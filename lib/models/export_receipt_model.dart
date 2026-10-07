@@ -1,0 +1,27 @@
+class ExportReceiptModel {
+  const ExportReceiptModel({
+    required this.id,
+    required this.code,
+    required this.customerId,
+    required this.customerName,
+    required this.date,
+    required this.riceId,
+    required this.riceName,
+    required this.quantity,
+    required this.sellingPrice,
+    required this.totalAmount,
+    required this.note,
+  });
+
+  final String id;
+  final String code;
+  final String customerId;
+  final String customerName;
+  final DateTime date;
+  final String riceId;
+  final String riceName;
+  final double quantity;
+  final double sellingPrice;
+  final double totalAmount;
+  final String note;
+}
