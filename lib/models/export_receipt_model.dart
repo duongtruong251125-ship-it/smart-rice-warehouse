@@ -1,3 +1,5 @@
+import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
+
 class ExportReceiptModel {
   const ExportReceiptModel({
     required this.id,
@@ -11,6 +13,7 @@ class ExportReceiptModel {
     required this.sellingPrice,
     required this.totalAmount,
     required this.note,
+    this.allocations = const <BatchAllocation>[],
   });
 
   final String id;
@@ -24,4 +27,5 @@ class ExportReceiptModel {
   final double sellingPrice;
   final double totalAmount;
   final String note;
+  final List<BatchAllocation> allocations;
 }

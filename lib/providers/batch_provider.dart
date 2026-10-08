@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
+import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
+import 'package:smart_rice_warehouse/services/fefo_service.dart';
 
 class BatchProvider extends ChangeNotifier {
   BatchProvider() : _batches = List<BatchModel>.from(MockData.batches);
@@ -83,36 +85,40 @@ class BatchProvider extends ChangeNotifier {
         .length;
   }
 
-  bool removeStock({required String riceId, required double quantity}) {
-    const tolerance = 0.000000001;
-    if (quantity <= 0 || totalStockForRice(riceId) + tolerance < quantity) {
+  bool applyFefoAllocations(List<BatchAllocation> allocations) {
+    if (allocations.isEmpty) {
       return false;
     }
 
-    var remainingQuantity = quantity;
-    for (var index = 0; index < _batches.length; index++) {
-      final batch = _batches[index];
-      if (batch.riceId != riceId || !_isAvailable(batch)) {
-        continue;
+    for (final allocation in allocations) {
+      final index = _batches.indexWhere((item) => item.id == allocation.batchId);
+      if (index == -1) {
+        return false;
       }
 
-      final deductedQuantity = batch.quantity < remainingQuantity
-          ? batch.quantity
-          : remainingQuantity;
-      final updatedQuantity = batch.quantity - deductedQuantity;
+      final batch = _batches[index];
+      final updatedQuantity = (batch.quantity - allocation.allocatedQuantity)
+          .clamp(0.0, double.infinity);
       _batches[index] = batch.copyWith(
         quantity: updatedQuantity,
         status: updatedQuantity == 0 ? BatchStatus.lowStock : batch.status,
       );
-      remainingQuantity -= deductedQuantity;
-
-      if (remainingQuantity <= tolerance) {
-        notifyListeners();
-        return true;
-      }
     }
 
-    return false;
+    notifyListeners();
+    return true;
+  }
+
+  bool removeStock({required String riceId, required double quantity}) {
+    final result = const FefoService().allocate(
+      batches: _batches,
+      riceId: riceId,
+      quantity: quantity,
+    );
+    if (!result.isSuccess) {
+      return false;
+    }
+    return applyFefoAllocations(result.allocations);
   }
 
   bool _isAvailable(BatchModel batch) {

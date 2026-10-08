@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
+import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
 import 'package:smart_rice_warehouse/models/customer_model.dart';
 import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
@@ -9,6 +11,7 @@ import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/customer_provider.dart';
 import 'package:smart_rice_warehouse/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/services/fefo_service.dart';
 import 'package:smart_rice_warehouse/widgets/custom_text_field.dart';
 
 class ExportFormScreen extends StatefulWidget {
@@ -58,7 +61,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
       final currentStock =
           context.read<BatchProvider>().totalStockForRice(rice.id);
       if (quantity > currentStock) {
-        return 'Số lượng xuất vượt quá tồn kho hiện tại';
+        return 'Số lượng xuất vượt quá tồn kho khả dụng hiện tại ($currentStock ${rice.unit})';
       }
     }
     return null;
@@ -78,7 +81,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
     return null;
   }
 
-  void _submit() {
+  void _reviewFefoAndSubmit() {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -88,6 +91,279 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
     final rice = _selectedRice!;
     final quantity = _parseNumber(_quantityController.text)!;
     final sellingPrice = _parseNumber(_sellingPriceController.text)!;
+
+    final exportProvider = context.read<ExportProvider>();
+    final fefoResult = exportProvider.previewFefoAllocation(
+      riceId: rice.id,
+      quantity: quantity,
+    );
+
+    if (!fefoResult.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            fefoResult.errorMessage ?? 'Không đủ tồn kho khả dụng để xuất',
+          ),
+          backgroundColor: AppTheme.secondaryColor,
+        ),
+      );
+      return;
+    }
+
+    _showFefoPreviewBottomSheet(
+      fefoResult: fefoResult,
+      customer: customer,
+      rice: rice,
+      quantity: quantity,
+      sellingPrice: sellingPrice,
+    );
+  }
+
+  void _showFefoPreviewBottomSheet({
+    required FefoAllocationResult fefoResult,
+    required CustomerModel customer,
+    required RiceModel rice,
+    required double quantity,
+    required double sellingPrice,
+  }) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        final theme = Theme.of(bottomSheetContext);
+
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.72,
+          minChildSize: 0.5,
+          maxChildSize: 0.92,
+          builder: (_, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: ListView(
+                controller: scrollController,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryLight,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.alt_route_rounded,
+                          color: AppTheme.primaryColor,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Phân bổ lô hàng (FEFO)',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Ưu tiên xuất lô cận hạn nhất trước',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 24),
+
+                  // Order summary
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.backgroundColor,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppTheme.borderColor),
+                    ),
+                    child: Column(
+                      children: [
+                        _summaryRow('Khách hàng:', customer.name),
+                        const SizedBox(height: 6),
+                        _summaryRow('Mặt hàng:', '${rice.name} (${rice.unit})'),
+                        const SizedBox(height: 6),
+                        _summaryRow(
+                          'Tổng lượng xuất:',
+                          '${NumberFormatter.quantity(quantity)} ${rice.unit}',
+                          isBold: true,
+                        ),
+                        const SizedBox(height: 6),
+                        _summaryRow(
+                          'Tổng thành tiền:',
+                          CurrencyFormatter.formatVnd(quantity * sellingPrice),
+                          color: AppTheme.secondaryColor,
+                          isBold: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Text(
+                    'Chi tiết các lô được xuất (${fefoResult.allocations.length} lô):',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+
+                  ...fefoResult.allocations.map((alloc) {
+                    final daysLeft = alloc.daysUntilExpiry;
+                    final isWarning = daysLeft <= 30;
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.qr_code_2,
+                                      size: 16,
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      alloc.batchCode,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isWarning
+                                        ? AppTheme.secondaryColor
+                                            .withValues(alpha: 0.15)
+                                        : AppTheme.accentGreen
+                                            .withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    'HSD: ${DateFormatter.ddMMyyyy(alloc.expiryDate)} (${daysLeft}d)',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: isWarning
+                                          ? AppTheme.secondaryColor
+                                          : AppTheme.accentGreen,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Lấy từ lô này:',
+                                  style: TextStyle(color: Colors.grey.shade700),
+                                ),
+                                Text(
+                                  '${NumberFormatter.quantity(alloc.allocatedQuantity)} ${rice.unit}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.secondaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Còn lại sau xuất:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                Text(
+                                  '${NumberFormatter.quantity(alloc.batchRemainingQuantity)} ${rice.unit}',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: () {
+                      Navigator.of(bottomSheetContext).pop();
+                      _confirmExport(
+                        fefoResult: fefoResult,
+                        customer: customer,
+                        rice: rice,
+                        quantity: quantity,
+                        sellingPrice: sellingPrice,
+                      );
+                    },
+                    icon: const Icon(Icons.check_circle_outline_rounded),
+                    label: const Text('Xác nhận xuất kho'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(bottomSheetContext).pop(),
+                    child: const Text('Chỉnh sửa lại'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _confirmExport({
+    required FefoAllocationResult fefoResult,
+    required CustomerModel customer,
+    required RiceModel rice,
+    required double quantity,
+    required double sellingPrice,
+  }) {
     final now = DateTime.now();
     final provider = context.read<ExportProvider>();
     final receipt = ExportReceiptModel(
@@ -102,19 +378,42 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
       sellingPrice: sellingPrice,
       totalAmount: quantity * sellingPrice,
       note: _noteController.text.trim(),
+      allocations: fefoResult.allocations,
     );
 
     if (!provider.createExportReceipt(receipt)) {
       _formKey.currentState?.validate();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Số lượng xuất vượt quá tồn kho hiện tại'),
+          content: Text('Xuất kho thất bại: Không đủ tồn kho khả dụng'),
         ),
       );
       return;
     }
 
-    Navigator.of(context).pop('Xuất kho thành công');
+    Navigator.of(context).pop('Xuất kho thành công theo quy tắc FEFO');
+  }
+
+  Widget _summaryRow(
+    String label,
+    String value, {
+    bool isBold = false,
+    Color? color,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+            color: color ?? AppTheme.textPrimary,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -135,7 +434,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
         : context.watch<BatchProvider>().totalStockForRice(selectedRice.id);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tạo phiếu xuất')),
+      appBar: AppBar(title: const Text('Tạo phiếu xuất kho')),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -143,7 +442,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               DropdownButtonFormField<CustomerModel>(
-                value: _selectedCustomer,
+                initialValue: _selectedCustomer,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Khách hàng'),
                 items: customers
@@ -167,9 +466,9 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<RiceModel>(
-                value: _selectedRice,
+                initialValue: _selectedRice,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Gạo'),
+                decoration: const InputDecoration(labelText: 'Gạo xuất kho'),
                 items: rices
                     .map(
                       (rice) => DropdownMenuItem(
@@ -197,13 +496,20 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                 const SizedBox(height: 12),
                 Card(
                   child: ListTile(
-                    leading: const Icon(Icons.inventory_outlined),
-                    title: const Text('Tồn hiện tại'),
+                    leading: const Icon(
+                      Icons.inventory_outlined,
+                      color: AppTheme.primaryColor,
+                    ),
+                    title: const Text('Tồn kho khả dụng'),
+                    subtitle: const Text('Chỉ tính các lô còn hạn sử dụng'),
                     trailing: Text(
                       '${NumberFormatter.quantity(currentStock)} '
                       '${selectedRice.unit}',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
+                            color: currentStock > 0
+                                ? AppTheme.accentGreen
+                                : AppTheme.secondaryColor,
                           ),
                     ),
                   ),
@@ -212,7 +518,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
               const SizedBox(height: 16),
               CustomTextField(
                 controller: _quantityController,
-                label: 'Số lượng',
+                label: 'Số lượng xuất (kg)',
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -223,7 +529,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
               const SizedBox(height: 16),
               CustomTextField(
                 controller: _sellingPriceController,
-                label: 'Giá bán',
+                label: 'Giá bán (VNĐ/kg)',
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -246,7 +552,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                     color: Color(0xFFD97706),
                   ),
                   title: const Text(
-                    'Tổng tiền',
+                    'Tổng tiền dự tính',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   trailing: Text(
@@ -262,9 +568,10 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  FilledButton(
-                    onPressed: _submit,
-                    child: const Text('Xác nhận xuất kho'),
+                  FilledButton.icon(
+                    onPressed: _reviewFefoAndSubmit,
+                    icon: const Icon(Icons.alt_route_rounded),
+                    label: const Text('Kiểm tra & Phân bổ FEFO'),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
