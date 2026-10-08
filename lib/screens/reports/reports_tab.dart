@@ -372,7 +372,7 @@ class _SevenDayChart extends StatelessWidget {
               )
             else
               SizedBox(
-                height: 165,
+                height: 125,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

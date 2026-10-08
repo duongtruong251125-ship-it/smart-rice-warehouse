@@ -357,27 +357,40 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                         key: ValueKey('batch_dd_${rice?.id}_$currentValue'),
                         value: currentValue,
                         isExpanded: true,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Mã lô hàng',
-                          prefixIcon: Icon(Icons.qr_code_2_rounded),
+                          prefixIcon:
+                              const Icon(Icons.qr_code_2_rounded, size: 20),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          helperText: !isCreatingNew && selectedExisting != null
+                              ? 'Lô tồn: ${selectedExisting.quantity.toInt()}kg • HSD: ${DateFormatter.ddMMyyyy(selectedExisting.expiryDate)} (Cộng dồn)'
+                              : null,
+                          helperStyle: const TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.accentGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         items: [
                           ...existingBatches.map(
                             (b) => DropdownMenuItem<String>(
                               value: b.code,
                               child: Text(
-                                'Lô ${b.code} (Tồn: ${b.quantity.toInt()}kg • HSD: ${DateFormatter.ddMMyyyy(b.expiryDate)})',
+                                '${b.code} (Tồn: ${b.quantity.toInt()}kg • HSD: ${DateFormatter.ddMMyyyy(b.expiryDate)})',
                                 overflow: TextOverflow.ellipsis,
-                                style:
-                                    const TextStyle(fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
                           const DropdownMenuItem<String>(
                             value: _newBatchOption,
                             child: Text(
-                              '✨ + Tạo mã lô mới (Chưa có trong kho)',
+                              '✨ + Tạo mã lô mới',
                               style: TextStyle(
+                                fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.primaryColor,
                               ),
@@ -397,133 +410,24 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                           });
                         },
                       ),
-                      const SizedBox(height: 8),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            ...existingBatches.map((b) {
-                              final isSelected = currentValue == b.code;
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 6),
-                                child: ChoiceChip(
-                                  selected: isSelected,
-                                  label: Text(
-                                    '${b.code} (${b.quantity.toInt()}kg)',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    ),
-                                  ),
-                                  selectedColor: AppTheme.primaryLight,
-                                  onSelected: (selected) {
-                                    if (selected) {
-                                      setState(() => _selectBatch(b));
-                                    }
-                                  },
-                                ),
-                              );
-                            }),
-                            ChoiceChip(
-                              selected: isCreatingNew,
-                              avatar: const Icon(Icons.add, size: 14),
-                              label: const Text(
-                                'Mã lô mới',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              selectedColor: AppTheme.secondaryLight,
-                              onSelected: (selected) {
-                                if (selected) {
-                                  setState(() => _selectNewBatchMode());
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      if (!isCreatingNew && selectedExisting != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryLight,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color:
-                                  AppTheme.primaryColor.withValues(alpha: 0.25),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.inventory_2_outlined,
-                                color: AppTheme.primaryColor,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Nhập bổ sung vào lô: ${selectedExisting.code}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.primaryDark,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Tồn kho hiện tại: ${selectedExisting.quantity.toInt()} kg • HSD: ${DateFormatter.ddMMyyyy(selectedExisting.expiryDate)}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppTheme.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ] else ...[
+                      if (isCreatingNew) ...[
+                        const SizedBox(height: 8),
                         CustomTextField(
                           controller: _batchCodeController,
-                          label: 'Nhập mã lô mới',
+                          label:
+                              'Mã lô mới (Gợi ý: LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')})',
                           textInputAction: TextInputAction.next,
                           validator: _validateBatchCode,
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Gợi ý mã mới: LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                            TextButton.icon(
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _batchCodeController.text =
-                                      'LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}';
-                                });
-                              },
-                              icon: const Icon(Icons.auto_awesome, size: 14),
-                              label: const Text(
-                                'Điền mã gợi ý',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
+                          suffixIcon: IconButton(
+                            tooltip: 'Điền mã gợi ý',
+                            icon: const Icon(Icons.auto_awesome, size: 16),
+                            onPressed: () {
+                              setState(() {
+                                _batchCodeController.text =
+                                    'LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}';
+                              });
+                            },
+                          ),
                         ),
                       ],
                     ],

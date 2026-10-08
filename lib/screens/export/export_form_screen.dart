@@ -494,33 +494,36 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                     value == null ? 'Vui lòng chọn loại gạo' : null,
               ),
               if (selectedRice != null) ...[
-                const SizedBox(height: 12),
-                Card(
-                  child: ListTile(
-                    leading: const Icon(
-                      Icons.inventory_outlined,
-                      color: AppTheme.primaryColor,
-                    ),
-                    title: const Text('Tồn kho khả dụng'),
-                    subtitle: const Text('Chỉ tính các lô còn hạn sử dụng'),
-                    trailing: Text(
-                      '${NumberFormatter.quantity(currentStock)} '
-                      '${selectedRice.unit}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: currentStock > 0
-                                ? AppTheme.accentGreen
-                                : AppTheme.secondaryColor,
-                          ),
-                    ),
+                const SizedBox(height: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.backgroundColor,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.borderColor),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Các lô hàng khả dụng trong kho (FEFO ưu tiên xuất lô cận hạn nhất):',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.inventory_2_outlined,
+                          size: 16, color: AppTheme.primaryColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Tồn khả dụng: ${NumberFormatter.quantity(currentStock)} ${selectedRice.unit}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: currentStock > 0
+                              ? AppTheme.accentGreen
+                              : AppTheme.secondaryColor,
+                        ),
                       ),
+                      const Spacer(),
+                      const Text('(FEFO tự động ưu tiên)',
+                          style: TextStyle(
+                              fontSize: 11, color: AppTheme.textSecondary)),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Builder(
@@ -531,95 +534,94 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                         .watch<BatchProvider>()
                         .findByRiceId(selectedRice.id)
                         .where((b) {
-                          if (b.quantity <= 0 || b.status == BatchStatus.expired) {
+                          if (b.quantity <= 0 ||
+                              b.status == BatchStatus.expired) {
                             return false;
                           }
-                          final exp = DateTime(
-                              b.expiryDate.year, b.expiryDate.month, b.expiryDate.day);
+                          final exp = DateTime(b.expiryDate.year,
+                              b.expiryDate.month, b.expiryDate.day);
                           return !exp.isBefore(today);
                         })
                         .toList();
 
                     if (batches.isEmpty) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 4),
-                        child: Text(
-                          'Không có lô hàng nào còn hạn và khả dụng trong kho',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppTheme.textSecondary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      );
+                      return const SizedBox.shrink();
                     }
 
-                    batches.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
+                    batches
+                        .sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
 
-                    return Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: batches.map((batch) {
-                        final daysLeft =
-                            batch.expiryDate.difference(today).inDays;
-                        final isCritical = daysLeft <= 7;
-                        final isWarning = daysLeft <= 30;
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: batches.map((batch) {
+                          final daysLeft =
+                              batch.expiryDate.difference(today).inDays;
+                          final isCritical = daysLeft <= 7;
+                          final isWarning = daysLeft <= 30;
 
-                        final Color chipBg = isCritical
-                            ? const Color(0xFFFEF2F2)
-                            : isWarning
-                                ? const Color(0xFFFFFBEB)
-                                : const Color(0xFFF0FDF4);
-                        final Color chipBorder = isCritical
-                            ? const Color(0xFFFECACA)
-                            : isWarning
-                                ? const Color(0xFFFDE68A)
-                                : const Color(0xFFBBF7D0);
-                        final Color chipText = isCritical
-                            ? const Color(0xFFDC2626)
-                            : isWarning
-                                ? const Color(0xFFD97706)
-                                : const Color(0xFF15803D);
+                          final Color chipBg = isCritical
+                              ? const Color(0xFFFEF2F2)
+                              : isWarning
+                                  ? const Color(0xFFFFFBEB)
+                                  : const Color(0xFFF0FDF4);
+                          final Color chipBorder = isCritical
+                              ? const Color(0xFFFECACA)
+                              : isWarning
+                                  ? const Color(0xFFFDE68A)
+                                  : const Color(0xFFBBF7D0);
+                          final Color chipText = isCritical
+                              ? const Color(0xFFDC2626)
+                              : isWarning
+                                  ? const Color(0xFFD97706)
+                                  : const Color(0xFF15803D);
 
-                        return ActionChip(
-                          backgroundColor: chipBg,
-                          side: BorderSide(color: chipBorder),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 2),
-                          avatar: Icon(
-                            isCritical
-                                ? Icons.error_outline_rounded
-                                : isWarning
-                                    ? Icons.warning_amber_rounded
-                                    : Icons.inventory_2_outlined,
-                            size: 16,
-                            color: chipText,
-                          ),
-                          label: Text(
-                            '${batch.code} (${NumberFormatter.quantity(batch.quantity)}kg • còn $daysLeft ngày)',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: chipText,
-                            ),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _quantityController.text =
-                                  batch.quantity == batch.quantity.roundToDouble()
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: ActionChip(
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                              backgroundColor: chipBg,
+                              side: BorderSide(color: chipBorder),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 0),
+                              avatar: Icon(
+                                isCritical
+                                    ? Icons.error_outline_rounded
+                                    : isWarning
+                                        ? Icons.warning_amber_rounded
+                                        : Icons.inventory_2_outlined,
+                                size: 14,
+                                color: chipText,
+                              ),
+                              label: Text(
+                                '${batch.code} (${NumberFormatter.quantity(batch.quantity)}kg • ${daysLeft}d)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: chipText,
+                                ),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _quantityController.text = batch.quantity ==
+                                          batch.quantity.roundToDouble()
                                       ? batch.quantity.toInt().toString()
                                       : batch.quantity.toString();
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Đã chọn mã lô ${batch.code} (${NumberFormatter.quantity(batch.quantity)} kg)'),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        );
-                      }).toList(),
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        'Đã chọn ${NumberFormatter.quantity(batch.quantity)} kg từ lô ${batch.code}'),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     );
                   },
                 ),
