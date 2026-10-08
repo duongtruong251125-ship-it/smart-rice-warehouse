@@ -517,7 +517,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Mã lô hàng có sẵn trong kho (Nhấp để chọn nhanh):',
+                  'Các lô hàng khả dụng trong kho (FEFO ưu tiên xuất lô cận hạn nhất):',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

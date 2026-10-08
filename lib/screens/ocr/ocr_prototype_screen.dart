@@ -151,15 +151,8 @@ class _OcrPrototypeScreenState extends State<OcrPrototypeScreen> {
     }
 
     final now = DateTime.now();
-    final batchProvider = context.read<BatchProvider>();
     final importProvider = context.read<ImportProvider>();
-
-    if (batchProvider.isBatchCodeExists(batchCode)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Mã lô $batchCode đã tồn tại trong hệ thống')),
-      );
-      return;
-    }
+    // BatchProvider and ImportProvider allow both new batch and replenishing existing batch
 
     final newBatch = BatchModel(
       id: 'batch-${now.microsecondsSinceEpoch}',
@@ -449,6 +442,8 @@ class _OcrPrototypeScreenState extends State<OcrPrototypeScreen> {
                         onPressed: () {
                           setState(() {
                             _batchCodeController.text = b.code;
+                            _manufactureDate = b.manufactureDate;
+                            _expiryDate = b.expiryDate;
                           });
                         },
                       )),

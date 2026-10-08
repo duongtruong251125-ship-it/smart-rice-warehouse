@@ -28,10 +28,40 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
   final _manufactureDateController = TextEditingController();
   final _expiryDateController = TextEditingController();
 
+  static const String _newBatchOption = '__NEW_BATCH__';
+
   SupplierModel? _selectedSupplier;
   RiceModel? _selectedRice;
   DateTime? _manufactureDate;
   DateTime? _expiryDate;
+  String _selectedBatchCode = _newBatchOption;
+
+  void _selectBatch(BatchModel batch) {
+    _selectedBatchCode = batch.code;
+    _batchCodeController.text = batch.code;
+    _manufactureDate = batch.manufactureDate;
+    _manufactureDateController.text =
+        DateFormatter.ddMMyyyy(batch.manufactureDate);
+    _expiryDate = batch.expiryDate;
+    _expiryDateController.text = DateFormatter.ddMMyyyy(batch.expiryDate);
+  }
+
+  void _selectNewBatchMode([RiceModel? rice]) {
+    final targetRice = rice ?? _selectedRice;
+    _selectedBatchCode = _newBatchOption;
+    final prefix = targetRice?.code ?? 'LO';
+    final batches = targetRice == null
+        ? context.read<BatchProvider>().batches
+        : context.read<BatchProvider>().findByRiceId(targetRice.id);
+    final nextCode =
+        'LO-$prefix-${(batches.length + 1).toString().padLeft(3, '0')}';
+    _batchCodeController.text = nextCode;
+    final now = DateTime.now();
+    _manufactureDate ??= now;
+    _manufactureDateController.text = DateFormatter.ddMMyyyy(_manufactureDate!);
+    _expiryDate ??= now.add(const Duration(days: 365));
+    _expiryDateController.text = DateFormatter.ddMMyyyy(_expiryDate!);
+  }
 
   double get _totalAmount {
     final quantity = _parseNumber(_quantityController.text) ?? 0;
@@ -78,11 +108,14 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
   }
 
   String? _validateBatchCode(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Vui lòng nhập mã lô';
+    if (_selectedBatchCode != _newBatchOption) {
+      return null;
     }
-    if (context.read<BatchProvider>().isBatchCodeExists(value)) {
-      return 'Mã lô đã tồn tại';
+    if (value == null || value.trim().isEmpty) {
+      return 'Vui lòng nhập mã lô mới';
+    }
+    if (context.read<BatchProvider>().isBatchCodeExists(value.trim())) {
+      return 'Mã lô "${value.trim()}" đã tồn tại. Vui lòng chọn lô từ danh sách hoặc nhập mã khác.';
     }
     return null;
   }
@@ -139,6 +172,10 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
     final now = DateTime.now();
     final identifier = now.microsecondsSinceEpoch.toString();
     final provider = context.read<ImportProvider>();
+    final isNew = _selectedBatchCode == _newBatchOption;
+    final batchCode =
+        isNew ? _batchCodeController.text.trim() : _selectedBatchCode;
+
     final receipt = ImportReceiptModel(
       id: 'import-$identifier',
       code: provider.generateReceiptCode(),
@@ -150,14 +187,14 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
       quantity: quantity,
       purchasePrice: purchasePrice,
       totalAmount: quantity * purchasePrice,
-      batchCode: _batchCodeController.text.trim(),
+      batchCode: batchCode,
       manufactureDate: _manufactureDate!,
       expiryDate: _expiryDate!,
     );
     final today = DateTime(now.year, now.month, now.day);
     final batch = BatchModel(
       id: 'batch-$identifier',
-      code: _batchCodeController.text.trim(),
+      code: batchCode,
       riceId: rice.id,
       riceName: rice.name,
       quantity: quantity,
@@ -175,7 +212,7 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
     );
     if (!created) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mã lô đã tồn tại')),
+        const SnackBar(content: Text('Không thể tạo phiếu nhập cho mã lô này')),
       );
       return;
     }
@@ -249,6 +286,13 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                     if (value != null) {
                       _purchasePriceController.text =
                           _numberText(value.purchasePrice);
+                      final batches =
+                          context.read<BatchProvider>().findByRiceId(value.id);
+                      if (batches.isNotEmpty) {
+                        _selectBatch(batches.first);
+                      } else {
+                        _selectNewBatchMode(value);
+                      }
                     }
                   });
                 },
@@ -280,13 +324,6 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 16),
-              CustomTextField(
-                controller: _batchCodeController,
-                label: 'Mã lô',
-                textInputAction: TextInputAction.next,
-                validator: _validateBatchCode,
-              ),
-              const SizedBox(height: 6),
               Builder(
                 builder: (context) {
                   final rice = _selectedRice;
@@ -295,57 +332,184 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                       ? context.watch<BatchProvider>().batches
                       : context.watch<BatchProvider>().findByRiceId(rice.id);
 
+                  final validCodes = {
+                    ...existingBatches.map((b) => b.code),
+                    _newBatchOption,
+                  };
+                  final currentValue = validCodes.contains(_selectedBatchCode)
+                      ? _selectedBatchCode
+                      : (existingBatches.isNotEmpty
+                          ? existingBatches.first.code
+                          : _newBatchOption);
+
+                  final isCreatingNew = currentValue == _newBatchOption;
+                  final selectedExisting = isCreatingNew
+                      ? null
+                      : existingBatches.firstWhere(
+                          (b) => b.code == currentValue,
+                          orElse: () => existingBatches.first,
+                        );
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Gợi ý mã lô (Nhấp để điền nhanh):',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textSecondary,
+                      DropdownButtonFormField<String>(
+                        key: ValueKey('batch_dd_${rice?.id}_$currentValue'),
+                        value: currentValue,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Mã lô hàng',
+                          prefixIcon: Icon(Icons.qr_code_2_rounded),
+                        ),
+                        items: [
+                          ...existingBatches.map(
+                            (b) => DropdownMenuItem<String>(
+                              value: b.code,
+                              child: Text(
+                                'Lô ${b.code} (Tồn: ${b.quantity.toInt()}kg • HSD: ${DateFormatter.ddMMyyyy(b.expiryDate)})',
+                                overflow: TextOverflow.ellipsis,
+                                style:
+                                    const TextStyle(fontWeight: FontWeight.w600),
+                              ),
                             ),
                           ),
-                          TextButton.icon(
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          const DropdownMenuItem<String>(
+                            value: _newBatchOption,
+                            child: Text(
+                              '✨ + Tạo mã lô mới (Chưa có trong kho)',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
                             ),
-                            onPressed: () {
-                              final nextNum = existingBatches.length + 1;
-                              final code =
-                                  'LO-$prefix-${nextNum.toString().padLeft(3, '0')}';
-                              setState(() {
-                                _batchCodeController.text = code;
-                              });
-                            },
-                            icon: const Icon(Icons.auto_awesome_rounded,
-                                size: 14),
-                            label: const Text('Tạo mã mới',
-                                style: TextStyle(fontSize: 12)),
                           ),
                         ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            if (value == _newBatchOption) {
+                              _selectNewBatchMode();
+                            } else {
+                              final found = existingBatches
+                                  .firstWhere((b) => b.code == value);
+                              _selectBatch(found);
+                            }
+                          });
+                        },
                       ),
-                      if (existingBatches.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
+                      const SizedBox(height: 8),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
                           children: [
-                            ActionChip(
-                              backgroundColor: AppTheme.primaryLight,
-                              label: Text(
-                                'Tạo mới: LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primaryColor,
+                            ...existingBatches.map((b) {
+                              final isSelected = currentValue == b.code;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 6),
+                                child: ChoiceChip(
+                                  selected: isSelected,
+                                  label: Text(
+                                    '${b.code} (${b.quantity.toInt()}kg)',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                  selectedColor: AppTheme.primaryLight,
+                                  onSelected: (selected) {
+                                    if (selected) {
+                                      setState(() => _selectBatch(b));
+                                    }
+                                  },
                                 ),
+                              );
+                            }),
+                            ChoiceChip(
+                              selected: isCreatingNew,
+                              avatar: const Icon(Icons.add, size: 14),
+                              label: const Text(
+                                'Mã lô mới',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              selectedColor: AppTheme.secondaryLight,
+                              onSelected: (selected) {
+                                if (selected) {
+                                  setState(() => _selectNewBatchMode());
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      if (!isCreatingNew && selectedExisting != null) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryLight,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color:
+                                  AppTheme.primaryColor.withValues(alpha: 0.25),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.inventory_2_outlined,
+                                color: AppTheme.primaryColor,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Nhập bổ sung vào lô: ${selectedExisting.code}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primaryDark,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Tồn kho hiện tại: ${selectedExisting.quantity.toInt()} kg • HSD: ${DateFormatter.ddMMyyyy(selectedExisting.expiryDate)}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else ...[
+                        CustomTextField(
+                          controller: _batchCodeController,
+                          label: 'Nhập mã lô mới',
+                          textInputAction: TextInputAction.next,
+                          validator: _validateBatchCode,
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Gợi ý mã mới: LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                            TextButton.icon(
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -353,18 +517,12 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                                       'LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}';
                                 });
                               },
+                              icon: const Icon(Icons.auto_awesome, size: 14),
+                              label: const Text(
+                                'Điền mã gợi ý',
+                                style: TextStyle(fontSize: 12),
+                              ),
                             ),
-                            ...existingBatches.take(4).map((b) => ActionChip(
-                                  label: Text(
-                                    '${b.code} (${b.quantity.toInt()}kg)',
-                                    style: const TextStyle(fontSize: 11),
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _batchCodeController.text = '${b.code}-N2';
-                                    });
-                                  },
-                                )),
                           ],
                         ),
                       ],
