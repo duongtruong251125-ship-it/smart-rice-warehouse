@@ -34,7 +34,7 @@ class StatusChip extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: foregroundColor.withOpacity(0.22),
+          color: foregroundColor.withValues(alpha: 0.22),
           width: 1,
         ),
       ),

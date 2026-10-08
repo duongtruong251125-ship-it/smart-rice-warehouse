@@ -591,10 +591,7 @@ class _WarehouseStatusRow extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 2),
-            StatusChip(
-              label: isLowStock ? 'Tồn thấp' : 'Đủ hàng',
-              type: isLowStock ? StatusChipType.warning : StatusChipType.active,
-            ),
+            StatusChip(isLowStock: isLowStock),
           ],
         ),
       ],

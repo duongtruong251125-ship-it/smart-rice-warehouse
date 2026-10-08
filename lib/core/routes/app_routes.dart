@@ -11,6 +11,7 @@ import 'package:smart_rice_warehouse/screens/home/main_screen.dart';
 import 'package:smart_rice_warehouse/screens/import/import_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/import/import_list_screen.dart';
 import 'package:smart_rice_warehouse/screens/inventory/inventory_screen.dart';
+import 'package:smart_rice_warehouse/screens/ocr/ocr_prototype_screen.dart';
 import 'package:smart_rice_warehouse/screens/profile/profile_tab.dart';
 import 'package:smart_rice_warehouse/screens/reports/reports_tab.dart';
 import 'package:smart_rice_warehouse/screens/rice/rice_form_screen.dart';
@@ -42,6 +43,7 @@ abstract final class AppRoutes {
   static const String profile = '/profile';
   static const String alerts = '/alerts';
   static const String forecast = '/forecast';
+  static const String ocrPrototype = '/ocr/prototype';
 
   static final Map<String, WidgetBuilder> routes = <String, WidgetBuilder>{
     splash: (_) => const SplashScreen(),
@@ -80,8 +82,6 @@ abstract final class AppRoutes {
     addImport: (_) => const ImportFormScreen(),
     export: (_) => const ExportListScreen(),
     addExport: (_) => const ExportFormScreen(),
-    alerts: (_) => const AlertListScreen(),
-    forecast: (_) => const ForecastScreen(),
     reports: (_) => Scaffold(
           appBar: AppBar(title: const Text('Báo cáo')),
           body: const ReportsTab(),
@@ -91,4 +91,17 @@ abstract final class AppRoutes {
           body: const ProfileTab(),
         ),
   };
+
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    if (settings.name == alerts) {
+      return MaterialPageRoute(builder: (_) => const AlertListScreen());
+    }
+    if (settings.name == forecast) {
+      return MaterialPageRoute(builder: (_) => const ForecastScreen());
+    }
+    if (settings.name == ocrPrototype) {
+      return MaterialPageRoute(builder: (_) => const OcrPrototypeScreen());
+    }
+    return null;
+  }
 }

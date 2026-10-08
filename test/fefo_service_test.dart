@@ -281,11 +281,11 @@ void main() {
       final batchProvider = BatchProvider();
       final exportProvider = ExportProvider(batchProvider);
 
-      final riceId = 'rice-st25';
+      const riceId = 'rice-st25';
       final initialStock = batchProvider.totalStockForRice(riceId);
       expect(initialStock, greaterThan(0));
 
-      final exportQty = 100.0;
+      const exportQty = 100.0;
       final receipt = ExportReceiptModel(
         id: 'test-exp-01',
         code: 'PX-TEST-01',
