@@ -4,6 +4,7 @@ import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
+import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/customer_model.dart';
 import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
@@ -513,6 +514,114 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                           ),
                     ),
                   ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Mã lô hàng có sẵn trong kho (Nhấp để chọn nhanh):',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Builder(
+                  builder: (context) {
+                    final now = DateTime.now();
+                    final today = DateTime(now.year, now.month, now.day);
+                    final batches = context
+                        .watch<BatchProvider>()
+                        .findByRiceId(selectedRice.id)
+                        .where((b) {
+                          if (b.quantity <= 0 || b.status == BatchStatus.expired) {
+                            return false;
+                          }
+                          final exp = DateTime(
+                              b.expiryDate.year, b.expiryDate.month, b.expiryDate.day);
+                          return !exp.isBefore(today);
+                        })
+                        .toList();
+
+                    if (batches.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          'Không có lô hàng nào còn hạn và khả dụng trong kho',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      );
+                    }
+
+                    batches.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
+
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: batches.map((batch) {
+                        final daysLeft =
+                            batch.expiryDate.difference(today).inDays;
+                        final isCritical = daysLeft <= 7;
+                        final isWarning = daysLeft <= 30;
+
+                        final Color chipBg = isCritical
+                            ? const Color(0xFFFEF2F2)
+                            : isWarning
+                                ? const Color(0xFFFFFBEB)
+                                : const Color(0xFFF0FDF4);
+                        final Color chipBorder = isCritical
+                            ? const Color(0xFFFECACA)
+                            : isWarning
+                                ? const Color(0xFFFDE68A)
+                                : const Color(0xFFBBF7D0);
+                        final Color chipText = isCritical
+                            ? const Color(0xFFDC2626)
+                            : isWarning
+                                ? const Color(0xFFD97706)
+                                : const Color(0xFF15803D);
+
+                        return ActionChip(
+                          backgroundColor: chipBg,
+                          side: BorderSide(color: chipBorder),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 2),
+                          avatar: Icon(
+                            isCritical
+                                ? Icons.error_outline_rounded
+                                : isWarning
+                                    ? Icons.warning_amber_rounded
+                                    : Icons.inventory_2_outlined,
+                            size: 16,
+                            color: chipText,
+                          ),
+                          label: Text(
+                            '${batch.code} (${NumberFormatter.quantity(batch.quantity)}kg • còn $daysLeft ngày)',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: chipText,
+                            ),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _quantityController.text =
+                                  batch.quantity == batch.quantity.roundToDouble()
+                                      ? batch.quantity.toInt().toString()
+                                      : batch.quantity.toString();
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Đã chọn mã lô ${batch.code} (${NumberFormatter.quantity(batch.quantity)} kg)'),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    );
+                  },
                 ),
               ],
               const SizedBox(height: 16),

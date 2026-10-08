@@ -34,8 +34,21 @@ class ReportsTab extends StatelessWidget {
     );
     final isNarrow = MediaQuery.sizeOf(context).width < 340;
 
-    final total7DaysImport = activities.fold(0.0, (s, a) => s + a.importQuantity);
-    final total7DaysExport = activities.fold(0.0, (s, a) => s + a.exportQuantity);
+    final currentMonthImports = importProvider.receipts.where(
+      (r) => r.date.year == now.year && r.date.month == now.month,
+    ).toList();
+    final currentMonthExports = exportProvider.receipts.where(
+      (r) => r.date.year == now.year && r.date.month == now.month,
+    ).toList();
+    final monthImportQty =
+        currentMonthImports.fold(0.0, (s, r) => s + r.quantity);
+    final monthExportQty =
+        currentMonthExports.fold(0.0, (s, r) => s + r.quantity);
+
+    final total7DaysImport =
+        activities.fold(0.0, (s, a) => s + a.importQuantity);
+    final total7DaysExport =
+        activities.fold(0.0, (s, a) => s + a.exportQuantity);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
@@ -48,24 +61,24 @@ class ReportsTab extends StatelessWidget {
             crossAxisCount: isNarrow ? 1 : 2,
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
-            childAspectRatio: isNarrow ? 2.5 : 1.72,
+            childAspectRatio: isNarrow ? 2.1 : 1.45,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
-              DashboardCard(
-                icon: Icons.download_rounded,
+              _MonthlyMetricCard(
                 title: 'Tổng nhập tháng',
-                value: CurrencyFormatter.formatVnd(
-                  importProvider.totalAmountForMonth(now),
-                ),
+                amount: importProvider.totalAmountForMonth(now),
+                quantity: monthImportQty,
+                receiptCount: currentMonthImports.length,
+                icon: Icons.download_rounded,
                 accentColor: AppTheme.accentGreen,
               ),
-              DashboardCard(
-                icon: Icons.upload_rounded,
+              _MonthlyMetricCard(
                 title: 'Tổng xuất tháng',
-                value: CurrencyFormatter.formatVnd(
-                  exportProvider.totalAmountForMonth(now),
-                ),
+                amount: exportProvider.totalAmountForMonth(now),
+                quantity: monthExportQty,
+                receiptCount: currentMonthExports.length,
+                icon: Icons.upload_rounded,
                 accentColor: AppTheme.secondaryColor,
               ),
             ],
@@ -339,11 +352,11 @@ class _SevenDayChart extends StatelessWidget {
               spacing: 12,
               runSpacing: 8,
               children: [
-                _LegendItem(color: AppTheme.accentGreen, label: 'Nhập kho'),
-                _LegendItem(color: AppTheme.secondaryColor, label: 'Xuất kho'),
+                _LegendItem(color: AppTheme.accentGreen, label: 'Cột Nhập kho (kg)'),
+                _LegendItem(color: AppTheme.secondaryColor, label: 'Cột Xuất kho (kg)'),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             if (maximum == 0)
               SizedBox(
                 height: 120,
@@ -359,7 +372,7 @@ class _SevenDayChart extends StatelessWidget {
               )
             else
               SizedBox(
-                height: 155,
+                height: 165,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -373,9 +386,168 @@ class _SevenDayChart extends StatelessWidget {
                   ],
                 ),
               ),
+            const Divider(height: 28),
+            Text(
+              'Bảng đối soát 7 ngày gần đây:',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _SevenDayTable(activities: activities),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SevenDayTable extends StatelessWidget {
+  const _SevenDayTable({required this.activities});
+
+  final List<_DailyActivity> activities;
+
+  @override
+  Widget build(BuildContext context) {
+    final reversed = activities.reversed.toList();
+    final today = DateTime.now();
+
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'Ngày',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'Nhập (kg)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.accentGreen,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'Xuất (kg)',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.secondaryColor,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'Biến động',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        ...reversed.map((act) {
+          final isToday = act.date.year == today.year &&
+              act.date.month == today.month &&
+              act.date.day == today.day;
+          final net = act.importQuantity - act.exportQuantity;
+          final dateStr = isToday
+              ? 'Hôm nay'
+              : '${act.date.day.toString().padLeft(2, '0')}/${act.date.month.toString().padLeft(2, '0')}';
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    dateStr,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
+                      color: isToday ? AppTheme.primaryColor : AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    act.importQuantity > 0
+                        ? '+${NumberFormatter.quantity(act.importQuantity)}'
+                        : '0',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: act.importQuantity > 0
+                          ? AppTheme.accentGreen
+                          : AppTheme.textSecondary,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    act.exportQuantity > 0
+                        ? '-${NumberFormatter.quantity(act.exportQuantity)}'
+                        : '0',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: act.exportQuantity > 0
+                          ? AppTheme.secondaryColor
+                          : AppTheme.textSecondary,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    net > 0 ? '+${NumberFormatter.quantity(net)}' : NumberFormatter.quantity(net),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: net > 0
+                          ? AppTheme.accentGreen
+                          : (net < 0 ? AppTheme.secondaryColor : AppTheme.textSecondary),
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 }
@@ -388,34 +560,74 @@ class _DailyBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasImport = activity.importQuantity > 0;
+    final hasExport = activity.exportQuantity > 0;
+
     return Column(
       children: [
+        SizedBox(
+          height: 14,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (hasImport)
+                  Text(
+                    '${activity.importQuantity.toInt()}',
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.accentGreen,
+                    ),
+                  ),
+                if (hasImport && hasExport) const SizedBox(width: 2),
+                if (hasExport)
+                  Text(
+                    '${activity.exportQuantity.toInt()}',
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.secondaryColor,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 2),
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
+              final maxH = constraints.maxHeight;
+              final importH = maximum > 0 && hasImport
+                  ? (maxH * activity.importQuantity / maximum).clamp(6.0, maxH)
+                  : 2.0;
+              final exportH = maximum > 0 && hasExport
+                  ? (maxH * activity.exportQuantity / maximum).clamp(6.0, maxH)
+                  : 2.0;
+
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 2),
+                margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                padding: const EdgeInsets.symmetric(horizontal: 1.5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(5),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     _ActivityBar(
-                      height: constraints.maxHeight *
-                          activity.importQuantity /
-                          maximum,
-                      color: AppTheme.accentGreen,
+                      height: importH,
+                      color: hasImport ? AppTheme.accentGreen : const Color(0xFFE2E8F0),
+                      width: 11,
                     ),
                     const SizedBox(width: 3),
                     _ActivityBar(
-                      height: constraints.maxHeight *
-                          activity.exportQuantity /
-                          maximum,
-                      color: AppTheme.secondaryColor,
+                      height: exportH,
+                      color: hasExport ? AppTheme.secondaryColor : const Color(0xFFE2E8F0),
+                      width: 11,
                     ),
                   ],
                 ),
@@ -423,12 +635,13 @@ class _DailyBars extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           '${activity.date.day}/${activity.date.month}',
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: AppTheme.textSecondary,
+                fontSize: 10,
               ),
         ),
       ],
@@ -437,19 +650,111 @@ class _DailyBars extends StatelessWidget {
 }
 
 class _ActivityBar extends StatelessWidget {
-  const _ActivityBar({required this.height, required this.color});
+  const _ActivityBar({
+    required this.height,
+    required this.color,
+    this.width = 11,
+  });
 
   final double height;
   final Color color;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 8,
+      width: width,
       height: height,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(3)),
+      ),
+    );
+  }
+}
+
+class _MonthlyMetricCard extends StatelessWidget {
+  const _MonthlyMetricCard({
+    required this.title,
+    required this.amount,
+    required this.quantity,
+    required this.receiptCount,
+    required this.icon,
+    required this.accentColor,
+  });
+
+  final String title;
+  final double amount;
+  final double quantity;
+  final int receiptCount;
+  final IconData icon;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(color: accentColor, width: 4),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(icon, size: 18, color: accentColor),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              CurrencyFormatter.formatVnd(amount),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: accentColor,
+                letterSpacing: -0.3,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                '${NumberFormatter.quantity(quantity)} kg • $receiptCount phiếu',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: accentColor,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

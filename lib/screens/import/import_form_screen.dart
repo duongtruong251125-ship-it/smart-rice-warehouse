@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
@@ -284,6 +285,92 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                 label: 'Mã lô',
                 textInputAction: TextInputAction.next,
                 validator: _validateBatchCode,
+              ),
+              const SizedBox(height: 6),
+              Builder(
+                builder: (context) {
+                  final rice = _selectedRice;
+                  final prefix = rice?.code ?? 'LO';
+                  final existingBatches = rice == null
+                      ? context.watch<BatchProvider>().batches
+                      : context.watch<BatchProvider>().findByRiceId(rice.id);
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Gợi ý mã lô (Nhấp để điền nhanh):',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          TextButton.icon(
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: () {
+                              final nextNum = existingBatches.length + 1;
+                              final code =
+                                  'LO-$prefix-${nextNum.toString().padLeft(3, '0')}';
+                              setState(() {
+                                _batchCodeController.text = code;
+                              });
+                            },
+                            icon: const Icon(Icons.auto_awesome_rounded,
+                                size: 14),
+                            label: const Text('Tạo mã mới',
+                                style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                      ),
+                      if (existingBatches.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            ActionChip(
+                              backgroundColor: AppTheme.primaryLight,
+                              label: Text(
+                                'Tạo mới: LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryColor,
+                                ),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _batchCodeController.text =
+                                      'LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}';
+                                });
+                              },
+                            ),
+                            ...existingBatches.take(4).map((b) => ActionChip(
+                                  label: Text(
+                                    '${b.code} (${b.quantity.toInt()}kg)',
+                                    style: const TextStyle(fontSize: 11),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _batchCodeController.text = '${b.code}-N2';
+                                    });
+                                  },
+                                )),
+                          ],
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
               CustomTextField(

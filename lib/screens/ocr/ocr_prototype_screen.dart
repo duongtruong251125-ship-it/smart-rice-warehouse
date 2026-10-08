@@ -411,6 +411,51 @@ class _OcrPrototypeScreenState extends State<OcrPrototypeScreen> {
             controller: _batchCodeController,
             label: 'Mã lô hàng mới',
           ),
+          const SizedBox(height: 6),
+          Builder(
+            builder: (context) {
+              final rice = _selectedRice;
+              final prefix = rice?.code ?? 'LO';
+              final existingBatches = rice == null
+                  ? context.watch<BatchProvider>().batches
+                  : context.watch<BatchProvider>().findByRiceId(rice.id);
+
+              return Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  ActionChip(
+                    backgroundColor: AppTheme.primaryLight,
+                    label: Text(
+                      'Mã mới: LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _batchCodeController.text =
+                            'LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}';
+                      });
+                    },
+                  ),
+                  ...existingBatches.take(3).map((b) => ActionChip(
+                        label: Text(
+                          b.code,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _batchCodeController.text = b.code;
+                          });
+                        },
+                      )),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: 12),
 
           Row(
