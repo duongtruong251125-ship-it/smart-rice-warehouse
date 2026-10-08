@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:smart_rice_warehouse/screens/alerts/alert_list_screen.dart';
 import 'package:smart_rice_warehouse/screens/auth/login_screen.dart';
 import 'package:smart_rice_warehouse/screens/batch/batch_list_screen.dart';
 import 'package:smart_rice_warehouse/screens/customer/customer_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/customer/customer_list_screen.dart';
 import 'package:smart_rice_warehouse/screens/export/export_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/export/export_list_screen.dart';
+import 'package:smart_rice_warehouse/screens/forecast/forecast_screen.dart';
 import 'package:smart_rice_warehouse/screens/home/main_screen.dart';
 import 'package:smart_rice_warehouse/screens/import/import_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/import/import_list_screen.dart';
@@ -38,6 +40,8 @@ abstract final class AppRoutes {
   static const String inventory = '/inventory';
   static const String reports = '/reports';
   static const String profile = '/profile';
+  static const String alerts = '/alerts';
+  static const String forecast = '/forecast';
 
   static final Map<String, WidgetBuilder> routes = <String, WidgetBuilder>{
     splash: (_) => const SplashScreen(),
@@ -76,6 +80,8 @@ abstract final class AppRoutes {
     addImport: (_) => const ImportFormScreen(),
     export: (_) => const ExportListScreen(),
     addExport: (_) => const ExportFormScreen(),
+    alerts: (_) => const AlertListScreen(),
+    forecast: (_) => const ForecastScreen(),
     reports: (_) => Scaffold(
           appBar: AppBar(title: const Text('Báo cáo')),
           body: const ReportsTab(),
