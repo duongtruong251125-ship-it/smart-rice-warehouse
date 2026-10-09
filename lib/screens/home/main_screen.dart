@@ -66,6 +66,12 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Quét mã QR Lô gạo',
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.qrScanner),
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+          ),
           Consumer<AlertProvider>(
             builder: (context, alertProvider, _) {
               final unread = alertProvider.unreadCount;

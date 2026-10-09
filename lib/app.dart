@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/providers/alert_provider.dart';
+import 'package:smart_rice_warehouse/providers/damage_provider.dart';
 import 'package:smart_rice_warehouse/providers/forecast_provider.dart';
+import 'package:smart_rice_warehouse/providers/inventory_check_provider.dart';
+import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
 
 class SmartRiceWarehouseApp extends StatelessWidget {
   const SmartRiceWarehouseApp({super.key});
@@ -14,6 +17,9 @@ class SmartRiceWarehouseApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AlertProvider()),
         ChangeNotifierProvider(create: (_) => ForecastProvider()),
+        ChangeNotifierProvider(create: (_) => WarehouseProvider()),
+        ChangeNotifierProvider(create: (_) => InventoryCheckProvider()),
+        ChangeNotifierProvider(create: (_) => DamageProvider()),
       ],
       child: MaterialApp(
         title: 'Smart Rice Warehouse',

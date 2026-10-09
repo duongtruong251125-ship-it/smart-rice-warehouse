@@ -23,6 +23,25 @@ class BatchProvider extends ChangeNotifier {
     );
   }
 
+  BatchModel? findById(String id) {
+    try {
+      return _batches.firstWhere((b) => b.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  BatchModel? findByCode(String code) {
+    try {
+      final normalized = code.trim().toLowerCase();
+      return _batches.firstWhere(
+        (b) => b.code.trim().toLowerCase() == normalized,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   bool isBatchCodeExists(String code) {
     final normalizedCode = code.trim().toLowerCase();
     return _batches.any(
@@ -47,6 +66,57 @@ class BatchProvider extends ChangeNotifier {
     }
 
     _batches[index] = batch;
+    notifyListeners();
+    return true;
+  }
+
+  /// Gán hoặc chuyển đổi vị trí kho cho lô hàng (Task 1.5)
+  bool assignLocation({
+    required String batchId,
+    required String locationId,
+    required String locationName,
+  }) {
+    final index = _batches.indexWhere((b) => b.id == batchId);
+    if (index == -1) return false;
+    _batches[index] = _batches[index].copyWith(
+      warehouseLocationId: locationId,
+      locationName: locationName,
+    );
+    notifyListeners();
+    return true;
+  }
+
+  /// Điều chỉnh số lượng lô từ kiểm kê (Task 2.5)
+  bool adjustQuantity({
+    required String batchId,
+    required double newQuantity,
+    String? reason,
+  }) {
+    final index = _batches.indexWhere((b) => b.id == batchId);
+    if (index == -1) return false;
+    final clamped = newQuantity.clamp(0.0, double.infinity);
+    final batch = _batches[index];
+    _batches[index] = batch.copyWith(
+      quantity: clamped,
+      status: clamped == 0 ? BatchStatus.lowStock : batch.status,
+    );
+    notifyListeners();
+    return true;
+  }
+
+  /// Báo hỏng và giảm tồn lô hàng (Task 3.4)
+  bool reportDamage({
+    required String batchId,
+    required double damagedQuantity,
+  }) {
+    final index = _batches.indexWhere((b) => b.id == batchId);
+    if (index == -1) return false;
+    final batch = _batches[index];
+    final updated = (batch.quantity - damagedQuantity).clamp(0.0, double.infinity);
+    _batches[index] = batch.copyWith(
+      quantity: updated,
+      status: updated == 0 ? BatchStatus.lowStock : batch.status,
+    );
     notifyListeners();
     return true;
   }

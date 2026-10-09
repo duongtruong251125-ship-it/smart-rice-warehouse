@@ -16,6 +16,9 @@ abstract final class AppTheme {
   static const Color borderColor = Color(0xFFE2E8F0);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF64748B);
+  static const Color dangerColor = Color(0xFFDC2626);
+  static const Color warningColor = Color(0xFFF59E0B);
+  static const Color successColor = Color(0xFF16A34A);
 
   static ThemeData get light {
     final colorScheme = ColorScheme.fromSeed(

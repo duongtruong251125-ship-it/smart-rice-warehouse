@@ -4,8 +4,10 @@ import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/customer_provider.dart';
+import 'package:smart_rice_warehouse/providers/damage_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
+import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
 import 'package:smart_rice_warehouse/widgets/section_title.dart';
 
 class WarehouseHub extends StatelessWidget {
@@ -18,8 +20,42 @@ class WarehouseHub extends StatelessWidget {
     final batchProvider = context.watch<BatchProvider>();
     final supplierCount = context.watch<SupplierProvider>().suppliers.length;
     final customerCount = context.watch<CustomerProvider>().customers.length;
+    final warehouseProvider = context.watch<WarehouseProvider>();
+    final damageProvider = context.watch<DamageProvider>();
 
     final items = <_WarehouseItem>[
+      _WarehouseItem(
+        title: 'Quét mã QR Lô',
+        subtitle: 'Quét tem QR tra cứu nhanh thông tin lô gạo',
+        badge: 'Quét QR',
+        icon: Icons.qr_code_scanner_rounded,
+        color: const Color(0xFF0284C7),
+        route: AppRoutes.qrScanner,
+      ),
+      _WarehouseItem(
+        title: 'Vị trí kho',
+        subtitle: 'Sơ đồ Khu, Kệ, Tầng & chuyển vị trí lưu kho',
+        badge: '${warehouseProvider.locations.length} vị trí',
+        icon: Icons.warehouse_outlined,
+        color: const Color(0xFFD97706),
+        route: AppRoutes.warehouseLocations,
+      ),
+      _WarehouseItem(
+        title: 'Kiểm kê kho',
+        subtitle: 'Kiểm kê định kỳ bằng QR & cân đối số lượng thực tế',
+        badge: 'Kiểm kê',
+        icon: Icons.fact_check_outlined,
+        color: const Color(0xFF059669),
+        route: AppRoutes.inventoryCheck,
+      ),
+      _WarehouseItem(
+        title: 'Báo hỏng gạo',
+        subtitle: 'Ghi nhận rách bao, ẩm mốc & giảm trừ tồn kho',
+        badge: '${damageProvider.reports.length} phiếu',
+        icon: Icons.report_problem_outlined,
+        color: const Color(0xFFDC2626),
+        route: AppRoutes.damageReportList,
+      ),
       _WarehouseItem(
         title: 'Quản lý gạo',
         subtitle: 'Danh mục mặt hàng, đơn vị, giá nhập & giá bán',
@@ -65,7 +101,7 @@ class WarehouseHub extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        const SectionTitle('Danh mục quản lý kho'),
+        const SectionTitle('Nghiệp vụ kho & Quản lý vị trí'),
         const SizedBox(height: 12),
         for (var index = 0; index < items.length; index++) ...[
           Card(
@@ -78,7 +114,7 @@ class WarehouseHub extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: items[index].color.withOpacity(0.12),
+                  color: items[index].color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -104,7 +140,7 @@ class WarehouseHub extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: items[index].color.withOpacity(0.12),
+                      color: items[index].color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
@@ -169,4 +205,3 @@ class _WarehouseItem {
   final Color color;
   final String route;
 }
-

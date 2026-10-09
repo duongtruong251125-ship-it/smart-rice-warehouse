@@ -1,10 +1,13 @@
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/customer_model.dart';
+import 'package:smart_rice_warehouse/models/damage_report_model.dart';
 import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
 import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/models/supplier_model.dart';
 import 'package:smart_rice_warehouse/models/user_model.dart';
+import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
 
 abstract final class MockData {
   static const UserModel adminUser = UserModel(
@@ -145,6 +148,10 @@ abstract final class MockData {
       manufactureDate: DateTime(2026, 7, 28),
       expiryDate: DateTime(2027, 7, 28),
       status: BatchStatus.available,
+      supplierId: 'supplier-lua-viet',
+      supplierName: 'Công ty Lúa Việt',
+      warehouseLocationId: 'loc-a-01',
+      locationName: 'Khu A → Kệ 1 → Tầng 1 (A-K1-T1)',
     ),
     BatchModel(
       id: 'batch-002',
@@ -156,6 +163,10 @@ abstract final class MockData {
       manufactureDate: DateTime(2026, 9, 5),
       expiryDate: DateTime(2027, 9, 5),
       status: BatchStatus.available,
+      supplierId: 'supplier-lua-viet',
+      supplierName: 'Công ty Lúa Việt',
+      warehouseLocationId: 'loc-a-01',
+      locationName: 'Khu A → Kệ 1 → Tầng 1 (A-K1-T1)',
     ),
     BatchModel(
       id: 'batch-003',
@@ -167,6 +178,10 @@ abstract final class MockData {
       manufactureDate: DateTime(2026, 8, 10),
       expiryDate: DateTime(2027, 8, 10),
       status: BatchStatus.available,
+      supplierId: 'supplier-dong-xanh',
+      supplierName: 'Nông sản Đồng Xanh',
+      warehouseLocationId: 'loc-a-02',
+      locationName: 'Khu A → Kệ 1 → Tầng 2 (A-K1-T2)',
     ),
     BatchModel(
       id: 'batch-004',
@@ -178,6 +193,10 @@ abstract final class MockData {
       manufactureDate: DateTime(2026, 8, 14),
       expiryDate: DateTime(2027, 2, 14),
       status: BatchStatus.available,
+      supplierId: 'supplier-dong-xanh',
+      supplierName: 'Nông sản Đồng Xanh',
+      warehouseLocationId: 'loc-b-01',
+      locationName: 'Khu B → Kệ 1 → Tầng 1 (B-K1-T1)',
     ),
     BatchModel(
       id: 'batch-005',
@@ -189,6 +208,10 @@ abstract final class MockData {
       manufactureDate: DateTime(2026, 8, 26),
       expiryDate: DateTime(2027, 8, 26),
       status: BatchStatus.available,
+      supplierId: 'supplier-lua-vang',
+      supplierName: 'Kho Gạo Lúa Vàng',
+      warehouseLocationId: 'loc-b-02',
+      locationName: 'Khu B → Kệ 1 → Tầng 2 (B-K1-T2)',
     ),
     BatchModel(
       id: 'batch-006',
@@ -200,6 +223,10 @@ abstract final class MockData {
       manufactureDate: DateTime(2026, 9, 12),
       expiryDate: DateTime(2027, 3, 12),
       status: BatchStatus.available,
+      supplierId: 'supplier-lua-vang',
+      supplierName: 'Kho Gạo Lúa Vàng',
+      warehouseLocationId: 'loc-a-03',
+      locationName: 'Khu A → Kệ 2 → Tầng 1 (A-K2-T1)',
     ),
     BatchModel(
       id: 'batch-007',
@@ -211,6 +238,10 @@ abstract final class MockData {
       manufactureDate: DateTime.now().subtract(const Duration(days: 35)),
       expiryDate: DateTime.now().add(const Duration(days: 5)),
       status: BatchStatus.available,
+      supplierId: 'supplier-lua-viet',
+      supplierName: 'Công ty Lúa Việt',
+      warehouseLocationId: 'loc-c-01',
+      locationName: 'Khu C → Kệ 1 → Tầng 1 (C-K1-T1)',
     ),
     BatchModel(
       id: 'batch-008',
@@ -222,6 +253,10 @@ abstract final class MockData {
       manufactureDate: DateTime.now().subtract(const Duration(days: 30)),
       expiryDate: DateTime.now().add(const Duration(days: 18)),
       status: BatchStatus.available,
+      supplierId: 'supplier-dong-xanh',
+      supplierName: 'Nông sản Đồng Xanh',
+      warehouseLocationId: 'loc-c-01',
+      locationName: 'Khu C → Kệ 1 → Tầng 1 (C-K1-T1)',
     ),
     BatchModel(
       id: 'batch-009',
@@ -233,6 +268,10 @@ abstract final class MockData {
       manufactureDate: DateTime.now().subtract(const Duration(days: 90)),
       expiryDate: DateTime.now().subtract(const Duration(days: 3)),
       status: BatchStatus.expired,
+      supplierId: 'supplier-lua-vang',
+      supplierName: 'Kho Gạo Lúa Vàng',
+      warehouseLocationId: 'loc-c-01',
+      locationName: 'Khu C → Kệ 1 → Tầng 1 (C-K1-T1)',
     ),
   ];
 
@@ -491,6 +530,130 @@ abstract final class MockData {
       sellingPrice: 31000,
       totalAmount: 2170000,
       note: 'Giao siêu thị mini.',
+    ),
+  ];
+
+  static const List<WarehouseLocationModel> warehouseLocations = <WarehouseLocationModel>[
+    WarehouseLocationModel(
+      id: 'loc-a-01',
+      zone: 'Khu A',
+      rack: 'Kệ 1',
+      shelf: 'Tầng 1',
+      code: 'A-K1-T1',
+      capacity: 2000,
+      currentBatchCount: 2,
+      description: 'Khu A - Kệ gạo ST25 và Jasmine cao cấp',
+    ),
+    WarehouseLocationModel(
+      id: 'loc-a-02',
+      zone: 'Khu A',
+      rack: 'Kệ 1',
+      shelf: 'Tầng 2',
+      code: 'A-K1-T2',
+      capacity: 1500,
+      currentBatchCount: 1,
+      description: 'Khu A - Tầng trên xuất nhanh',
+    ),
+    WarehouseLocationModel(
+      id: 'loc-a-03',
+      zone: 'Khu A',
+      rack: 'Kệ 2',
+      shelf: 'Tầng 1',
+      code: 'A-K2-T1',
+      capacity: 2000,
+      currentBatchCount: 1,
+      description: 'Khu A - Kệ 2 lưu trữ gạo thơm',
+    ),
+    WarehouseLocationModel(
+      id: 'loc-b-01',
+      zone: 'Khu B',
+      rack: 'Kệ 1',
+      shelf: 'Tầng 1',
+      code: 'B-K1-T1',
+      capacity: 1500,
+      currentBatchCount: 1,
+      description: 'Khu B - Kệ gạo Lứt & Nếp',
+    ),
+    WarehouseLocationModel(
+      id: 'loc-b-02',
+      zone: 'Khu B',
+      rack: 'Kệ 1',
+      shelf: 'Tầng 2',
+      code: 'B-K1-T2',
+      capacity: 1000,
+      currentBatchCount: 1,
+      description: 'Khu B - Gạo Nàng Hương',
+    ),
+    WarehouseLocationModel(
+      id: 'loc-c-01',
+      zone: 'Khu C',
+      rack: 'Kệ 1',
+      shelf: 'Tầng 1',
+      code: 'C-K1-T1',
+      capacity: 800,
+      currentBatchCount: 3,
+      description: 'Khu C - Khu cách ly lô cận hạn / lỗi',
+    ),
+  ];
+
+  static final List<InventoryCheckSession> initialInventoryChecks = <InventoryCheckSession>[
+    InventoryCheckSession(
+      id: 'session-001',
+      code: 'KK-202610-001',
+      createdAt: DateTime(2026, 10, 1, 9, 30),
+      completedAt: DateTime(2026, 10, 1, 11, 0),
+      createdBy: 'Admin',
+      status: InventoryCheckStatus.completed,
+      totalItems: 3,
+      totalDifference: -5.0,
+      note: 'Kiểm kê định kỳ đầu tháng 10 Khu A',
+      items: const [
+        InventoryCheckItem(
+          batchId: 'batch-001',
+          batchCode: 'LO-ST25-001',
+          riceName: 'Gạo ST25',
+          expectedQuantity: 805,
+          actualQuantity: 800,
+          difference: -5,
+          reason: InventoryCheckReason.haoHut,
+          note: 'Hao hụt tự nhiên do bảo quản',
+        ),
+        InventoryCheckItem(
+          batchId: 'batch-002',
+          batchCode: 'LO-ST25-002',
+          riceName: 'Gạo ST25',
+          expectedQuantity: 350,
+          actualQuantity: 350,
+          difference: 0,
+          reason: InventoryCheckReason.none,
+        ),
+        InventoryCheckItem(
+          batchId: 'batch-003',
+          batchCode: 'LO-JAS-001',
+          riceName: 'Gạo Jasmine',
+          expectedQuantity: 600,
+          actualQuantity: 600,
+          difference: 0,
+          reason: InventoryCheckReason.none,
+        ),
+      ],
+    ),
+  ];
+
+  static final List<DamageReportModel> initialDamageReports = <DamageReportModel>[
+    DamageReportModel(
+      id: 'damage-001',
+      code: 'BH-202609-001',
+      batchId: 'batch-001',
+      batchCode: 'LO-ST25-001',
+      riceId: 'rice-st25',
+      riceName: 'Gạo ST25',
+      quantity: 15,
+      reason: DamageReason.baoRach,
+      note: 'Rách bao trong quá trình bốc dỡ',
+      createdBy: 'Admin',
+      createdAt: DateTime(2026, 9, 25, 14, 15),
+      status: DamageReportStatus.confirmed,
     ),
   ];
 }
