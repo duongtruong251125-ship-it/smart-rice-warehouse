@@ -46,7 +46,7 @@ class ProfileTab extends StatelessWidget {
                     decoration: InputDecoration(
                       labelText: 'Mật khẩu hiện tại',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      prefixIcon: const Icon(Icons.lock_outline),
+                      prefixIcon: Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility),
                         onPressed: () => setState(() => obscureCurrent = !obscureCurrent),
@@ -59,7 +59,7 @@ class ProfileTab extends StatelessWidget {
                     decoration: InputDecoration(
                       labelText: 'Mật khẩu mới',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      prefixIcon: const Icon(Icons.vpn_key_outlined),
+                      prefixIcon: Icon(Icons.vpn_key_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility),
                         onPressed: () => setState(() => obscureNew = !obscureNew),
@@ -81,7 +81,7 @@ class ProfileTab extends StatelessWidget {
                           const SnackBar(content: Text('Đổi mật khẩu thành công!')),
                         );
                       },
-                      child: const Text('Xác nhận đổi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text('Xác nhận đổi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -123,37 +123,37 @@ class ProfileTab extends StatelessWidget {
                   const Center(child: Text('Cài đặt hệ thống', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                   const SizedBox(height: 20),
                   SwitchListTile(
-                    title: const Text('Chế độ Nền tối (Dark Mode)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                    subtitle: const Text('Giao diện tối giúp dịu mắt hơn', style: TextStyle(fontSize: 12)),
+                    title: Text('Chế độ Nền tối (Dark Mode)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                    subtitle: Text('Giao diện tối giúp dịu mắt hơn', style: TextStyle(fontSize: 12)),
                     value: isDarkMode,
                     activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.5),
                     activeColor: AppTheme.primaryColor,
-                    secondary: const Icon(Icons.dark_mode_rounded),
+                    secondary: Icon(Icons.dark_mode_rounded),
                     onChanged: (val) {
                       setState(() => isDarkMode = val);
                       themeProvider.toggleTheme(val);
                     },
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const Divider(),
+                  Divider(),
                   SwitchListTile(
-                    title: const Text('Thông báo Đẩy (Push)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                    subtitle: const Text('Nhận cảnh báo hạn sử dụng, tồn kho', style: TextStyle(fontSize: 12)),
+                    title: Text('Thông báo Đẩy (Push)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                    subtitle: Text('Nhận cảnh báo hạn sử dụng, tồn kho', style: TextStyle(fontSize: 12)),
                     value: pushNotifications,
                     activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.5),
                     activeColor: AppTheme.primaryColor,
-                    secondary: const Icon(Icons.notifications_active_rounded),
+                    secondary: Icon(Icons.notifications_active_rounded),
                     onChanged: (val) => setState(() => pushNotifications = val),
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const Divider(),
+                  Divider(),
                   SwitchListTile(
-                    title: const Text('Đồng bộ dữ liệu nền', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-                    subtitle: const Text('Tự động tải số liệu mới nhất', style: TextStyle(fontSize: 12)),
+                    title: Text('Đồng bộ dữ liệu nền', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                    subtitle: Text('Tự động tải số liệu mới nhất', style: TextStyle(fontSize: 12)),
                     value: syncData,
                     activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.5),
                     activeColor: AppTheme.primaryColor,
-                    secondary: const Icon(Icons.sync_rounded),
+                    secondary: Icon(Icons.sync_rounded),
                     onChanged: (val) => setState(() => syncData = val),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -172,7 +172,7 @@ class ProfileTab extends StatelessWidget {
                           const SnackBar(content: Text('Đã lưu cấu hình cài đặt!')),
                         );
                       },
-                      child: const Text('Lưu thông tin', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text('Lưu thông tin', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -244,15 +244,15 @@ class ProfileTab extends StatelessWidget {
                           radius: 40,
                           backgroundColor: AppTheme.primaryLight,
                           backgroundImage: selectedImage != null ? FileImage(selectedImage!) : null,
-                          child: selectedImage == null ? const Icon(Icons.person, size: 40, color: AppTheme.primaryColor) : null,
+                          child: selectedImage == null ? Icon(Icons.person, size: 40, color: AppTheme.primaryColor) : null,
                         ),
                         Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: AppTheme.secondaryColor,
                             shape: BoxShape.circle,
                           ),
                           padding: const EdgeInsets.all(8),
-                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                          child: Icon(Icons.camera_alt, color: Colors.white, size: 16),
                         ),
                       ],
                     ),
@@ -262,7 +262,7 @@ class ProfileTab extends StatelessWidget {
                     decoration: InputDecoration(
                       labelText: 'Họ và tên',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      prefixIcon: const Icon(Icons.person_outline),
+                      prefixIcon: Icon(Icons.person_outline),
                     ),
                     controller: TextEditingController(text: user?.name ?? 'Admin Quản Lý'),
                   ),
@@ -271,7 +271,7 @@ class ProfileTab extends StatelessWidget {
                     decoration: InputDecoration(
                       labelText: 'Chức vụ',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      prefixIcon: const Icon(Icons.badge_outlined),
+                      prefixIcon: Icon(Icons.badge_outlined),
                     ),
                     controller: TextEditingController(text: _roleLabel(user?.role)),
                   ),
@@ -290,7 +290,7 @@ class ProfileTab extends StatelessWidget {
                           const SnackBar(content: Text('Đã cập nhật hồ sơ và ảnh đại diện!')),
                         );
                       },
-                      child: const Text('Lưu thông tin', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: Text('Lưu thông tin', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -316,7 +316,7 @@ class ProfileTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: AppTheme.borderColor),
             boxShadow: const [
@@ -341,7 +341,7 @@ class ProfileTab extends StatelessWidget {
                     width: 2.5,
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person_rounded,
                   size: 42,
                   color: AppTheme.primaryColor,
@@ -351,20 +351,20 @@ class ProfileTab extends StatelessWidget {
               Text(
                 user?.name ?? 'Admin Quản Lý',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 user?.email ?? 'admin@smartrice.vn',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 12),
@@ -380,7 +380,7 @@ class ProfileTab extends StatelessWidget {
                 // --- 2. SETTINGS & ACTIONS CARD ---
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppTheme.borderColor),
             boxShadow: const [
@@ -402,7 +402,7 @@ class ProfileTab extends StatelessWidget {
                   subtitle: 'Cập nhật avatar, họ tên',
                   onTap: () => _showPersonalInformation(context, user),
                 ),
-                const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
                 _ProfileOptionTile(
                   icon: Icons.lock_rounded,
                   iconColor: const Color(0xFFD97706),
@@ -410,7 +410,7 @@ class ProfileTab extends StatelessWidget {
                   subtitle: 'Thay đổi mật khẩu an toàn',
                   onTap: () => _showPasswordModal(context),
                 ),
-                const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
                 _ProfileOptionTile(
                   icon: Icons.tune_rounded,
                   iconColor: AppTheme.accentTeal,
@@ -418,7 +418,7 @@ class ProfileTab extends StatelessWidget {
                   subtitle: 'Giao diện & Thông báo',
                   onTap: () => _showSettingsModal(context),
                 ),
-                const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
                 _ProfileOptionTile(
                   icon: Icons.logout_rounded,
                   iconColor: const Color(0xFFDC2626),
@@ -438,7 +438,7 @@ class ProfileTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppTheme.borderColor),
           ),
@@ -451,14 +451,14 @@ class ProfileTab extends StatelessWidget {
                   color: AppTheme.primaryColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.verified_user_rounded,
                   size: 18,
                   color: AppTheme.primaryColor,
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -467,7 +467,7 @@ class ProfileTab extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     SizedBox(height: 2),
@@ -475,7 +475,7 @@ class ProfileTab extends StatelessWidget {
                       'Hệ thống Quản lý & Giám sát Kho lúa gạo hiện đại',
                       style: TextStyle(
                         fontSize: 11,
-                        color: AppTheme.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -532,9 +532,9 @@ class _ProfileOptionTile extends StatelessWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: AppTheme.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         trailing: Container(
@@ -545,10 +545,10 @@ class _ProfileOptionTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppTheme.borderColor),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.chevron_right_rounded,
             size: 18,
-            color: AppTheme.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         onTap: onTap,
@@ -570,19 +570,19 @@ class _InformationRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 3),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

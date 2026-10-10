@@ -191,7 +191,7 @@ class _HomeTabState extends State<HomeTab> {
                             const SizedBox(height: 4),
                             Text(
                               '${totalTons.toStringAsFixed(1)} Tấn',
-                              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
+                              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.onSurface),
                             ),
                           ],
                         ),
@@ -602,7 +602,7 @@ class _ModernQuickActionsGrid extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
-              border: Border.all(color: const Color(0xFFF1F5F9)),
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -616,7 +616,7 @@ class _ModernQuickActionsGrid extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   item.label,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF334155)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
