@@ -14,9 +14,162 @@ import 'package:smart_rice_warehouse/widgets/status_chip.dart';
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
 
-  void _showPasswordMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Chức năng đang được phát triển')),
+    void _showPasswordModal(BuildContext context) {
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20, right: 20, top: 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Đổi mật khẩu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  TextField(
+                    obscureText: obscureCurrent,
+                    decoration: InputDecoration(
+                      labelText: 'Mật khẩu hiện tại',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setState(() => obscureCurrent = !obscureCurrent),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    obscureText: obscureNew,
+                    decoration: InputDecoration(
+                      labelText: 'Mật khẩu mới',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      prefixIcon: const Icon(Icons.vpn_key_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility),
+                        onPressed: () => setState(() => obscureNew = !obscureNew),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đổi mật khẩu thành công!')),
+                        );
+                      },
+                      child: const Text('Xác nhận đổi', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showSettingsModal(BuildContext context) {
+    bool isDarkMode = false;
+    bool pushNotifications = true;
+    bool syncData = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Cài đặt hệ thống', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 20),
+                  SwitchListTile(
+                    title: const Text('Chế độ Nền tối (Dark Mode)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                    subtitle: const Text('Giao diện tối giúp dịu mắt hơn', style: TextStyle(fontSize: 12)),
+                    value: isDarkMode,
+                    activeColor: AppTheme.primaryColor,
+                    secondary: const Icon(Icons.dark_mode_rounded),
+                    onChanged: (val) => setState(() => isDarkMode = val),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  const Divider(),
+                  SwitchListTile(
+                    title: const Text('Thông báo Đẩy (Push)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                    subtitle: const Text('Nhận cảnh báo hạn sử dụng, tồn kho', style: TextStyle(fontSize: 12)),
+                    value: pushNotifications,
+                    activeColor: AppTheme.primaryColor,
+                    secondary: const Icon(Icons.notifications_active_rounded),
+                    onChanged: (val) => setState(() => pushNotifications = val),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  const Divider(),
+                  SwitchListTile(
+                    title: const Text('Đồng bộ dữ liệu nền', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                    subtitle: const Text('Tự động tải số liệu mới nhất', style: TextStyle(fontSize: 12)),
+                    value: syncData,
+                    activeColor: AppTheme.primaryColor,
+                    secondary: const Icon(Icons.sync_rounded),
+                    onChanged: (val) => setState(() => syncData = val),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(color: AppTheme.primaryColor),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Đã lưu cấu hình cài đặt')),
+                        );
+                      },
+                      child: const Text('Lưu & Đóng', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -140,86 +293,7 @@ class ProfileTab extends StatelessWidget {
 
 
 
-  void _showSettings(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Cài đặt hệ thống',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.borderColor),
-                ),
-                child: const Column(
-                  children: [
-                    ListTile(
-                      leading: Icon(Icons.language_rounded,
-                          color: AppTheme.primaryColor),
-                      title: Text('Ngôn ngữ hiển thị',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
-                      trailing: Text(
-                        'Tiếng Việt',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textSecondary),
-                      ),
-                    ),
-                    Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
-                    ListTile(
-                      leading: Icon(Icons.palette_outlined,
-                          color: AppTheme.accentTeal),
-                      title: Text('Chế độ giao diện',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
-                      trailing: Text(
-                        'Sáng (AgriWarehouse)',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textSecondary),
-                      ),
-                    ),
-                    Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
-                    ListTile(
-                      leading: Icon(Icons.info_outline_rounded,
-                          color: AppTheme.accentBlue),
-                      title: Text('Phiên bản Build',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
-                      trailing: Text(
-                        'v2.4.0 (Enterprise)',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textSecondary),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
+    @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
 
@@ -291,7 +365,7 @@ class ProfileTab extends StatelessWidget {
 
         const SizedBox(height: 20),
 
-        // --- 2. SETTINGS & ACTIONS CARD ---
+                // --- 2. SETTINGS & ACTIONS CARD ---
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -310,32 +384,29 @@ class ProfileTab extends StatelessWidget {
             child: Column(
               children: [
                 _ProfileOptionTile(
-                  icon: Icons.badge_outlined,
+                  icon: Icons.person_rounded,
                   iconColor: AppTheme.primaryColor,
                   title: 'Thông tin cá nhân',
-                  subtitle: 'Xem hồ sơ nhân sự & chức vụ',
+                  subtitle: 'Cập nhật avatar, họ tên',
                   onTap: () => _showPersonalInformation(context, user),
                 ),
-                const Divider(
-                    height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
                 _ProfileOptionTile(
-                  icon: Icons.lock_outline_rounded,
-                  iconColor: AppTheme.secondaryColor,
-                  title: 'Đổi mật khẩu bảo mật',
-                  subtitle: 'Cập nhật khóa truy cập tài khoản',
-                  onTap: () => _showPasswordMessage(context),
+                  icon: Icons.lock_rounded,
+                  iconColor: const Color(0xFFD97706),
+                  title: 'Đổi mật khẩu',
+                  subtitle: 'Thay đổi mật khẩu an toàn',
+                  onTap: () => _showPasswordModal(context),
                 ),
-                const Divider(
-                    height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
                 _ProfileOptionTile(
                   icon: Icons.tune_rounded,
                   iconColor: AppTheme.accentTeal,
                   title: 'Cài đặt hệ thống',
-                  subtitle: 'Ngôn ngữ, giao diện & cấu hình kho',
-                  onTap: () => _showSettings(context),
+                  subtitle: 'Giao diện & Thông báo',
+                  onTap: () => _showSettingsModal(context),
                 ),
-                const Divider(
-                    height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
                 _ProfileOptionTile(
                   icon: Icons.logout_rounded,
                   iconColor: const Color(0xFFDC2626),
@@ -349,7 +420,7 @@ class ProfileTab extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 20),
+
 
         // --- 3. SYSTEM FOOTER BRANDING ---
         Container(
