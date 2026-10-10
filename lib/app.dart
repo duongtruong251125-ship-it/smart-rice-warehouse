@@ -74,15 +74,13 @@ class SmartRiceWarehouseApp extends StatelessWidget {
             ),
           ),
           ChangeNotifierProvider(
-            create: (context) => ImportProvider(
-              context.read<BatchProvider>(), database,
+            create: (context) => ImportProvider(context.read<BatchProvider>(), database: database,
               initial: snapshot.importReceipts,
               onPersist: database?.saveImportReceipts,
             ),
           ),
           ChangeNotifierProvider(
-            create: (context) => ExportProvider(
-              context.read<BatchProvider>(), database,
+            create: (context) => ExportProvider(context.read<BatchProvider>(), database: database,
               initial: snapshot.exportReceipts,
               onPersist: database?.saveExportReceipts,
             ),

@@ -9,8 +9,8 @@ import 'package:smart_rice_warehouse/providers/import_provider.dart';
 void main() {
   test('import increases stock and export decreases stock safely', () {
     final batchProvider = BatchProvider();
-    final importProvider = ImportProvider(batchProvider, null);
-    final exportProvider = ExportProvider(batchProvider, null);
+    final importProvider = ImportProvider(batchProvider);
+    final exportProvider = ExportProvider(batchProvider);
     const riceId = 'rice-st25';
     const riceName = 'Gạo ST25';
     final now = DateTime.now();

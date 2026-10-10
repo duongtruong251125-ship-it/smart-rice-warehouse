@@ -15,8 +15,8 @@ import 'package:smart_rice_warehouse/screens/profile/profile_tab.dart';
 void main() {
   test('report totals and inventory value react to import and export', () {
     final batchProvider = BatchProvider();
-    final importProvider = ImportProvider(batchProvider, null);
-    final exportProvider = ExportProvider(batchProvider, null);
+    final importProvider = ImportProvider(batchProvider);
+    final exportProvider = ExportProvider(batchProvider);
     final riceProvider = RiceProvider();
     final rice = riceProvider.findById('rice-st25')!;
     final now = DateTime.now();

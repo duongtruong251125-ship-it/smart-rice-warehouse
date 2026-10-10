@@ -8,7 +8,8 @@ import 'package:smart_rice_warehouse/services/fefo_service.dart';
 
 class ExportProvider extends ChangeNotifier {
   ExportProvider(
-    this._batchProvider, this._database, {
+    this._batchProvider, {
+    this.database,
     List<ExportReceiptModel>? initial,
     this.onPersist,
   }) : _receipts = List<ExportReceiptModel>.from(
@@ -17,7 +18,7 @@ class ExportProvider extends ChangeNotifier {
 
   final List<ExportReceiptModel> _receipts;
   BatchProvider _batchProvider;
-  final AppDatabase? _database;
+  final AppDatabase? database;
   final ValueChanged<List<ExportReceiptModel>>? onPersist;
   final FefoService _fefoService = const FefoService();
 
