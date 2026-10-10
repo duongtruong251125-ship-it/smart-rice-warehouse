@@ -96,7 +96,7 @@ class _HomeTabState extends State<HomeTab> {
           // HEADER XINH ĐẸP CÓ GRADIENT
           Container(
             padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 30),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
                 begin: Alignment.topLeft,
@@ -121,14 +121,14 @@ class _HomeTabState extends State<HomeTab> {
                             'Xin chào, $userName 👋',
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             color: Colors.white70,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'Sẵn sàng quản lý kho!',
                           style: TextStyle(
                             fontSize: 22,
@@ -144,7 +144,7 @@ class _HomeTabState extends State<HomeTab> {
                       onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
                       child: Container(
                         padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Colors.white24,
                           shape: BoxShape.circle,
                         ),
@@ -161,8 +161,7 @@ class _HomeTabState extends State<HomeTab> {
                 // THẺ TỔNG QUAN TỒN KHO NỔI TRÊN NỀN GRADIENT
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
+                  decoration: BoxDecoration(color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
@@ -180,14 +179,14 @@ class _HomeTabState extends State<HomeTab> {
                           color: const Color(0xFFCCFBF1),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.inventory_2_rounded, color: Color(0xFF0F766E), size: 32),
+                        child: Icon(Icons.inventory_2_rounded, color: Color(0xFF0F766E), size: 32),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Tổng Tồn Kho Hiện Tại', style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w600)),
+                            Text('Tổng Tồn Kho Hiện Tại', style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w600)),
                             const SizedBox(height: 4),
                             Text(
                               '${totalTons.toStringAsFixed(1)} Tấn',
@@ -211,9 +210,9 @@ class _HomeTabState extends State<HomeTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // SECTION: CHỨC NĂNG NHANH (QUICK ACTIONS)
-                const Text(
+                Text(
                   'Thao tác nhanh',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                 ),
                 const SizedBox(height: 16),
                 const _ModernQuickActionsGrid().animate().fade(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1),
@@ -225,13 +224,13 @@ class _HomeTabState extends State<HomeTab> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Cần chú ý',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pushNamed(context, AppRoutes.alerts),
-                        child: const Text('Xem tất cả', style: TextStyle(color: Color(0xFF0F766E), fontWeight: FontWeight.bold)),
+                        child: Text('Xem tất cả', style: TextStyle(color: Color(0xFF0F766E), fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -245,7 +244,7 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 36).animate(onPlay: (controller) => controller.repeat()).shakeX(duration: 1.seconds, amount: 2),
+                        Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 36).animate(onPlay: (controller) => controller.repeat()).shakeX(duration: 1.seconds, amount: 2),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
@@ -253,10 +252,10 @@ class _HomeTabState extends State<HomeTab> {
                             children: [
                               Text(
                                 'Có ${alertProvider.alerts.length} cảnh báo về kho',
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF991B1B), fontSize: 15),
+                                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF991B1B), fontSize: 15),
                               ),
                               const SizedBox(height: 4),
-                              const Text(
+                              Text(
                                 'Gạo sắp hết hạn hoặc tồn kho dưới mức tối thiểu. Hãy kiểm tra ngay!',
                                 style: TextStyle(color: Color(0xFFB91C1C), fontSize: 13),
                               ),
@@ -270,9 +269,9 @@ class _HomeTabState extends State<HomeTab> {
                 ],
 
                 // SECTION: HOẠT ĐỘNG GẦN ĐÂY
-                const Text(
+                Text(
                   'Hoạt động gần đây',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
                 ),
                 const SizedBox(height: 16),
                 _RecentActivityList(activities: recentActivities).animate().fade(duration: 600.ms, delay: 400.ms).slideY(begin: 0.1),
@@ -311,7 +310,7 @@ class _RecentActivityList extends StatelessWidget {
         child: const Center(
           child: Text(
             'Chưa có giao dịch nhập xuất gần đây',
-            style: TextStyle(color: AppTheme.textSecondary),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ),
       );
@@ -394,10 +393,10 @@ class _MiniActivityCard extends StatelessWidget {
                         ),
                         child: Text(
                           activity.code,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.textSecondary,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -409,10 +408,10 @@ class _MiniActivityCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   activity.riceName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -436,10 +435,10 @@ class _MiniActivityCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 _formatDate(activity.date),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -538,7 +537,7 @@ class _ModernQuickActionsGrid extends StatelessWidget {
   static const _actions = [
     _QuickActionItem(label: 'Nhập kho', icon: Icons.south_west_rounded, color: Color(0xFF0F766E), bgColor: Color(0xFFCCFBF1), route: AppRoutes.addImport),
     _QuickActionItem(label: 'Xuất kho', icon: Icons.north_east_rounded, color: Color(0xFFD97706), bgColor: Color(0xFFFEF3C7), route: AppRoutes.addExport),
-    _QuickActionItem(label: 'Quét QR', icon: Icons.qr_code_scanner_rounded, color: Color(0xFF0F172A), bgColor: Color(0xFFE2E8F0), route: AppRoutes.qrScanner),
+    _QuickActionItem(label: 'Quét QR', icon: Icons.qr_code_scanner_rounded, color: Theme.of(context).colorScheme.onSurface, bgColor: Color(0xFFE2E8F0), route: AppRoutes.qrScanner),
     _QuickActionItem(label: 'Kiểm kê', icon: Icons.fact_check_rounded, color: Color(0xFF2563EB), bgColor: Color(0xFFDBEAFE), route: AppRoutes.inventoryCheck),
     _QuickActionItem(label: 'Thống kê', icon: Icons.bar_chart_rounded, color: Color(0xFF9333EA), bgColor: Color(0xFFF3E8FF), route: AppRoutes.reports),
     _QuickActionItem(label: 'Mở rộng', icon: Icons.widgets_rounded, color: Color(0xFFEC4899), bgColor: Color(0xFFFCE7F3), route: AppRoutes.home),
@@ -573,18 +572,18 @@ class _ModernQuickActionsGrid extends StatelessWidget {
                         child: Text('Công cụ mở rộng', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                       ListTile(
-                        leading: const Icon(Icons.person, color: Color(0xFF0F766E)),
-                        title: const Text('Tài khoản cá nhân'),
+                        leading: Icon(Icons.person, color: Color(0xFF0F766E)),
+                        title: Text('Tài khoản cá nhân'),
                         onTap: () { Navigator.pop(context); Navigator.pushNamed(context, AppRoutes.profile); },
                       ),
                       ListTile(
-                        leading: const Icon(Icons.category_rounded, color: Color(0xFF9333EA)),
-                        title: const Text('Quản lý Lô hàng'),
+                        leading: Icon(Icons.category_rounded, color: Color(0xFF9333EA)),
+                        title: Text('Quản lý Lô hàng'),
                         onTap: () { Navigator.pop(context); Navigator.pushNamed(context, AppRoutes.batches); },
                       ),
                       ListTile(
-                        leading: const Icon(Icons.local_shipping_rounded, color: Color(0xFFD97706)),
-                        title: const Text('Nhà cung cấp'),
+                        leading: Icon(Icons.local_shipping_rounded, color: Color(0xFFD97706)),
+                        title: Text('Nhà cung cấp'),
                         onTap: () { Navigator.pop(context); Navigator.pushNamed(context, AppRoutes.suppliers); },
                       ),
                       const SizedBox(height: 20),
@@ -598,8 +597,7 @@ class _ModernQuickActionsGrid extends StatelessWidget {
           },
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
               border: Border.all(color: Theme.of(context).dividerColor),
