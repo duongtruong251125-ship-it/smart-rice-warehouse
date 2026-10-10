@@ -1,5 +1,6 @@
 import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
+import 'package:smart_rice_warehouse/models/damage_report_model.dart';
 
 class FefoAllocationResult {
   const FefoAllocationResult({
@@ -51,13 +52,12 @@ class FefoAllocationResult {
 class FefoService {
   const FefoService();
 
-  /// Phân bổ số lượng xuất kho theo nguyên tắc FEFO (First Expired, First Out)
-  /// Trả về kết quả phân bổ trước khi cập nhật dữ liệu.
   FefoAllocationResult allocate({
     required List<BatchModel> batches,
     required String riceId,
     required double quantity,
     DateTime? currentDate,
+    List<DamageReportModel> damageReports = const [],
   }) {
     if (quantity <= 0) {
       return FefoAllocationResult.failure(
@@ -69,60 +69,59 @@ class FefoService {
     final now = currentDate ?? DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    // 1. Lọc các lô hợp lệ của loại gạo: quantity > 0, chưa hết hạn, status != expired
+    final damageMap = <String, double>{};
+    for (final report in damageReports) {
+      damageMap[report.batchCode] = (damageMap[report.batchCode] ?? 0) + report.quantity;
+    }
+
     final validBatches = batches.where((batch) {
       if (batch.riceId != riceId) return false;
-      if (batch.quantity <= 0) return false;
       if (batch.status == BatchStatus.expired) return false;
 
-      final expiry = DateTime(
-        batch.expiryDate.year,
-        batch.expiryDate.month,
-        batch.expiryDate.day,
-      );
+      final damaged = damageMap[batch.code] ?? 0;
+      final available = batch.quantity - damaged;
+      if (available <= 0) return false;
+
+      final expiry = DateTime(batch.expiryDate.year, batch.expiryDate.month, batch.expiryDate.day);
       return !expiry.isBefore(today);
     }).toList();
 
     if (validBatches.isEmpty) {
       return FefoAllocationResult.failure(
         requestedQuantity: quantity,
-        errorMessage: 'Không có lô hàng hợp lệ hoặc còn hạn để xuất',
+        errorMessage: 'Không có lô hàng hợp lệ hoặc đã bị lập biên bản hỏng.',
       );
     }
 
-    // 2. Sắp xếp theo hạn sử dụng (expiryDate) tăng dần (FEFO)
-    // Nếu cùng hạn sử dụng, ưu tiên lô nhập trước (importDate tăng dần)
     validBatches.sort((a, b) {
       final expiryComp = a.expiryDate.compareTo(b.expiryDate);
       if (expiryComp != 0) return expiryComp;
       return a.importDate.compareTo(b.importDate);
     });
 
-    // 3. Kiểm tra tổng số lượng khả dụng
-    final totalAvailable = validBatches.fold(
-      0.0,
-      (sum, batch) => sum + batch.quantity,
-    );
+    final totalAvailable = validBatches.fold(0.0, (sum, batch) {
+      final damaged = damageMap[batch.code] ?? 0;
+      return sum + (batch.quantity - damaged);
+    });
 
     const tolerance = 0.000000001;
     if (totalAvailable + tolerance < quantity) {
       return FefoAllocationResult.failure(
         requestedQuantity: quantity,
-        errorMessage:
-            'Tồn kho khả dụng không đủ (Cần: $quantity, Khả dụng: $totalAvailable)',
+        errorMessage: 'Tồn kho khả dụng không đủ (Cần: $quantity, Khả dụng: $totalAvailable)',
       );
     }
 
-    // 4. Phân bổ quantity theo thứ tự FEFO
     var remainingNeeded = quantity;
     final allocations = <BatchAllocation>[];
 
     for (final batch in validBatches) {
       if (remainingNeeded <= tolerance) break;
+      
+      final damaged = damageMap[batch.code] ?? 0;
+      final available = batch.quantity - damaged;
 
-      final take =
-          batch.quantity < remainingNeeded ? batch.quantity : remainingNeeded;
-      final remainingInBatch = batch.quantity - take;
+      final take = available < remainingNeeded ? available : remainingNeeded;
 
       allocations.add(
         BatchAllocation(
@@ -130,7 +129,7 @@ class FefoService {
           batchCode: batch.code,
           allocatedQuantity: take,
           batchInitialQuantity: batch.quantity,
-          batchRemainingQuantity: remainingInBatch,
+          batchRemainingQuantity: batch.quantity - take,
           expiryDate: batch.expiryDate,
         ),
       );

@@ -112,10 +112,10 @@ void main() {
           ChangeNotifierProvider(create: (_) => CustomerProvider()),
           ChangeNotifierProvider.value(value: batchProvider),
           ChangeNotifierProvider(
-            create: (_) => ImportProvider(batchProvider),
+            create: (_) => ImportProvider(batchProvider, null),
           ),
           ChangeNotifierProvider(
-            create: (_) => ExportProvider(batchProvider),
+            create: (_) => ExportProvider(batchProvider, null),
           ),
         ],
         child: SmartRiceWarehouseApp(settings: SettingsService()),

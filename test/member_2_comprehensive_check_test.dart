@@ -260,8 +260,8 @@ void main() {
     // ----------------------------------------------------
     testWidgets('Mục 5: Báo cáo hiển thị thẻ tổng quan, biểu đồ cột tuần và 2 bảng 5 cột', (tester) async {
       final batchProvider = BatchProvider();
-      final importProvider = ImportProvider(batchProvider);
-      final exportProvider = ExportProvider(batchProvider);
+      final importProvider = ImportProvider(batchProvider, null);
+      final exportProvider = ExportProvider(batchProvider, null);
       final riceProvider = RiceProvider();
 
       await tester.pumpWidget(
@@ -346,7 +346,7 @@ void main() {
 
       // Test nghiệp vụ tạo phiếu nhập cho mã lô có sẵn: cộng dồn số lượng
       final batchProvider = BatchProvider();
-      final importProvider = ImportProvider(batchProvider);
+      final importProvider = ImportProvider(batchProvider, null);
 
       final initialStock = batchProvider.totalStockForRice('rice-st25');
       final existingBatch = batchProvider.batches.firstWhere((b) => b.riceId == 'rice-st25');

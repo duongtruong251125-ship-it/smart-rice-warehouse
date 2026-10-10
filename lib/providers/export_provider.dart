@@ -2,12 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
 import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/data/app_database.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/services/fefo_service.dart';
 
 class ExportProvider extends ChangeNotifier {
   ExportProvider(
-    this._batchProvider, {
+    this._batchProvider, this._database, {
     List<ExportReceiptModel>? initial,
     this.onPersist,
   }) : _receipts = List<ExportReceiptModel>.from(
@@ -16,6 +17,7 @@ class ExportProvider extends ChangeNotifier {
 
   final List<ExportReceiptModel> _receipts;
   BatchProvider _batchProvider;
+  final AppDatabase? _database;
   final ValueChanged<List<ExportReceiptModel>>? onPersist;
   final FefoService _fefoService = const FefoService();
 

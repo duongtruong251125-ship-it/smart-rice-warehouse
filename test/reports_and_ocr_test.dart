@@ -14,8 +14,8 @@ void main() {
   group('Week 3 - Task 3.1 & 3.5 Reports and Validation Tests', () {
     test('Total import and export for month are calculated correctly from real data', () {
       final batchProvider = BatchProvider();
-      final importProvider = ImportProvider(batchProvider);
-      final exportProvider = ExportProvider(batchProvider);
+      final importProvider = ImportProvider(batchProvider, null);
+      final exportProvider = ExportProvider(batchProvider, null);
 
       final aug2026 = DateTime(2026, 8, 15);
       final sept2026 = DateTime(2026, 9, 15);
@@ -156,8 +156,8 @@ void main() {
   group('Week 3 - Task 3.6 Full End-to-End Business Flow Test', () {
     test('Import -> Batch Created -> Export with FEFO -> Inventory Updated -> Alerts Updated', () {
       final batchProvider = BatchProvider();
-      final importProvider = ImportProvider(batchProvider);
-      final exportProvider = ExportProvider(batchProvider);
+      final importProvider = ImportProvider(batchProvider, null);
+      final exportProvider = ExportProvider(batchProvider, null);
 
       final now = DateTime(2026, 10, 15);
       const testRiceId = 'rice-st25';

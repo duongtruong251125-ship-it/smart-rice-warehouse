@@ -2,11 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/data/app_database.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 
 class ImportProvider extends ChangeNotifier {
   ImportProvider(
-    this._batchProvider, {
+    this._batchProvider, this._database, {
     List<ImportReceiptModel>? initial,
     this.onPersist,
   }) : _receipts = List<ImportReceiptModel>.from(
@@ -15,6 +16,7 @@ class ImportProvider extends ChangeNotifier {
 
   final List<ImportReceiptModel> _receipts;
   final BatchProvider _batchProvider;
+  final AppDatabase? _database;
   final ValueChanged<List<ImportReceiptModel>>? onPersist;
 
   List<ImportReceiptModel> get receipts =>

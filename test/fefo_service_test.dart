@@ -279,7 +279,7 @@ void main() {
 
     test('9. Export xong -> total inventory bằng tổng quantity batch còn lại', () {
       final batchProvider = BatchProvider();
-      final exportProvider = ExportProvider(batchProvider);
+      final exportProvider = ExportProvider(batchProvider, null);
 
       const riceId = 'rice-st25';
       final initialStock = batchProvider.totalStockForRice(riceId);
