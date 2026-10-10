@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
@@ -188,53 +189,40 @@ class _MainScreenState extends State<MainScreen> {
         children: _tabs,
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppTheme.cardColor,
-          border: Border(
-            top: BorderSide(color: AppTheme.borderColor, width: 1),
-          ),
+        decoration: BoxDecoration(
+          color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Color.fromRGBO(0, 0, 0, 0.03),
-              blurRadius: 10,
-              offset: Offset(0, -2),
-            ),
+              blurRadius: 20,
+              color: Colors.black.withValues(alpha: 0.05),
+              offset: const Offset(0, -5),
+            )
           ],
         ),
-        child: NavigationBar(
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.storefront_outlined),
-              selectedIcon: Icon(Icons.storefront_rounded),
-              label: 'Trang chủ',
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10),
+            child: GNav(
+              rippleColor: Colors.grey[200]!,
+              hoverColor: Colors.grey[100]!,
+              gap: 6,
+              activeColor: const Color(0xFF0F766E),
+              iconSize: 24,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              duration: const Duration(milliseconds: 400),
+              tabBackgroundColor: const Color(0xFFCCFBF1),
+              color: Colors.grey[500]!,
+              tabs: const [
+                GButton(icon: Icons.home_rounded, text: 'Trang chủ'),
+                GButton(icon: Icons.inventory_2_rounded, text: 'Kho hàng'),
+                GButton(icon: Icons.sync_alt_rounded, text: 'Giao dịch'),
+                GButton(icon: Icons.bar_chart_rounded, text: 'Báo cáo'),
+                GButton(icon: Icons.person_rounded, text: 'Tài khoản'),
+              ],
+              selectedIndex: _selectedIndex,
+              onTabChange: (index) => setState(() => _selectedIndex = index),
             ),
-            NavigationDestination(
-              icon: Icon(Icons.inventory_2_outlined),
-              selectedIcon: Icon(Icons.inventory_2_rounded),
-              label: 'Kho hàng',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.receipt_long_outlined),
-              selectedIcon: Icon(Icons.receipt_long_rounded),
-              label: 'Nhập/Xuất',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.insert_chart_outlined_rounded),
-              selectedIcon: Icon(Icons.insert_chart_rounded),
-              label: 'Báo cáo',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline_rounded),
-              selectedIcon: Icon(Icons.person_rounded),
-              label: 'Tài khoản',
-            ),
-          ],
+          ),
         ),
       ),
     );
