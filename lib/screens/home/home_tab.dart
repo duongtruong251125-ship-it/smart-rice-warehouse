@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
@@ -210,7 +211,7 @@ class _HomeTabState extends State<HomeTab> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
                 ),
                 const SizedBox(height: 16),
-                const _ModernQuickActionsGrid(),
+                const _ModernQuickActionsGrid().animate().fade(duration: 600.ms, delay: 200.ms).slideY(begin: 0.1),
                 
                 const SizedBox(height: 32),
                 
@@ -239,7 +240,7 @@ class _HomeTabState extends State<HomeTab> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 36),
+                        const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 36).animate(onPlay: (controller) => controller.repeat()).shakeX(duration: 1.seconds, amount: 2),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
@@ -269,7 +270,7 @@ class _HomeTabState extends State<HomeTab> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
                 ),
                 const SizedBox(height: 16),
-                _RecentActivityList(activities: recentActivities),
+                _RecentActivityList(activities: recentActivities).animate().fade(duration: 600.ms, delay: 400.ms).slideY(begin: 0.1),
                 const SizedBox(height: 40),
               ],
             ),
