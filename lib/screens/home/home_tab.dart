@@ -3,16 +3,48 @@ import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
+import 'package:smart_rice_warehouse/providers/alert_provider.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/export_provider.dart';
+import 'package:smart_rice_warehouse/providers/forecast_provider.dart';
 import 'package:smart_rice_warehouse/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/widgets/dashboard_card.dart';
 import 'package:smart_rice_warehouse/widgets/section_title.dart';
 import 'package:smart_rice_warehouse/widgets/status_chip.dart';
 
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncMetrics();
+    });
+  }
+
+  void _syncMetrics() {
+    if (!mounted) return;
+    final riceProvider = context.read<RiceProvider>();
+    final batchProvider = context.read<BatchProvider>();
+    final exportProvider = context.read<ExportProvider>();
+
+    context.read<AlertProvider>().scanAlerts(
+          rices: riceProvider.rices,
+          batches: batchProvider.batches,
+        );
+    context.read<ForecastProvider>().refreshForecasts(
+          rices: riceProvider.rices,
+          exportReceipts: exportProvider.receipts,
+          batchProvider: batchProvider,
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +52,9 @@ class HomeTab extends StatelessWidget {
     final batchProvider = context.watch<BatchProvider>();
     final importProvider = context.watch<ImportProvider>();
     final exportProvider = context.watch<ExportProvider>();
+    final alertProvider = context.watch<AlertProvider>();
+    final forecastProvider = context.watch<ForecastProvider>();
+
     final today = DateTime.now();
     final recentActivities = _getRecentActivities(
       rices: riceProvider.rices,
@@ -34,6 +69,11 @@ class HomeTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _DashboardHeader(),
+          const SizedBox(height: 12),
+          _SmartWarehouseBanner(
+            alertProvider: alertProvider,
+            forecastProvider: forecastProvider,
+          ),
           const SizedBox(height: 12),
           GridView.count(
             crossAxisCount: isNarrow ? 1 : 2,
@@ -85,6 +125,165 @@ class HomeTab extends StatelessWidget {
           const SizedBox(height: 10),
           _RecentActivityList(activities: recentActivities),
         ],
+      ),
+    );
+  }
+}
+
+class _SmartWarehouseBanner extends StatelessWidget {
+  const _SmartWarehouseBanner({
+    required this.alertProvider,
+    required this.forecastProvider,
+  });
+
+  final AlertProvider alertProvider;
+  final ForecastProvider forecastProvider;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasCritical = alertProvider.criticalCount > 0;
+    final hasWarning =
+        alertProvider.lowStockCount > 0 || alertProvider.expiringCount > 0;
+
+    final Color cardBg;
+    final Color borderColor;
+    final Color accentColor;
+    final IconData icon;
+    final String title;
+    final String subtitle;
+
+    if (hasCritical) {
+      cardBg = const Color(0xFFFEF2F2);
+      borderColor = const Color(0xFFFECACA);
+      accentColor = const Color(0xFFDC2626);
+      icon = Icons.error_outline_rounded;
+      final topAlert = alertProvider.criticalAlerts.first;
+      title = 'Cảnh báo khẩn: ${topAlert.title}';
+      subtitle = topAlert.message;
+    } else if (hasWarning) {
+      cardBg = const Color(0xFFFFFBEB);
+      borderColor = const Color(0xFFFDE68A);
+      accentColor = const Color(0xFFD97706);
+      icon = Icons.warning_amber_rounded;
+      title =
+          'Chú ý kho: ${alertProvider.lowStockCount} loại gạo tồn thấp, ${alertProvider.expiringCount} lô cận hạn';
+      subtitle = 'Kiểm tra ngay để ưu tiên xuất FEFO hoặc chuẩn bị đặt hàng';
+    } else {
+      cardBg = const Color(0xFFF0FDF4);
+      borderColor = const Color(0xFFBBF7D0);
+      accentColor = const Color(0xFF16A34A);
+      icon = Icons.check_circle_outline_rounded;
+      title = 'Kho hàng đang vận hành an toàn';
+      subtitle = 'Mọi mặt hàng đều đạt định mức tồn kho và hạn sử dụng đảm bảo';
+    }
+
+    return Card(
+      color: cardBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: borderColor, width: 1.2),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => Navigator.of(context).pushNamed(
+          hasCritical || hasWarning ? AppRoutes.alerts : AppRoutes.forecast,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, color: accentColor, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: accentColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: accentColor,
+                    size: 18,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontSize: 12,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  _pillBadge(
+                    label: '${alertProvider.lowStockCount} tồn thấp',
+                    isAlert: alertProvider.lowStockCount > 0,
+                    context: context,
+                    route: AppRoutes.alerts,
+                  ),
+                  _pillBadge(
+                    label: '${alertProvider.expiringCount} lô cận hạn',
+                    isAlert: alertProvider.expiringCount > 0,
+                    context: context,
+                    route: AppRoutes.alerts,
+                  ),
+                  _pillBadge(
+                    label: '${forecastProvider.reorderSoonCount} cần nhập gấp',
+                    isAlert: forecastProvider.reorderSoonCount > 0,
+                    context: context,
+                    route: AppRoutes.forecast,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _pillBadge({
+    required String label,
+    required bool isAlert,
+    required BuildContext context,
+    required String route,
+  }) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pushNamed(route),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: isAlert ? const Color(0xFFFEE2E2) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isAlert ? const Color(0xFFFCA5A5) : AppTheme.borderColor,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: isAlert ? const Color(0xFFB91C1C) : AppTheme.textSecondary,
+          ),
+        ),
       ),
     );
   }
@@ -176,7 +375,7 @@ class _DashboardHeader extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryLight.withOpacity(0.65),
+                        color: AppTheme.primaryLight.withValues(alpha: 0.65),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -213,10 +412,10 @@ class _QuickActionsGrid extends StatelessWidget {
       route: AppRoutes.addExport,
     ),
     _QuickAction(
-      label: 'Loại gạo',
-      icon: Icons.rice_bowl_outlined,
+      label: 'Dự báo',
+      icon: Icons.trending_up_rounded,
       color: AppTheme.primaryColor,
-      route: AppRoutes.rice,
+      route: AppRoutes.forecast,
     ),
     _QuickAction(
       label: 'Kiểm kho',
@@ -282,10 +481,10 @@ class _QuickActionButton extends StatelessWidget {
               width: 46,
               height: 46,
               decoration: BoxDecoration(
-                color: action.color.withOpacity(0.1),
+                color: action.color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: action.color.withOpacity(0.22),
+                  color: action.color.withValues(alpha: 0.25),
                 ),
               ),
               child: Icon(action.icon, color: action.color, size: 22),
@@ -321,68 +520,81 @@ class _WarehouseStatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (rices.isEmpty) {
-      return const _EmptySection(message: 'Chưa có dữ liệu tồn kho');
-    }
+    final theme = Theme.of(context);
 
     return Card(
-      child: Column(
-        children: [
-          for (var index = 0; index < rices.length; index++) ...[
-            _WarehouseStatusItem(
-              rice: rices[index],
-              stock: batchProvider.totalStockForRice(rices[index].id),
-            ),
-            if (index < rices.length - 1) const Divider(height: 1),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          children: [
+            for (var index = 0; index < rices.length; index++) ...[
+              if (index > 0) const Divider(height: 18),
+              _WarehouseStatusRow(
+                rice: rices[index],
+                stock: batchProvider.totalStockForRice(rices[index].id),
+                theme: theme,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 }
 
-class _WarehouseStatusItem extends StatelessWidget {
-  const _WarehouseStatusItem({required this.rice, required this.stock});
+class _WarehouseStatusRow extends StatelessWidget {
+  const _WarehouseStatusRow({
+    required this.rice,
+    required this.stock,
+    required this.theme,
+  });
 
   final RiceModel rice;
   final double stock;
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isLowStock = stock <= rice.minimumStock;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      leading: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(10),
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                rice.name,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Mã: ${rice.code} • ĐVT: ${rice.unit}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
-        child: Icon(
-          Icons.rice_bowl_outlined,
-          size: 20,
-          color: colorScheme.primary,
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              '${_formatQuantity(stock)} ${rice.unit}',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: isLowStock ? const Color(0xFFDC2626) : AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            StatusChip(isLowStock: isLowStock),
+          ],
         ),
-      ),
-      title: Text(
-        rice.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      subtitle: Text(
-        '${_formatQuantity(stock)} ${rice.unit}',
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      trailing: StatusChip(isLowStock: stock <= rice.minimumStock),
+      ],
     );
   }
 }
@@ -394,94 +606,70 @@ class _RecentActivityList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     if (activities.isEmpty) {
-      return const _EmptySection(message: 'Chưa có hoạt động gần đây');
-    }
-
-    return Card(
-      child: Column(
-        children: [
-          for (var index = 0; index < activities.length; index++) ...[
-            _ActivityItem(activity: activities[index]),
-            if (index < activities.length - 1) const Divider(height: 1),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ActivityItem extends StatelessWidget {
-  const _ActivityItem({required this.activity});
-
-  final _DashboardActivity activity;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final accentColor = activity.isImport
-        ? AppTheme.accentGreen
-        : AppTheme.secondaryColor;
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      leading: Container(
-        width: 38,
-        height: 38,
-        decoration: BoxDecoration(
-          color: accentColor.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          activity.isImport ? Icons.download_rounded : Icons.upload_rounded,
-          color: accentColor,
-          size: 20,
-        ),
-      ),
-      title: Text(
-        '${activity.isImport ? 'Nhập' : 'Xuất'} '
-        '${_formatQuantity(activity.quantity)} ${activity.unit} '
-        '${activity.riceName}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      subtitle: Text(
-        '${activity.code} • ${_formatDate(activity.date)}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptySection extends StatelessWidget {
-  const _EmptySection({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 28),
-        child: Center(
-          child: Text(
-            message,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Center(
+            child: Text(
+              'Chưa có giao dịch gần đây',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
             ),
           ),
         ),
+      );
+    }
+
+    return Card(
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: activities.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final activity = activities[index];
+          final accentColor = activity.isImport
+              ? AppTheme.accentGreen
+              : AppTheme.secondaryColor;
+
+          return ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            leading: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                activity.isImport
+                    ? Icons.download_rounded
+                    : Icons.upload_rounded,
+                color: accentColor,
+                size: 20,
+              ),
+            ),
+            title: Text(
+              '${activity.isImport ? 'Nhập' : 'Xuất'} '
+              '${_formatQuantity(activity.quantity)} ${activity.unit} '
+              '${activity.riceName}',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            subtitle: Text(
+              '${activity.code} • ${_formatDate(activity.date)}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -564,4 +752,3 @@ String _formatDate(DateTime date) {
   final month = date.month.toString().padLeft(2, '0');
   return '$day/$month/${date.year}';
 }
-

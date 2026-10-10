@@ -19,6 +19,10 @@ class BatchModel {
     required this.manufactureDate,
     required this.expiryDate,
     required this.status,
+    this.supplierId,
+    this.supplierName,
+    this.warehouseLocationId,
+    this.locationName,
   });
 
   final String id;
@@ -30,6 +34,10 @@ class BatchModel {
   final DateTime manufactureDate;
   final DateTime expiryDate;
   final BatchStatus status;
+  final String? supplierId;
+  final String? supplierName;
+  final String? warehouseLocationId;
+  final String? locationName;
 
   BatchModel copyWith({
     String? id,
@@ -41,6 +49,10 @@ class BatchModel {
     DateTime? manufactureDate,
     DateTime? expiryDate,
     BatchStatus? status,
+    String? supplierId,
+    String? supplierName,
+    String? warehouseLocationId,
+    String? locationName,
   }) {
     return BatchModel(
       id: id ?? this.id,
@@ -52,6 +64,10 @@ class BatchModel {
       manufactureDate: manufactureDate ?? this.manufactureDate,
       expiryDate: expiryDate ?? this.expiryDate,
       status: status ?? this.status,
+      supplierId: supplierId ?? this.supplierId,
+      supplierName: supplierName ?? this.supplierName,
+      warehouseLocationId: warehouseLocationId ?? this.warehouseLocationId,
+      locationName: locationName ?? this.locationName,
     );
   }
 }

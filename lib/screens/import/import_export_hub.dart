@@ -84,6 +84,27 @@ class ImportExportHub extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              side: const BorderSide(color: AppTheme.accentGreen),
+            ),
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.ocrPrototype),
+            icon: const Icon(Icons.document_scanner_outlined,
+                color: AppTheme.accentGreen, size: 18),
+            label: const Text(
+              'Nhập kho bằng OCR Hóa đơn (Prototype)',
+              style: TextStyle(
+                color: AppTheme.accentGreen,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
         const SizedBox(height: 22),
         const SectionTitle('Sổ giao dịch Nhập / Xuất kho'),
         const SizedBox(height: 12),
@@ -153,7 +174,7 @@ class _TransactionCard extends StatelessWidget {
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            color: accentColor.withOpacity(0.12),
+            color: accentColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: accentColor, size: 24),
@@ -172,7 +193,7 @@ class _TransactionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.12),
+                color: accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -201,7 +222,7 @@ class _TransactionCard extends StatelessWidget {
           width: 30,
           height: 30,
           decoration: BoxDecoration(
-            color: accentColor.withOpacity(0.1),
+            color: accentColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -279,7 +300,7 @@ class _RecentTransactionTile extends StatelessWidget {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(

@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
+import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
+import 'package:smart_rice_warehouse/services/fefo_service.dart';
 
 class BatchProvider extends ChangeNotifier {
   BatchProvider() : _batches = List<BatchModel>.from(MockData.batches);
@@ -19,6 +21,25 @@ class BatchProvider extends ChangeNotifier {
       0,
       (total, rice) => total + totalStockForRice(rice.id) * rice.purchasePrice,
     );
+  }
+
+  BatchModel? findById(String id) {
+    try {
+      return _batches.firstWhere((b) => b.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  BatchModel? findByCode(String code) {
+    try {
+      final normalized = code.trim().toLowerCase();
+      return _batches.firstWhere(
+        (b) => b.code.trim().toLowerCase() == normalized,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   bool isBatchCodeExists(String code) {
@@ -45,6 +66,57 @@ class BatchProvider extends ChangeNotifier {
     }
 
     _batches[index] = batch;
+    notifyListeners();
+    return true;
+  }
+
+  /// Gán hoặc chuyển đổi vị trí kho cho lô hàng (Task 1.5)
+  bool assignLocation({
+    required String batchId,
+    required String locationId,
+    required String locationName,
+  }) {
+    final index = _batches.indexWhere((b) => b.id == batchId);
+    if (index == -1) return false;
+    _batches[index] = _batches[index].copyWith(
+      warehouseLocationId: locationId,
+      locationName: locationName,
+    );
+    notifyListeners();
+    return true;
+  }
+
+  /// Điều chỉnh số lượng lô từ kiểm kê (Task 2.5)
+  bool adjustQuantity({
+    required String batchId,
+    required double newQuantity,
+    String? reason,
+  }) {
+    final index = _batches.indexWhere((b) => b.id == batchId);
+    if (index == -1) return false;
+    final clamped = newQuantity.clamp(0.0, double.infinity);
+    final batch = _batches[index];
+    _batches[index] = batch.copyWith(
+      quantity: clamped,
+      status: clamped == 0 ? BatchStatus.lowStock : batch.status,
+    );
+    notifyListeners();
+    return true;
+  }
+
+  /// Báo hỏng và giảm tồn lô hàng (Task 3.4)
+  bool reportDamage({
+    required String batchId,
+    required double damagedQuantity,
+  }) {
+    final index = _batches.indexWhere((b) => b.id == batchId);
+    if (index == -1) return false;
+    final batch = _batches[index];
+    final updated = (batch.quantity - damagedQuantity).clamp(0.0, double.infinity);
+    _batches[index] = batch.copyWith(
+      quantity: updated,
+      status: updated == 0 ? BatchStatus.lowStock : batch.status,
+    );
     notifyListeners();
     return true;
   }
@@ -83,36 +155,40 @@ class BatchProvider extends ChangeNotifier {
         .length;
   }
 
-  bool removeStock({required String riceId, required double quantity}) {
-    const tolerance = 0.000000001;
-    if (quantity <= 0 || totalStockForRice(riceId) + tolerance < quantity) {
+  bool applyFefoAllocations(List<BatchAllocation> allocations) {
+    if (allocations.isEmpty) {
       return false;
     }
 
-    var remainingQuantity = quantity;
-    for (var index = 0; index < _batches.length; index++) {
-      final batch = _batches[index];
-      if (batch.riceId != riceId || !_isAvailable(batch)) {
-        continue;
+    for (final allocation in allocations) {
+      final index = _batches.indexWhere((item) => item.id == allocation.batchId);
+      if (index == -1) {
+        return false;
       }
 
-      final deductedQuantity = batch.quantity < remainingQuantity
-          ? batch.quantity
-          : remainingQuantity;
-      final updatedQuantity = batch.quantity - deductedQuantity;
+      final batch = _batches[index];
+      final updatedQuantity = (batch.quantity - allocation.allocatedQuantity)
+          .clamp(0.0, double.infinity);
       _batches[index] = batch.copyWith(
         quantity: updatedQuantity,
         status: updatedQuantity == 0 ? BatchStatus.lowStock : batch.status,
       );
-      remainingQuantity -= deductedQuantity;
-
-      if (remainingQuantity <= tolerance) {
-        notifyListeners();
-        return true;
-      }
     }
 
-    return false;
+    notifyListeners();
+    return true;
+  }
+
+  bool removeStock({required String riceId, required double quantity}) {
+    final result = const FefoService().allocate(
+      batches: _batches,
+      riceId: riceId,
+      quantity: quantity,
+    );
+    if (!result.isSuccess) {
+      return false;
+    }
+    return applyFefoAllocations(result.allocations);
   }
 
   bool _isAvailable(BatchModel batch) {

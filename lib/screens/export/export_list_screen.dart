@@ -4,8 +4,10 @@ import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
+import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
 import 'package:smart_rice_warehouse/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/screens/export/export_detail_screen.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
 import 'package:smart_rice_warehouse/widgets/transaction_receipt_card.dart';
 
@@ -19,6 +21,14 @@ class ExportListScreen extends StatelessWidget {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
+    );
+  }
+
+  void _openDetail(BuildContext context, ExportReceiptModel receipt) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ExportDetailScreen(receipt: receipt),
+      ),
     );
   }
 
@@ -55,6 +65,7 @@ class ExportListScreen extends StatelessWidget {
                   quantityText:
                       '${NumberFormatter.quantity(receipt.quantity)} $unit',
                   totalText: CurrencyFormatter.formatVnd(receipt.totalAmount),
+                  onTap: () => _openDetail(context, receipt),
                 );
               },
             ),

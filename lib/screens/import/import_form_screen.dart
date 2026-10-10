@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
@@ -27,10 +28,40 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
   final _manufactureDateController = TextEditingController();
   final _expiryDateController = TextEditingController();
 
+  static const String _newBatchOption = '__NEW_BATCH__';
+
   SupplierModel? _selectedSupplier;
   RiceModel? _selectedRice;
   DateTime? _manufactureDate;
   DateTime? _expiryDate;
+  String _selectedBatchCode = _newBatchOption;
+
+  void _selectBatch(BatchModel batch) {
+    _selectedBatchCode = batch.code;
+    _batchCodeController.text = batch.code;
+    _manufactureDate = batch.manufactureDate;
+    _manufactureDateController.text =
+        DateFormatter.ddMMyyyy(batch.manufactureDate);
+    _expiryDate = batch.expiryDate;
+    _expiryDateController.text = DateFormatter.ddMMyyyy(batch.expiryDate);
+  }
+
+  void _selectNewBatchMode([RiceModel? rice]) {
+    final targetRice = rice ?? _selectedRice;
+    _selectedBatchCode = _newBatchOption;
+    final prefix = targetRice?.code ?? 'LO';
+    final batches = targetRice == null
+        ? context.read<BatchProvider>().batches
+        : context.read<BatchProvider>().findByRiceId(targetRice.id);
+    final nextCode =
+        'LO-$prefix-${(batches.length + 1).toString().padLeft(3, '0')}';
+    _batchCodeController.text = nextCode;
+    final now = DateTime.now();
+    _manufactureDate ??= now;
+    _manufactureDateController.text = DateFormatter.ddMMyyyy(_manufactureDate!);
+    _expiryDate ??= now.add(const Duration(days: 365));
+    _expiryDateController.text = DateFormatter.ddMMyyyy(_expiryDate!);
+  }
 
   double get _totalAmount {
     final quantity = _parseNumber(_quantityController.text) ?? 0;
@@ -77,11 +108,14 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
   }
 
   String? _validateBatchCode(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Vui lòng nhập mã lô';
+    if (_selectedBatchCode != _newBatchOption) {
+      return null;
     }
-    if (context.read<BatchProvider>().isBatchCodeExists(value)) {
-      return 'Mã lô đã tồn tại';
+    if (value == null || value.trim().isEmpty) {
+      return 'Vui lòng nhập mã lô mới';
+    }
+    if (context.read<BatchProvider>().isBatchCodeExists(value.trim())) {
+      return 'Mã lô "${value.trim()}" đã tồn tại. Vui lòng chọn lô từ danh sách hoặc nhập mã khác.';
     }
     return null;
   }
@@ -138,6 +172,10 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
     final now = DateTime.now();
     final identifier = now.microsecondsSinceEpoch.toString();
     final provider = context.read<ImportProvider>();
+    final isNew = _selectedBatchCode == _newBatchOption;
+    final batchCode =
+        isNew ? _batchCodeController.text.trim() : _selectedBatchCode;
+
     final receipt = ImportReceiptModel(
       id: 'import-$identifier',
       code: provider.generateReceiptCode(),
@@ -149,14 +187,14 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
       quantity: quantity,
       purchasePrice: purchasePrice,
       totalAmount: quantity * purchasePrice,
-      batchCode: _batchCodeController.text.trim(),
+      batchCode: batchCode,
       manufactureDate: _manufactureDate!,
       expiryDate: _expiryDate!,
     );
     final today = DateTime(now.year, now.month, now.day);
     final batch = BatchModel(
       id: 'batch-$identifier',
-      code: _batchCodeController.text.trim(),
+      code: batchCode,
       riceId: rice.id,
       riceName: rice.name,
       quantity: quantity,
@@ -174,7 +212,7 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
     );
     if (!created) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mã lô đã tồn tại')),
+        const SnackBar(content: Text('Không thể tạo phiếu nhập cho mã lô này')),
       );
       return;
     }
@@ -248,6 +286,13 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                     if (value != null) {
                       _purchasePriceController.text =
                           _numberText(value.purchasePrice);
+                      final batches =
+                          context.read<BatchProvider>().findByRiceId(value.id);
+                      if (batches.isNotEmpty) {
+                        _selectBatch(batches.first);
+                      } else {
+                        _selectNewBatchMode(value);
+                      }
                     }
                   });
                 },
@@ -279,11 +324,115 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 16),
-              CustomTextField(
-                controller: _batchCodeController,
-                label: 'Mã lô',
-                textInputAction: TextInputAction.next,
-                validator: _validateBatchCode,
+              Builder(
+                builder: (context) {
+                  final rice = _selectedRice;
+                  final prefix = rice?.code ?? 'LO';
+                  final existingBatches = rice == null
+                      ? context.watch<BatchProvider>().batches
+                      : context.watch<BatchProvider>().findByRiceId(rice.id);
+
+                  final validCodes = {
+                    ...existingBatches.map((b) => b.code),
+                    _newBatchOption,
+                  };
+                  final currentValue = validCodes.contains(_selectedBatchCode)
+                      ? _selectedBatchCode
+                      : (existingBatches.isNotEmpty
+                          ? existingBatches.first.code
+                          : _newBatchOption);
+
+                  final isCreatingNew = currentValue == _newBatchOption;
+                  final selectedExisting = isCreatingNew
+                      ? null
+                      : existingBatches.firstWhere(
+                          (b) => b.code == currentValue,
+                          orElse: () => existingBatches.first,
+                        );
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        key: ValueKey('batch_dd_${rice?.id}_$currentValue'),
+                        value: currentValue,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: 'Mã lô hàng',
+                          prefixIcon:
+                              const Icon(Icons.qr_code_2_rounded, size: 20),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          helperText: !isCreatingNew && selectedExisting != null
+                              ? 'Lô tồn: ${selectedExisting.quantity.toInt()}kg • HSD: ${DateFormatter.ddMMyyyy(selectedExisting.expiryDate)} (Cộng dồn)'
+                              : null,
+                          helperStyle: const TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.accentGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        items: [
+                          ...existingBatches.map(
+                            (b) => DropdownMenuItem<String>(
+                              value: b.code,
+                              child: Text(
+                                '${b.code} (Tồn: ${b.quantity.toInt()}kg • HSD: ${DateFormatter.ddMMyyyy(b.expiryDate)})',
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                          const DropdownMenuItem<String>(
+                            value: _newBatchOption,
+                            child: Text(
+                              '✨ + Tạo mã lô mới',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() {
+                            if (value == _newBatchOption) {
+                              _selectNewBatchMode();
+                            } else {
+                              final found = existingBatches
+                                  .firstWhere((b) => b.code == value);
+                              _selectBatch(found);
+                            }
+                          });
+                        },
+                      ),
+                      if (isCreatingNew) ...[
+                        const SizedBox(height: 8),
+                        CustomTextField(
+                          controller: _batchCodeController,
+                          label:
+                              'Mã lô mới (Gợi ý: LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')})',
+                          textInputAction: TextInputAction.next,
+                          validator: _validateBatchCode,
+                          suffixIcon: IconButton(
+                            tooltip: 'Điền mã gợi ý',
+                            icon: const Icon(Icons.auto_awesome, size: 16),
+                            onPressed: () {
+                              setState(() {
+                                _batchCodeController.text =
+                                    'LO-$prefix-${(existingBatches.length + 1).toString().padLeft(3, '0')}';
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
               CustomTextField(

@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
+import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
 import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/services/fefo_service.dart';
 
 class ExportProvider extends ChangeNotifier {
   ExportProvider(this._batchProvider)
@@ -9,6 +11,7 @@ class ExportProvider extends ChangeNotifier {
 
   final List<ExportReceiptModel> _receipts;
   BatchProvider _batchProvider;
+  final FefoService _fefoService = const FefoService();
 
   List<ExportReceiptModel> get receipts =>
       List<ExportReceiptModel>.unmodifiable(_receipts);
@@ -38,23 +41,89 @@ class ExportProvider extends ChangeNotifier {
   }
 
   bool canExport({required String riceId, required double quantity}) {
-    return quantity > 0 && _batchProvider.totalStockForRice(riceId) >= quantity;
+    if (quantity <= 0) return false;
+    final result = previewFefoAllocation(riceId: riceId, quantity: quantity);
+    return result.isSuccess;
+  }
+
+  /// Tính toán trước phân bổ lô hàng theo nguyên tắc FEFO mà chưa trừ kho
+  FefoAllocationResult previewFefoAllocation({
+    required String riceId,
+    required double quantity,
+    DateTime? currentDate,
+  }) {
+    return _fefoService.allocate(
+      batches: _batchProvider.batches,
+      riceId: riceId,
+      quantity: quantity,
+      currentDate: currentDate,
+    );
   }
 
   String generateReceiptCode() {
     return 'PX${(_maxCodeNumber() + 1).toString().padLeft(3, '0')}';
   }
 
+  ExportReceiptModel? findById(String id) {
+    try {
+      return _receipts.firstWhere((receipt) => receipt.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<ExportReceiptModel> searchReceipts(String query) {
+    final normalized = query.trim().toLowerCase();
+    if (normalized.isEmpty) return receipts;
+    return _receipts
+        .where(
+          (r) =>
+              r.code.toLowerCase().contains(normalized) ||
+              r.customerName.toLowerCase().contains(normalized) ||
+              r.riceName.toLowerCase().contains(normalized),
+        )
+        .toList(growable: false);
+  }
+
+  /// Tạo phiếu xuất kho áp dụng thuật toán FEFO
   bool createExportReceipt(ExportReceiptModel receipt) {
-    final stockRemoved = _batchProvider.removeStock(
-      riceId: receipt.riceId,
-      quantity: receipt.quantity,
-    );
+    List<BatchAllocation> allocations = receipt.allocations;
+
+    // Nếu phiếu chưa có sẵn allocation, tính toán theo FEFO
+    if (allocations.isEmpty) {
+      final previewResult = previewFefoAllocation(
+        riceId: receipt.riceId,
+        quantity: receipt.quantity,
+      );
+      if (!previewResult.isSuccess) {
+        return false;
+      }
+      allocations = previewResult.allocations;
+    }
+
+    // Trừ kho theo từng lô hàng đã phân bổ
+    final stockRemoved = _batchProvider.applyFefoAllocations(allocations);
     if (!stockRemoved) {
       return false;
     }
 
-    _receipts.add(receipt);
+    // Lưu phiếu xuất kèm thông tin chi tiết từng lô
+    final finalizedReceipt = ExportReceiptModel(
+      id: receipt.id,
+      code: receipt.code,
+      customerId: receipt.customerId,
+      customerName: receipt.customerName,
+      date: receipt.date,
+      riceId: receipt.riceId,
+      riceName: receipt.riceName,
+      quantity: receipt.quantity,
+      sellingPrice: receipt.sellingPrice,
+      totalAmount: receipt.totalAmount,
+      note: receipt.note,
+      allocations: allocations,
+    );
+
+    _receipts.add(finalizedReceipt);
     notifyListeners();
     return true;
   }

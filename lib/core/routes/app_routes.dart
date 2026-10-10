@@ -1,21 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:smart_rice_warehouse/models/batch_model.dart';
+import 'package:smart_rice_warehouse/screens/alerts/alert_list_screen.dart';
 import 'package:smart_rice_warehouse/screens/auth/login_screen.dart';
+import 'package:smart_rice_warehouse/screens/batch/batch_detail_screen.dart';
 import 'package:smart_rice_warehouse/screens/batch/batch_list_screen.dart';
 import 'package:smart_rice_warehouse/screens/customer/customer_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/customer/customer_list_screen.dart';
+import 'package:smart_rice_warehouse/screens/damage/damage_form_screen.dart';
+import 'package:smart_rice_warehouse/screens/damage/damage_list_screen.dart';
 import 'package:smart_rice_warehouse/screens/export/export_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/export/export_list_screen.dart';
+import 'package:smart_rice_warehouse/screens/forecast/forecast_screen.dart';
 import 'package:smart_rice_warehouse/screens/home/main_screen.dart';
 import 'package:smart_rice_warehouse/screens/import/import_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/import/import_list_screen.dart';
 import 'package:smart_rice_warehouse/screens/inventory/inventory_screen.dart';
+import 'package:smart_rice_warehouse/screens/inventory_check/inventory_check_history_screen.dart';
+import 'package:smart_rice_warehouse/screens/inventory_check/inventory_check_screen.dart';
+import 'package:smart_rice_warehouse/screens/ocr/ocr_prototype_screen.dart';
 import 'package:smart_rice_warehouse/screens/profile/profile_tab.dart';
 import 'package:smart_rice_warehouse/screens/reports/reports_tab.dart';
 import 'package:smart_rice_warehouse/screens/rice/rice_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/rice/rice_list_screen.dart';
+import 'package:smart_rice_warehouse/screens/scanner/qr_scanner_screen.dart';
 import 'package:smart_rice_warehouse/screens/splash/splash_screen.dart';
 import 'package:smart_rice_warehouse/screens/supplier/supplier_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/supplier/supplier_list_screen.dart';
+import 'package:smart_rice_warehouse/screens/warehouse/warehouse_location_screen.dart';
 
 abstract final class AppRoutes {
   static const String splash = '/';
@@ -38,6 +49,18 @@ abstract final class AppRoutes {
   static const String inventory = '/inventory';
   static const String reports = '/reports';
   static const String profile = '/profile';
+  static const String alerts = '/alerts';
+  static const String forecast = '/forecast';
+  static const String ocrPrototype = '/ocr/prototype';
+
+  // Member 1 dynamic routes
+  static const String batchDetail = '/batch/detail';
+  static const String qrScanner = '/scanner';
+  static const String warehouseLocations = '/warehouse/locations';
+  static const String inventoryCheck = '/inventory-check';
+  static const String inventoryCheckHistory = '/inventory-check/history';
+  static const String damageReportForm = '/damage/form';
+  static const String damageReportList = '/damage/list';
 
   static final Map<String, WidgetBuilder> routes = <String, WidgetBuilder>{
     splash: (_) => const SplashScreen(),
@@ -85,4 +108,54 @@ abstract final class AppRoutes {
           body: const ProfileTab(),
         ),
   };
+
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    if (settings.name == alerts) {
+      return MaterialPageRoute(builder: (_) => const AlertListScreen());
+    }
+    if (settings.name == forecast) {
+      return MaterialPageRoute(builder: (_) => const ForecastScreen());
+    }
+    if (settings.name == ocrPrototype) {
+      return MaterialPageRoute(builder: (_) => const OcrPrototypeScreen());
+    }
+    if (settings.name == batchDetail) {
+      final batchId = settings.arguments as String?;
+      return MaterialPageRoute(
+        builder: (_) => BatchDetailScreen(batchId: batchId ?? ''),
+      );
+    }
+    if (settings.name == qrScanner) {
+      return MaterialPageRoute(
+        builder: (_) => const QrScannerScreen(),
+      );
+    }
+    if (settings.name == warehouseLocations) {
+      return MaterialPageRoute(
+        builder: (_) => const WarehouseLocationScreen(),
+      );
+    }
+    if (settings.name == inventoryCheck) {
+      return MaterialPageRoute(
+        builder: (_) => const InventoryCheckScreen(),
+      );
+    }
+    if (settings.name == inventoryCheckHistory) {
+      return MaterialPageRoute(
+        builder: (_) => const InventoryCheckHistoryScreen(),
+      );
+    }
+    if (settings.name == damageReportForm) {
+      final initialBatch = settings.arguments as BatchModel?;
+      return MaterialPageRoute(
+        builder: (_) => DamageFormScreen(initialBatch: initialBatch),
+      );
+    }
+    if (settings.name == damageReportList) {
+      return MaterialPageRoute(
+        builder: (_) => const DamageListScreen(),
+      );
+    }
+    return null;
+  }
 }

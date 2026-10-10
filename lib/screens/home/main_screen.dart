@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
+import 'package:smart_rice_warehouse/providers/alert_provider.dart';
 import 'package:smart_rice_warehouse/screens/home/home_tab.dart';
 import 'package:smart_rice_warehouse/screens/import/import_export_hub.dart';
 import 'package:smart_rice_warehouse/screens/inventory/warehouse_hub.dart';
@@ -62,6 +65,30 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Quét mã QR Lô gạo',
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.qrScanner),
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+          ),
+          Consumer<AlertProvider>(
+            builder: (context, alertProvider, _) {
+              final unread = alertProvider.unreadCount;
+              return IconButton(
+                tooltip: 'Cảnh báo & Thông báo',
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(AppRoutes.alerts),
+                icon: Badge(
+                  isLabelVisible: unread > 0,
+                  label: Text('$unread'),
+                  child: const Icon(Icons.notifications_outlined),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,

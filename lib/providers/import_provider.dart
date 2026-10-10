@@ -42,6 +42,24 @@ class ImportProvider extends ChangeNotifier {
     required ImportReceiptModel receipt,
     required BatchModel batch,
   }) {
+    if (_batchProvider.isBatchCodeExists(batch.code)) {
+      final existingIndex = _batchProvider.batches.indexWhere(
+        (item) =>
+            item.code.trim().toLowerCase() == batch.code.trim().toLowerCase(),
+      );
+      if (existingIndex != -1) {
+        final existing = _batchProvider.batches[existingIndex];
+        _batchProvider.updateBatch(
+          existing.copyWith(
+            quantity: existing.quantity + batch.quantity,
+          ),
+        );
+        _receipts.add(receipt);
+        notifyListeners();
+        return true;
+      }
+    }
+
     if (!_batchProvider.addBatch(batch)) {
       return false;
     }
