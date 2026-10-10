@@ -120,9 +120,8 @@ class FefoService {
     for (final batch in validBatches) {
       if (remainingNeeded <= tolerance) break;
 
-      final take = batch.quantity < remainingNeeded
-          ? batch.quantity
-          : remainingNeeded;
+      final take =
+          batch.quantity < remainingNeeded ? batch.quantity : remainingNeeded;
       final remainingInBatch = batch.quantity - take;
 
       allocations.add(

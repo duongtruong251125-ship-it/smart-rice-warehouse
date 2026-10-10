@@ -9,6 +9,7 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 4,
@@ -19,9 +20,11 @@ class SectionTitle extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(
+        Flexible(
           child: Text(
             title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
               letterSpacing: 0.1,
@@ -32,4 +35,3 @@ class SectionTitle extends StatelessWidget {
     );
   }
 }
-

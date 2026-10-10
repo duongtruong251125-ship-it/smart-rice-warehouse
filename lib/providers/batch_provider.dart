@@ -6,9 +6,11 @@ import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/services/fefo_service.dart';
 
 class BatchProvider extends ChangeNotifier {
-  BatchProvider() : _batches = List<BatchModel>.from(MockData.batches);
+  BatchProvider({List<BatchModel>? initial, this.onPersist})
+      : _batches = List<BatchModel>.from(initial ?? MockData.batches);
 
   final List<BatchModel> _batches;
+  final ValueChanged<List<BatchModel>>? onPersist;
 
   List<BatchModel> get batches => List<BatchModel>.unmodifiable(_batches);
 
@@ -55,6 +57,7 @@ class BatchProvider extends ChangeNotifier {
     }
 
     _batches.add(batch);
+    _persist();
     notifyListeners();
     return true;
   }
@@ -66,6 +69,7 @@ class BatchProvider extends ChangeNotifier {
     }
 
     _batches[index] = batch;
+    _persist();
     notifyListeners();
     return true;
   }
@@ -82,6 +86,7 @@ class BatchProvider extends ChangeNotifier {
       warehouseLocationId: locationId,
       locationName: locationName,
     );
+    _persist();
     notifyListeners();
     return true;
   }
@@ -94,12 +99,13 @@ class BatchProvider extends ChangeNotifier {
   }) {
     final index = _batches.indexWhere((b) => b.id == batchId);
     if (index == -1) return false;
-    final clamped = newQuantity.clamp(0.0, double.infinity);
+    if (!newQuantity.isFinite || newQuantity < 0) return false;
     final batch = _batches[index];
     _batches[index] = batch.copyWith(
-      quantity: clamped,
-      status: clamped == 0 ? BatchStatus.lowStock : batch.status,
+      quantity: newQuantity,
+      status: newQuantity == 0 ? BatchStatus.lowStock : batch.status,
     );
+    _persist();
     notifyListeners();
     return true;
   }
@@ -112,12 +118,19 @@ class BatchProvider extends ChangeNotifier {
     final index = _batches.indexWhere((b) => b.id == batchId);
     if (index == -1) return false;
     final batch = _batches[index];
-    final updated = (batch.quantity - damagedQuantity).clamp(0.0, double.infinity);
+    if (!damagedQuantity.isFinite ||
+        damagedQuantity <= 0 ||
+        damagedQuantity > batch.quantity) {
+      return false;
+    }
+    final updated = batch.quantity - damagedQuantity;
     _batches[index] = batch.copyWith(
       quantity: updated,
       status: updated == 0 ? BatchStatus.lowStock : batch.status,
     );
+    _persist();
     notifyListeners();
+    _persist();
     return true;
   }
 
@@ -160,21 +173,64 @@ class BatchProvider extends ChangeNotifier {
       return false;
     }
 
+    // Validate the complete transaction before changing any stock. Grouping by
+    // batch also protects against duplicate allocation rows over-deducting it.
+    final requestedByBatch = <String, double>{};
     for (final allocation in allocations) {
-      final index = _batches.indexWhere((item) => item.id == allocation.batchId);
-      if (index == -1) {
+      if (!allocation.allocatedQuantity.isFinite ||
+          allocation.allocatedQuantity <= 0) {
         return false;
       }
+      requestedByBatch.update(
+        allocation.batchId,
+        (value) => value + allocation.allocatedQuantity,
+        ifAbsent: () => allocation.allocatedQuantity,
+      );
+    }
 
+    for (final entry in requestedByBatch.entries) {
+      final batch = findById(entry.key);
+      if (batch == null ||
+          entry.value > batch.quantity ||
+          !_isAvailable(batch)) {
+        return false;
+      }
+    }
+
+    for (final entry in requestedByBatch.entries) {
+      final index = _batches.indexWhere((item) => item.id == entry.key);
       final batch = _batches[index];
-      final updatedQuantity = (batch.quantity - allocation.allocatedQuantity)
-          .clamp(0.0, double.infinity);
+      final updatedQuantity = batch.quantity - entry.value;
       _batches[index] = batch.copyWith(
         quantity: updatedQuantity,
         status: updatedQuantity == 0 ? BatchStatus.lowStock : batch.status,
       );
     }
 
+    notifyListeners();
+    _persist();
+    return true;
+  }
+
+  /// Applies an inventory check as one transaction. If one batch is invalid,
+  /// no batch is changed.
+  bool adjustQuantities(Map<String, double> quantities) {
+    if (quantities.isEmpty) return false;
+    for (final entry in quantities.entries) {
+      if (findById(entry.key) == null ||
+          !entry.value.isFinite ||
+          entry.value < 0) {
+        return false;
+      }
+    }
+    for (final entry in quantities.entries) {
+      final index = _batches.indexWhere((batch) => batch.id == entry.key);
+      final batch = _batches[index];
+      _batches[index] = batch.copyWith(
+        quantity: entry.value,
+        status: entry.value == 0 ? BatchStatus.lowStock : batch.status,
+      );
+    }
     notifyListeners();
     return true;
   }
@@ -204,4 +260,6 @@ class BatchProvider extends ChangeNotifier {
         batch.status != BatchStatus.expired &&
         !expiryDate.isBefore(today);
   }
+
+  void _persist() => onPersist?.call(batches);
 }

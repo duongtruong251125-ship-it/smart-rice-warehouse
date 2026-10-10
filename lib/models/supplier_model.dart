@@ -36,4 +36,24 @@ class SupplierModel {
       isActive: isActive ?? this.isActive,
     );
   }
+
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'name': name,
+        'phone': phone,
+        'email': email,
+        'address': address,
+        'taxCode': taxCode,
+        'isActive': isActive,
+      };
+
+  factory SupplierModel.fromJson(Map<String, dynamic> json) => SupplierModel(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        phone: json['phone'] as String,
+        email: json['email'] as String,
+        address: json['address'] as String,
+        taxCode: json['taxCode'] as String,
+        isActive: json['isActive'] as bool,
+      );
 }

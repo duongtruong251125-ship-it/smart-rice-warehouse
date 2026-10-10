@@ -3,9 +3,11 @@ import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 
 class RiceProvider extends ChangeNotifier {
-  RiceProvider() : _rices = List<RiceModel>.from(MockData.rices);
+  RiceProvider({List<RiceModel>? initial, this.onPersist})
+      : _rices = List<RiceModel>.from(initial ?? MockData.rices);
 
   final List<RiceModel> _rices;
+  final ValueChanged<List<RiceModel>>? onPersist;
 
   List<RiceModel> get rices => List<RiceModel>.unmodifiable(_rices);
 
@@ -33,6 +35,7 @@ class RiceProvider extends ChangeNotifier {
     }
 
     _rices.add(rice);
+    onPersist?.call(rices);
     notifyListeners();
     return true;
   }
@@ -44,11 +47,14 @@ class RiceProvider extends ChangeNotifier {
     }
 
     _rices[index] = rice;
+    onPersist?.call(rices);
     notifyListeners();
+    onPersist?.call(rices);
     return true;
   }
 
-  bool deleteRice(String id) {
+  bool deleteRice(String id, {bool Function(String id)? isReferenced}) {
+    if (isReferenced?.call(id) ?? false) return false;
     final removedCount = _rices.length;
     _rices.removeWhere((rice) => rice.id == id);
     if (_rices.length == removedCount) {

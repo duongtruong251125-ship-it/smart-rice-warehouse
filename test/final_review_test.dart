@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smart_rice_warehouse/core/services/settings_service.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/app.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
@@ -117,7 +118,7 @@ void main() {
             create: (_) => ExportProvider(batchProvider),
           ),
         ],
-        child: const SmartRiceWarehouseApp(),
+        child: SmartRiceWarehouseApp(settings: SettingsService()),
       ),
     );
 

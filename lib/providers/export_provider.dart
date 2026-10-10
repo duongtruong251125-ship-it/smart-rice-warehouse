@@ -6,11 +6,17 @@ import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/services/fefo_service.dart';
 
 class ExportProvider extends ChangeNotifier {
-  ExportProvider(this._batchProvider)
-      : _receipts = List<ExportReceiptModel>.from(MockData.exportReceipts);
+  ExportProvider(
+    this._batchProvider, {
+    List<ExportReceiptModel>? initial,
+    this.onPersist,
+  }) : _receipts = List<ExportReceiptModel>.from(
+          initial ?? MockData.exportReceipts,
+        );
 
   final List<ExportReceiptModel> _receipts;
   BatchProvider _batchProvider;
+  final ValueChanged<List<ExportReceiptModel>>? onPersist;
   final FefoService _fefoService = const FefoService();
 
   List<ExportReceiptModel> get receipts =>
@@ -87,6 +93,13 @@ class ExportProvider extends ChangeNotifier {
 
   /// Tạo phiếu xuất kho áp dụng thuật toán FEFO
   bool createExportReceipt(ExportReceiptModel receipt) {
+    if (receipt.quantity <= 0 ||
+        _receipts.any((item) =>
+            item.id == receipt.id ||
+            item.code.trim().toLowerCase() ==
+                receipt.code.trim().toLowerCase())) {
+      return false;
+    }
     List<BatchAllocation> allocations = receipt.allocations;
 
     // Nếu phiếu chưa có sẵn allocation, tính toán theo FEFO
@@ -99,6 +112,18 @@ class ExportProvider extends ChangeNotifier {
         return false;
       }
       allocations = previewResult.allocations;
+    }
+
+    final allocatedTotal = allocations.fold<double>(
+      0,
+      (total, allocation) => total + allocation.allocatedQuantity,
+    );
+    if ((allocatedTotal - receipt.quantity).abs() > 0.0001 ||
+        allocations.any((allocation) {
+          final batch = _batchProvider.findById(allocation.batchId);
+          return batch == null || batch.riceId != receipt.riceId;
+        })) {
+      return false;
     }
 
     // Trừ kho theo từng lô hàng đã phân bổ
@@ -124,6 +149,7 @@ class ExportProvider extends ChangeNotifier {
     );
 
     _receipts.add(finalizedReceipt);
+    onPersist?.call(receipts);
     notifyListeners();
     return true;
   }

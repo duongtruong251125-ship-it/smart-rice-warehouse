@@ -41,10 +41,11 @@ class _DamageListScreenState extends State<DamageListScreen> {
           // Banner tổng kết
           Container(
             padding: const EdgeInsets.all(14),
-            color: AppTheme.dangerColor.withOpacity(0.08),
+            color: AppTheme.dangerColor.withValues(alpha: 0.08),
             child: Row(
               children: [
-                const Icon(Icons.report_problem_rounded, color: AppTheme.dangerColor, size: 28),
+                const Icon(Icons.report_problem_rounded,
+                    color: AppTheme.dangerColor, size: 28),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -52,7 +53,8 @@ class _DamageListScreenState extends State<DamageListScreen> {
                     children: [
                       const Text(
                         'Tổng gạo hư hỏng đã ghi nhận',
-                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                            fontSize: 12, color: AppTheme.textSecondary),
                       ),
                       Text(
                         '${NumberFormatter.quantity(damageProvider.totalDamagedWeight)} kg (${damageProvider.reports.length} phiếu)',
@@ -90,7 +92,8 @@ class _DamageListScreenState extends State<DamageListScreen> {
                     child: FilterChip(
                       label: Text(reason.label),
                       selected: isSelected,
-                      onSelected: (_) => setState(() => _selectedReason = reason),
+                      onSelected: (_) =>
+                          setState(() => _selectedReason = reason),
                     ),
                   );
                 }),
@@ -102,7 +105,8 @@ class _DamageListScreenState extends State<DamageListScreen> {
           Expanded(
             child: reports.isEmpty
                 ? const EmptyState(
-                    message: 'Chưa có phiếu báo hỏng nào. Bấm nút "Báo hỏng" bên dưới để lập phiếu mới.',
+                    message:
+                        'Chưa có phiếu báo hỏng nào. Bấm nút "Báo hỏng" bên dưới để lập phiếu mới.',
                     icon: Icons.assignment_turned_in_outlined,
                   )
                 : ListView.separated(
@@ -123,7 +127,8 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                     width: 40,
                                     height: 40,
                                     decoration: BoxDecoration(
-                                      color: AppTheme.dangerColor.withOpacity(0.12),
+                                      color: AppTheme.dangerColor
+                                          .withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: const Icon(
@@ -135,7 +140,8 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           item.code,
@@ -157,9 +163,11 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                     ),
                                   ),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.dangerColor.withOpacity(0.12),
+                                      color: AppTheme.dangerColor
+                                          .withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -175,7 +183,8 @@ class _DamageListScreenState extends State<DamageListScreen> {
                               ),
                               const Divider(height: 18),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Text(
@@ -189,23 +198,29 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                   ),
                                   Text(
                                     DateFormatter.ddMMyyyy(item.createdAt),
-                                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.textSecondary),
                                   ),
                                 ],
                               ),
-                              if (item.note != null && item.note!.isNotEmpty) ...[
+                              if (item.note != null &&
+                                  item.note!.isNotEmpty) ...[
                                 const SizedBox(height: 6),
                                 Text(
                                   'Ghi chú: ${item.note!}',
-                                  style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      fontStyle: FontStyle.italic),
                                 ),
                               ],
                               if (item.imagePath != null) ...[
                                 const SizedBox(height: 8),
-                                Row(
+                                const Row(
                                   children: [
-                                    const Icon(Icons.attachment_rounded, size: 14, color: AppTheme.accentBlue),
-                                    const SizedBox(width: 4),
+                                    Icon(Icons.attachment_rounded,
+                                        size: 14, color: AppTheme.accentBlue),
+                                    SizedBox(width: 4),
                                     Text(
                                       'Có ảnh minh chứng đính kèm',
                                       style: TextStyle(

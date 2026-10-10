@@ -4,6 +4,7 @@ import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
+import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
 import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
@@ -11,8 +12,11 @@ import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/screens/reports/report_charts.dart';
 import 'package:smart_rice_warehouse/widgets/dashboard_card.dart';
 import 'package:smart_rice_warehouse/widgets/section_title.dart';
+import 'package:smart_rice_warehouse/models/inventory_snapshot_model.dart';
+import 'package:smart_rice_warehouse/data/app_database.dart';
 
 class ReportsTab extends StatefulWidget {
   const ReportsTab({super.key});
@@ -42,12 +46,16 @@ class _ReportsTabState extends State<ReportsTab> {
     );
     final isNarrow = MediaQuery.sizeOf(context).width < 340;
 
-    final currentMonthImports = importProvider.receipts.where(
-      (r) => r.date.year == now.year && r.date.month == now.month,
-    ).toList();
-    final currentMonthExports = exportProvider.receipts.where(
-      (r) => r.date.year == now.year && r.date.month == now.month,
-    ).toList();
+    final currentMonthImports = importProvider.receipts
+        .where(
+          (r) => r.date.year == now.year && r.date.month == now.month,
+        )
+        .toList();
+    final currentMonthExports = exportProvider.receipts
+        .where(
+          (r) => r.date.year == now.year && r.date.month == now.month,
+        )
+        .toList();
 
     final effectiveImports = currentMonthImports.isNotEmpty
         ? currentMonthImports
@@ -69,6 +77,18 @@ class _ReportsTabState extends State<ReportsTab> {
     final weeklyData = _buildMonthlyWeeklyBars(
       importReceipts: effectiveImports,
       exportReceipts: effectiveExports,
+    );
+    final inventorySlices = _buildInventorySlices(
+      batches: batchProvider.batches,
+      rices: riceProvider.rices,
+    );
+    final inventoryValuePoints = _buildInventoryValuePoints(
+      snapshots: context.read<AppSnapshot>().snapshots,
+      today: now,
+      currentValue: batchProvider.inventoryValue(riceProvider.rices),
+      importReceipts: importProvider.receipts,
+      exportReceipts: exportProvider.receipts,
+      rices: riceProvider.rices,
     );
 
     final total7DaysImport =
@@ -98,7 +118,8 @@ class _ReportsTabState extends State<ReportsTab> {
                 receiptCount: effectiveImports.length,
                 icon: Icons.download_rounded,
                 accentColor: AppTheme.accentGreen,
-                isSelected: _selectedMonthTable == 0 || _selectedMonthTable == 2,
+                isSelected:
+                    _selectedMonthTable == 0 || _selectedMonthTable == 2,
                 onTap: () {
                   setState(() {
                     _selectedMonthTable = 0;
@@ -112,7 +133,8 @@ class _ReportsTabState extends State<ReportsTab> {
                 receiptCount: effectiveExports.length,
                 icon: Icons.upload_rounded,
                 accentColor: AppTheme.secondaryColor,
-                isSelected: _selectedMonthTable == 1 || _selectedMonthTable == 2,
+                isSelected:
+                    _selectedMonthTable == 1 || _selectedMonthTable == 2,
                 onTap: () {
                   setState(() {
                     _selectedMonthTable = 1;
@@ -133,7 +155,42 @@ class _ReportsTabState extends State<ReportsTab> {
               accentColor: AppTheme.primaryColor,
             ),
           ),
+          const SizedBox(height: 24),
+          const SectionTitle('Phân tích tồn kho'),
           const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final composition = InventoryCompositionChart(
+                slices: inventorySlices,
+                totalQuantity: inventorySlices.fold(
+                  0,
+                  (sum, item) => sum + item.quantity,
+                ),
+              );
+              final trend = InventoryValueTrendChart(
+                points: inventoryValuePoints,
+              );
+
+              if (constraints.maxWidth >= 720) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: composition),
+                    const SizedBox(width: 12),
+                    Expanded(child: trend),
+                  ],
+                );
+              }
+              return Column(
+                children: [
+                  composition,
+                  const SizedBox(height: 12),
+                  trend,
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 24),
           _MonthlyDetailTableCard(
             selectedMode: _selectedMonthTable,
             onModeChanged: (mode) {
@@ -146,7 +203,6 @@ class _ReportsTabState extends State<ReportsTab> {
             weeklyData: weeklyData,
             isNarrow: isNarrow,
           ),
-
           const SizedBox(height: 24),
           const SectionTitle('Hoạt động 7 ngày gần đây'),
           const SizedBox(height: 4),
@@ -160,7 +216,6 @@ class _ReportsTabState extends State<ReportsTab> {
           ),
           const SizedBox(height: 12),
           _SevenDayChart(activities: activities),
-
           const SizedBox(height: 24),
           if (isNarrow) ...[
             const SectionTitle('Top gạo xuất nhiều nhất'),
@@ -329,16 +384,6 @@ class _MonthlyColumnBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var maxVal = 0.0;
-    for (final w in weeklyData) {
-      if ((selectedMode == 0 || selectedMode == 2) && w.importQty > maxVal) {
-        maxVal = w.importQty;
-      }
-      if ((selectedMode == 1 || selectedMode == 2) && w.exportQty > maxVal) {
-        maxVal = w.exportQty;
-      }
-    }
-
     final showImport = selectedMode == 0 || selectedMode == 2;
     final showExport = selectedMode == 1 || selectedMode == 2;
 
@@ -384,125 +429,22 @@ class _MonthlyColumnBars extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 72,
-            child: Row(
-              children: [
-                for (final w in weeklyData)
-                  Expanded(
-                    child: _WeeklyBarColumn(
-                      week: w,
-                      maxVal: maxVal,
-                      showImport: showImport,
-                      showExport: showExport,
-                    ),
+          const SizedBox(height: 12),
+          ReportFlowBarChart(
+            points: weeklyData
+                .map(
+                  (week) => ReportFlowPoint(
+                    label: week.label.split(' ').first,
+                    importQuantity: week.importQty,
+                    exportQuantity: week.exportQty,
                   ),
-              ],
-            ),
+                )
+                .toList(growable: false),
+            showImport: showImport,
+            showExport: showExport,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _WeeklyBarColumn extends StatelessWidget {
-  const _WeeklyBarColumn({
-    required this.week,
-    required this.maxVal,
-    required this.showImport,
-    required this.showExport,
-  });
-
-  final _WeeklyBarData week;
-  final double maxVal;
-  final bool showImport;
-  final bool showExport;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 12,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (showImport && week.importQty > 0)
-                  Text(
-                    '${week.importQty.toInt()}',
-                    style: const TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.accentGreen,
-                    ),
-                  ),
-                if (showImport && showExport && week.importQty > 0 && week.exportQty > 0)
-                  const SizedBox(width: 2),
-                if (showExport && week.exportQty > 0)
-                  Text(
-                    '${week.exportQty.toInt()}',
-                    style: const TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.secondaryColor,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 2),
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final maxH = constraints.maxHeight;
-              final importH = maxVal > 0 && showImport && week.importQty > 0
-                  ? (maxH * week.importQty / maxVal).clamp(4.0, maxH)
-                  : (showImport ? 2.0 : 0.0);
-              final exportH = maxVal > 0 && showExport && week.exportQty > 0
-                  ? (maxH * week.exportQty / maxVal).clamp(4.0, maxH)
-                  : (showExport ? 2.0 : 0.0);
-
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (showImport)
-                    _ActivityBar(
-                      height: importH,
-                      color: week.importQty > 0
-                          ? AppTheme.accentGreen
-                          : const Color(0xFFE2E8F0),
-                      width: 10,
-                    ),
-                  if (showImport && showExport) const SizedBox(width: 3),
-                  if (showExport)
-                    _ActivityBar(
-                      height: exportH,
-                      color: week.exportQty > 0
-                          ? AppTheme.secondaryColor
-                          : const Color(0xFFE2E8F0),
-                      width: 10,
-                    ),
-                ],
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          week.label.split(' ').first,
-          style: const TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -526,41 +468,52 @@ class _ImportDataTable extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 8,
-          runSpacing: 4,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.download_rounded, size: 16, color: AppTheme.accentGreen),
-                const SizedBox(width: 6),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 190),
-                  child: const Text(
-                    'Bảng Cột Nhập Tháng',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
+            Expanded(
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentGreen.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    child: const Icon(
+                      Icons.download_rounded,
+                      size: 15,
+                      color: AppTheme.accentGreen,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  const Flexible(
+                    child: Text(
+                      'Bảng Cột Nhập Tháng',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: AppTheme.accentGreen.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                '${sortedReceipts.length} dòng',
+                '${sortedReceipts.length} dòng dữ liệu',
                 style: const TextStyle(
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.accentGreen,
                 ),
@@ -569,212 +522,255 @@ class _ImportDataTable extends StatelessWidget {
           ],
         ),
         if (isNarrow) ...[
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           const Text(
-            '👉 Vuốt ngang để xem đủ 5 cột',
+            '👉 Vuốt ngang để xem đầy đủ các cột dữ liệu',
             style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
           ),
         ],
-        const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: 465,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Row(
-                    children: [
-                      SizedBox(
-                        width: 50,
-                        child: Text(
-                          'Cột Ngày',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textSecondary,
-                          ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppTheme.borderColor),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 465,
+                child: Column(
+                  children: [
+                    // TABLE HEADER
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF1F5F9),
+                        border: Border(
+                          bottom: BorderSide(color: AppTheme.borderColor),
                         ),
                       ),
-                      SizedBox(
-                        width: 105,
-                        child: Text(
-                          'Cột Mã phiếu',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textSecondary,
+                      child: const Row(
+                        children: [
+                          SizedBox(
+                            width: 50,
+                            child: Text(
+                              'Cột Ngày',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 115,
-                        child: Text(
-                          'Cột Loại gạo',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textSecondary,
+                          SizedBox(
+                            width: 100,
+                            child: Text(
+                              'Cột Mã phiếu',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 80,
-                        child: Text(
-                          'Cột Lượng',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.accentGreen,
+                          SizedBox(
+                            width: 115,
+                            child: Text(
+                              'Cột Loại gạo',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
                           ),
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 95,
-                        child: Text(
-                          'Cột Tiền (₫)',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                          SizedBox(
+                            width: 80,
+                            child: Text(
+                              'Cột Lượng',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.accentGreen,
+                                letterSpacing: 0.3,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
                           ),
-                          textAlign: TextAlign.right,
-                        ),
+                          SizedBox(
+                            width: 95,
+                            child: Text(
+                              'Cột Tiền (₫)',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textPrimary,
+                                letterSpacing: 0.3,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                ...sortedReceipts.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final receipt = entry.value;
-                  final isEven = index % 2 == 0;
+                    ),
+                    // TABLE ROWS
+                    ...sortedReceipts.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final receipt = entry.value;
+                      final isEven = index % 2 == 0;
 
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: isEven ? Colors.transparent : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(4),
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 7),
+                        decoration: BoxDecoration(
+                          color:
+                              isEven ? Colors.white : const Color(0xFFF8FAFC),
+                          border: const Border(
+                            bottom:
+                                BorderSide(color: Color(0xFFF1F5F9), width: 1),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 50,
+                              child: Text(
+                                _formatDate(receipt.date),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 100,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryLight
+                                        .withValues(alpha: 0.4),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    receipt.code,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.primaryDark,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 115,
+                              child: Text(
+                                receipt.riceName,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                '+${NumberFormatter.quantity(receipt.quantity)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.accentGreen,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 95,
+                              child: Text(
+                                CurrencyFormatter.formatVnd(
+                                    receipt.totalAmount),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textPrimary,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    // TABLE FOOTER TOTALS
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentGreen.withValues(alpha: 0.08),
+                        border: const Border(
+                          top: BorderSide(color: AppTheme.borderColor),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(
+                            width: 265,
+                            child: Text(
+                              'Tổng Cột Nhập:',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.accentGreen,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 80,
+                            child: Text(
+                              '+${NumberFormatter.quantity(totalQty)} kg',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.accentGreen,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 95,
+                            child: Text(
+                              CurrencyFormatter.formatVnd(totalAmount),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.accentGreen,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 50,
-                          child: Text(
-                            _formatDate(receipt.date),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 105,
-                          child: Text(
-                            receipt.code,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.primaryColor,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 115,
-                          child: Text(
-                            receipt.riceName,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.textPrimary,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 80,
-                          child: Text(
-                            '+${NumberFormatter.quantity(receipt.quantity)} kg',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.accentGreen,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 95,
-                          child: Text(
-                            CurrencyFormatter.formatVnd(receipt.totalAmount),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-                const Divider(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentGreen.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(
-                        width: 270,
-                        child: Text(
-                          'Tổng Cột Nhập:',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.accentGreen,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 80,
-                        child: Text(
-                          '+${NumberFormatter.quantity(totalQty)} kg',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.accentGreen,
-                          ),
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 95,
-                        child: Text(
-                          CurrencyFormatter.formatVnd(totalAmount),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.accentGreen,
-                          ),
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -802,41 +798,52 @@ class _ExportDataTable extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          alignment: WrapAlignment.spaceBetween,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 8,
-          runSpacing: 4,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.upload_rounded, size: 16, color: AppTheme.secondaryColor),
-                const SizedBox(width: 6),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 190),
-                  child: const Text(
-                    'Bảng Cột Xuất Tháng',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimary,
+            Expanded(
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: AppTheme.secondaryColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    child: const Icon(
+                      Icons.upload_rounded,
+                      size: 15,
+                      color: AppTheme.secondaryColor,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  const Flexible(
+                    child: Text(
+                      'Bảng Cột Xuất Tháng',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: AppTheme.secondaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                '${sortedReceipts.length} dòng',
+                '${sortedReceipts.length} dòng dữ liệu',
                 style: const TextStyle(
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.secondaryColor,
                 ),
@@ -845,212 +852,255 @@ class _ExportDataTable extends StatelessWidget {
           ],
         ),
         if (isNarrow) ...[
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           const Text(
-            '👉 Vuốt ngang để xem đủ 5 cột',
+            '👉 Vuốt ngang để xem đầy đủ các cột dữ liệu',
             style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
           ),
         ],
-        const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: SizedBox(
-            width: 465,
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Row(
-                    children: [
-                      SizedBox(
-                        width: 50,
-                        child: Text(
-                          'Cột Ngày',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textSecondary,
-                          ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppTheme.borderColor),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 465,
+                child: Column(
+                  children: [
+                    // TABLE HEADER
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF1F5F9),
+                        border: Border(
+                          bottom: BorderSide(color: AppTheme.borderColor),
                         ),
                       ),
-                      SizedBox(
-                        width: 105,
-                        child: Text(
-                          'Cột Mã phiếu',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textSecondary,
+                      child: const Row(
+                        children: [
+                          SizedBox(
+                            width: 50,
+                            child: Text(
+                              'Cột Ngày',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 115,
-                        child: Text(
-                          'Cột Khách hàng',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textSecondary,
+                          SizedBox(
+                            width: 100,
+                            child: Text(
+                              'Cột Mã phiếu',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 80,
-                        child: Text(
-                          'Cột Lượng',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.secondaryColor,
+                          SizedBox(
+                            width: 115,
+                            child: Text(
+                              'Cột Khách hàng',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
                           ),
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 95,
-                        child: Text(
-                          'Cột Tiền (₫)',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                          SizedBox(
+                            width: 80,
+                            child: Text(
+                              'Cột Lượng',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.secondaryColor,
+                                letterSpacing: 0.3,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
                           ),
-                          textAlign: TextAlign.right,
-                        ),
+                          SizedBox(
+                            width: 95,
+                            child: Text(
+                              'Cột Tiền (₫)',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textPrimary,
+                                letterSpacing: 0.3,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                ...sortedReceipts.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final receipt = entry.value;
-                  final isEven = index % 2 == 0;
+                    ),
+                    // TABLE ROWS
+                    ...sortedReceipts.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final receipt = entry.value;
+                      final isEven = index % 2 == 0;
 
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: isEven ? Colors.transparent : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(4),
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 7),
+                        decoration: BoxDecoration(
+                          color:
+                              isEven ? Colors.white : const Color(0xFFF8FAFC),
+                          border: const Border(
+                            bottom:
+                                BorderSide(color: Color(0xFFF1F5F9), width: 1),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 50,
+                              child: Text(
+                                _formatDate(receipt.date),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 100,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.secondaryColor
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    receipt.code,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.secondaryColor,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 115,
+                              child: Text(
+                                '${receipt.customerName} (${receipt.riceName})',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 80,
+                              child: Text(
+                                '-${NumberFormatter.quantity(receipt.quantity)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.secondaryColor,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 95,
+                              child: Text(
+                                CurrencyFormatter.formatVnd(
+                                    receipt.totalAmount),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textPrimary,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    // TABLE FOOTER TOTALS
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.secondaryColor.withValues(alpha: 0.08),
+                        border: const Border(
+                          top: BorderSide(color: AppTheme.borderColor),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(
+                            width: 265,
+                            child: Text(
+                              'Tổng Cột Xuất:',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.secondaryColor,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 80,
+                            child: Text(
+                              '-${NumberFormatter.quantity(totalQty)} kg',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.secondaryColor,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 95,
+                            child: Text(
+                              CurrencyFormatter.formatVnd(totalAmount),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.secondaryColor,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 50,
-                          child: Text(
-                            _formatDate(receipt.date),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 105,
-                          child: Text(
-                            receipt.code,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.primaryColor,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 115,
-                          child: Text(
-                            '${receipt.customerName} (${receipt.riceName})',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.textPrimary,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 80,
-                          child: Text(
-                            '-${NumberFormatter.quantity(receipt.quantity)} kg',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.secondaryColor,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 95,
-                          child: Text(
-                            CurrencyFormatter.formatVnd(receipt.totalAmount),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            ),
-                            textAlign: TextAlign.right,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-                const Divider(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppTheme.secondaryColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(
-                        width: 270,
-                        child: Text(
-                          'Tổng Cột Xuất:',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.secondaryColor,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: 80,
-                        child: Text(
-                          '-${NumberFormatter.quantity(totalQty)} kg',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.secondaryColor,
-                          ),
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 95,
-                        child: Text(
-                          CurrencyFormatter.formatVnd(totalAmount),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.secondaryColor,
-                          ),
-                          textAlign: TextAlign.right,
-                        ),
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -1158,7 +1208,8 @@ class _TopExportedList extends StatelessWidget {
     double maxQty,
     ThemeData theme,
   ) {
-    final ratio = maxQty > 0 ? (item.totalQuantity / maxQty).clamp(0.05, 1.0) : 0.0;
+    final ratio =
+        maxQty > 0 ? (item.totalQuantity / maxQty).clamp(0.05, 1.0) : 0.0;
     final isTop1 = rank == 1;
 
     return Row(
@@ -1167,9 +1218,7 @@ class _TopExportedList extends StatelessWidget {
           width: 26,
           height: 26,
           decoration: BoxDecoration(
-            color: isTop1
-                ? AppTheme.secondaryColor
-                : AppTheme.backgroundColor,
+            color: isTop1 ? AppTheme.secondaryColor : AppTheme.backgroundColor,
             shape: BoxShape.circle,
             border: isTop1 ? null : Border.all(color: AppTheme.borderColor),
           ),
@@ -1265,8 +1314,10 @@ class _SevenDayChart extends StatelessWidget {
               spacing: 12,
               runSpacing: 8,
               children: [
-                _LegendItem(color: AppTheme.accentGreen, label: 'Cột Nhập kho (kg)'),
-                _LegendItem(color: AppTheme.secondaryColor, label: 'Cột Xuất kho (kg)'),
+                _LegendItem(
+                    color: AppTheme.accentGreen, label: 'Cột Nhập kho (kg)'),
+                _LegendItem(
+                    color: AppTheme.secondaryColor, label: 'Cột Xuất kho (kg)'),
               ],
             ),
             const SizedBox(height: 16),
@@ -1406,7 +1457,9 @@ class _SevenDayTable extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
-                      color: isToday ? AppTheme.primaryColor : AppTheme.textPrimary,
+                      color: isToday
+                          ? AppTheme.primaryColor
+                          : AppTheme.textPrimary,
                     ),
                   ),
                 ),
@@ -1445,13 +1498,17 @@ class _SevenDayTable extends StatelessWidget {
                 Expanded(
                   flex: 3,
                   child: Text(
-                    net > 0 ? '+${NumberFormatter.quantity(net)}' : NumberFormatter.quantity(net),
+                    net > 0
+                        ? '+${NumberFormatter.quantity(net)}'
+                        : NumberFormatter.quantity(net),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: net > 0
                           ? AppTheme.accentGreen
-                          : (net < 0 ? AppTheme.secondaryColor : AppTheme.textSecondary),
+                          : (net < 0
+                              ? AppTheme.secondaryColor
+                              : AppTheme.textSecondary),
                     ),
                     textAlign: TextAlign.right,
                   ),
@@ -1533,13 +1590,17 @@ class _DailyBars extends StatelessWidget {
                   children: [
                     _ActivityBar(
                       height: importH,
-                      color: hasImport ? AppTheme.accentGreen : const Color(0xFFE2E8F0),
+                      color: hasImport
+                          ? AppTheme.accentGreen
+                          : const Color(0xFFE2E8F0),
                       width: 11,
                     ),
                     const SizedBox(width: 3),
                     _ActivityBar(
                       height: exportH,
-                      color: hasExport ? AppTheme.secondaryColor : const Color(0xFFE2E8F0),
+                      color: hasExport
+                          ? AppTheme.secondaryColor
+                          : const Color(0xFFE2E8F0),
                       width: 11,
                     ),
                   ],
@@ -1575,7 +1636,9 @@ class _ActivityBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
       width: width,
       height: height,
       decoration: BoxDecoration(
@@ -1625,9 +1688,8 @@ class _MonthlyMetricCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
-            color: isSelected
-                ? accentColor.withValues(alpha: 0.04)
-                : Colors.white,
+            color:
+                isSelected ? accentColor.withValues(alpha: 0.04) : Colors.white,
             border: Border(
               left: BorderSide(color: accentColor, width: 4),
             ),
@@ -1645,7 +1707,8 @@ class _MonthlyMetricCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: isSelected ? accentColor : AppTheme.textSecondary,
+                        color:
+                            isSelected ? accentColor : AppTheme.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1668,7 +1731,8 @@ class _MonthlyMetricCard extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
                 decoration: BoxDecoration(
                   color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
@@ -1783,7 +1847,12 @@ List<_WeeklyBarData> _buildMonthlyWeeklyBars({
     exportQtys[index] += r.quantity;
   }
 
-  final labels = ['Tuần 1 (1-7)', 'Tuần 2 (8-14)', 'Tuần 3 (15-21)', 'Tuần 4 (22+)'];
+  final labels = [
+    'Tuần 1 (1-7)',
+    'Tuần 2 (8-14)',
+    'Tuần 3 (15-21)',
+    'Tuần 4 (22+)'
+  ];
   return List.generate(4, (i) {
     return _WeeklyBarData(
       label: labels[i],
@@ -1817,6 +1886,106 @@ List<_DailyActivity> _buildDailyActivities({
       date: date,
       importQuantity: importProvider.quantityOn(date),
       exportQuantity: exportProvider.quantityOn(date),
+    );
+  });
+}
+
+List<ReportInventorySlice> _buildInventorySlices({
+  required List<BatchModel> batches,
+  required List<RiceModel> rices,
+}) {
+  const colors = [
+    AppTheme.primaryColor,
+    AppTheme.warningColor,
+    AppTheme.infoColor,
+    Color(0xFF8B5CF6),
+    AppTheme.accentTeal,
+  ];
+  final today = DateTime.now();
+  final startOfToday = DateTime(today.year, today.month, today.day);
+  final namesById = {for (final rice in rices) rice.id: rice.name};
+  final quantities = <String, double>{};
+
+  for (final batch in batches) {
+    final expiry = DateTime(
+      batch.expiryDate.year,
+      batch.expiryDate.month,
+      batch.expiryDate.day,
+    );
+    if (batch.quantity <= 0 ||
+        batch.status == BatchStatus.expired ||
+        expiry.isBefore(startOfToday)) {
+      continue;
+    }
+    quantities.update(
+      batch.riceId,
+      (value) => value + batch.quantity,
+      ifAbsent: () => batch.quantity,
+    );
+  }
+
+  final sorted = quantities.entries.toList()
+    ..sort((a, b) => b.value.compareTo(a.value));
+  final visible = sorted.take(4).toList();
+  final otherQuantity = sorted.skip(4).fold<double>(
+        0,
+        (sum, entry) => sum + entry.value,
+      );
+
+  final result = List<ReportInventorySlice>.generate(
+    visible.length,
+    (index) => ReportInventorySlice(
+      label: namesById[visible[index].key] ?? visible[index].key,
+      quantity: visible[index].value,
+      color: colors[index],
+    ),
+  );
+  if (otherQuantity > 0) {
+    result.add(
+      ReportInventorySlice(
+        label: 'Khác',
+        quantity: otherQuantity,
+        color: colors[4],
+      ),
+    );
+  }
+  return result;
+}
+
+List<ReportValuePoint> _buildInventoryValuePoints({
+  required List<InventorySnapshotModel> snapshots,
+  required DateTime today,
+  required double currentValue,
+  required List<ImportReceiptModel> importReceipts,
+  required List<ExportReceiptModel> exportReceipts,
+  required List<RiceModel> rices,
+}) {
+  final pricesByRiceId = {
+    for (final rice in rices) rice.id: rice.purchasePrice,
+  };
+  final startOfToday = DateTime(today.year, today.month, today.day);
+
+  return List.generate(7, (index) {
+    final date = startOfToday.subtract(Duration(days: 6 - index));
+    final nextDay = date.add(const Duration(days: 1));
+    final laterImports = importReceipts
+        .where((receipt) => !receipt.date.isBefore(nextDay))
+        .fold<double>(0, (sum, receipt) => sum + receipt.totalAmount);
+    final laterExportCost = exportReceipts
+        .where((receipt) => !receipt.date.isBefore(nextDay))
+        .fold<double>(
+          0,
+          (sum, receipt) =>
+              sum +
+              receipt.quantity *
+                  (pricesByRiceId[receipt.riceId] ?? receipt.sellingPrice),
+        );
+    return ReportValuePoint(
+      date: date,
+      value: (currentValue - laterImports + laterExportCost).clamp(
+        0,
+        double.infinity,
+      ),
     );
   });
 }

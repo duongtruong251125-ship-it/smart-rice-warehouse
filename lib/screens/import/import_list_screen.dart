@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
@@ -17,9 +18,7 @@ class ImportListScreen extends StatelessWidget {
     if (!context.mounted || message is! String) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    AppToast.success(context, message);
   }
 
   @override

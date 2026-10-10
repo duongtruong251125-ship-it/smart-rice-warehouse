@@ -11,7 +11,8 @@ class ForecastProvider extends ChangeNotifier {
   final ForecastService _service = const ForecastService();
   List<ForecastModel> _forecasts = <ForecastModel>[];
 
-  List<ForecastModel> get forecasts => List<ForecastModel>.unmodifiable(_forecasts);
+  List<ForecastModel> get forecasts =>
+      List<ForecastModel>.unmodifiable(_forecasts);
 
   int get reorderSoonCount =>
       _forecasts.where((f) => f.status == ForecastStatus.reorderSoon).length;

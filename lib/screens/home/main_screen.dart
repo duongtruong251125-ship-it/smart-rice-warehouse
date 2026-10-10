@@ -20,7 +20,7 @@ class _MainScreenState extends State<MainScreen> {
   static const _titles = <String>[
     'Trang chủ',
     'Kho hàng',
-    'Nhập/Xuất',
+    'Nhập / Xuất',
     'Báo cáo',
     'Tài khoản',
   ];
@@ -40,27 +40,53 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 16,
+        toolbarHeight: 64,
         title: Row(
           children: [
             Container(
-              width: 30,
-              height: 30,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: AppTheme.primaryLight,
-                borderRadius: BorderRadius.circular(7),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
-                Icons.rice_bowl_rounded,
-                size: 17,
-                color: AppTheme.primaryColor,
+                Icons.warehouse_rounded,
+                size: 22,
+                color: AppTheme.primaryDark,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                _titles[_selectedIndex],
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'KHO TRUNG TÂM',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primaryColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Text(
+                      _titles[_selectedIndex],
+                      key: ValueKey<String>(_titles[_selectedIndex]),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -70,7 +96,18 @@ class _MainScreenState extends State<MainScreen> {
             tooltip: 'Quét mã QR Lô gạo',
             onPressed: () =>
                 Navigator.of(context).pushNamed(AppRoutes.qrScanner),
-            icon: const Icon(Icons.qr_code_scanner_rounded),
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceMuted,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.qr_code_scanner_rounded,
+                size: 19,
+                color: AppTheme.textPrimary,
+              ),
+            ),
           ),
           Consumer<AlertProvider>(
             builder: (context, alertProvider, _) {
@@ -79,15 +116,33 @@ class _MainScreenState extends State<MainScreen> {
                 tooltip: 'Cảnh báo & Thông báo',
                 onPressed: () =>
                     Navigator.of(context).pushNamed(AppRoutes.alerts),
-                icon: Badge(
-                  isLabelVisible: unread > 0,
-                  label: Text('$unread'),
-                  child: const Icon(Icons.notifications_outlined),
+                icon: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceMuted,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Badge(
+                    isLabelVisible: unread > 0,
+                    label: Text(
+                      '$unread',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    backgroundColor: AppTheme.dangerColor,
+                    child: const Icon(
+                      Icons.notifications_none_rounded,
+                      size: 19,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
                 ),
               );
             },
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
         ],
       ),
       body: IndexedStack(
@@ -96,9 +151,17 @@ class _MainScreenState extends State<MainScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
+          color: AppTheme.cardColor,
           border: Border(
             top: BorderSide(color: AppTheme.borderColor, width: 1),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Color.fromRGBO(0, 0, 0, 0.03),
+              blurRadius: 10,
+              offset: Offset(0, -2),
+            ),
+          ],
         ),
         child: NavigationBar(
           selectedIndex: _selectedIndex,
@@ -139,4 +202,3 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
-

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
+import 'package:smart_rice_warehouse/widgets/modern_date_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
@@ -122,11 +124,12 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
 
   Future<void> _selectManufactureDate() async {
     final now = DateTime.now();
-    final selected = await showDatePicker(
+    final selected = await ModernDatePicker.show(
       context: context,
+      title: 'Chọn Ngày Sản Xuất',
       initialDate: _manufactureDate ?? now,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(now.year + 10),
+      minDate: DateTime(2000),
+      maxDate: DateTime(now.year + 10),
     );
     if (!mounted || selected == null) {
       return;
@@ -143,11 +146,12 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
     final initialDate = _expiryDate ??
         (_manufactureDate?.add(const Duration(days: 365)) ??
             now.add(const Duration(days: 365)));
-    final selected = await showDatePicker(
+    final selected = await ModernDatePicker.show(
       context: context,
+      title: 'Chọn Hạn Sử Dụng',
       initialDate: initialDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(now.year + 20),
+      minDate: _manufactureDate ?? DateTime(2000),
+      maxDate: DateTime(now.year + 20),
     );
     if (!mounted || selected == null) {
       return;
@@ -170,14 +174,14 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
     final quantity = _parseNumber(_quantityController.text)!;
     final purchasePrice = _parseNumber(_purchasePriceController.text)!;
     final now = DateTime.now();
-    final identifier = now.microsecondsSinceEpoch.toString();
+    final identifier = const Uuid().v4();
     final provider = context.read<ImportProvider>();
     final isNew = _selectedBatchCode == _newBatchOption;
     final batchCode =
         isNew ? _batchCodeController.text.trim() : _selectedBatchCode;
 
     final receipt = ImportReceiptModel(
-      id: 'import-$identifier',
+      id: identifier,
       code: provider.generateReceiptCode(),
       supplierId: supplier.id,
       supplierName: supplier.name,
@@ -193,7 +197,7 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
     );
     final today = DateTime(now.year, now.month, now.day);
     final batch = BatchModel(
-      id: 'batch-$identifier',
+      id: identifier,
       code: batchCode,
       riceId: rice.id,
       riceName: rice.name,
@@ -242,7 +246,7 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               DropdownButtonFormField<SupplierModel>(
-                value: _selectedSupplier,
+                initialValue: _selectedSupplier,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Nhà cung cấp'),
                 items: suppliers
@@ -266,7 +270,7 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<RiceModel>(
-                value: _selectedRice,
+                initialValue: _selectedRice,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Gạo'),
                 items: rices
@@ -355,7 +359,7 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                     children: [
                       DropdownButtonFormField<String>(
                         key: ValueKey('batch_dd_${rice?.id}_$currentValue'),
-                        value: currentValue,
+                        initialValue: currentValue,
                         isExpanded: true,
                         decoration: InputDecoration(
                           labelText: 'Mã lô hàng',

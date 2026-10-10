@@ -1,3 +1,4 @@
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:smart_rice_warehouse/models/ocr_invoice_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/models/supplier_model.dart';
@@ -14,6 +15,17 @@ class OcrSampleInvoice {
 
 class OcrService {
   const OcrService();
+
+  Future<String> recognizeTextFromImage(String imagePath) async {
+    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    try {
+      final result =
+          await recognizer.processImage(InputImage.fromFilePath(imagePath));
+      return result.text.trim();
+    } finally {
+      await recognizer.close();
+    }
+  }
 
   static const List<OcrSampleInvoice> samples = [
     OcrSampleInvoice(
@@ -120,9 +132,12 @@ HSD: 25/03/2027
     }
 
     if (quantity == null) {
-      final fallbackQty = RegExp(r'(\d+(?:[.,]\d+)?)\s*kg', caseSensitive: false).firstMatch(rawText);
+      final fallbackQty =
+          RegExp(r'(\d+(?:[.,]\d+)?)\s*kg', caseSensitive: false)
+              .firstMatch(rawText);
       if (fallbackQty != null) {
-        quantity = double.tryParse(fallbackQty.group(1)?.replaceAll(',', '.') ?? '');
+        quantity =
+            double.tryParse(fallbackQty.group(1)?.replaceAll(',', '.') ?? '');
       }
     }
 

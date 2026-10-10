@@ -128,7 +128,8 @@ class AlertProvider extends ChangeNotifier {
             batchId: batch.id,
             batchCode: batch.code,
             title: 'Lô đã hết hạn: ${batch.code}',
-            message: 'Lô ${batch.code} (${batch.riceName}, còn ${NumberFormatter.quantity(batch.quantity)} kg) '
+            message:
+                'Lô ${batch.code} (${batch.riceName}, còn ${NumberFormatter.quantity(batch.quantity)} kg) '
                 'đã hết hạn vào ${DateFormatter.ddMMyyyy(batch.expiryDate)}. Tuyệt đối không xuất hàng lô này!',
             severity: AlertSeverity.critical,
             createdAt: now,
@@ -147,7 +148,8 @@ class AlertProvider extends ChangeNotifier {
             batchId: batch.id,
             batchCode: batch.code,
             title: 'Lô sắp hết hạn khẩn cấp: ${batch.code}',
-            message: 'Lô ${batch.code} (${batch.riceName}, tồn ${NumberFormatter.quantity(batch.quantity)} kg) '
+            message:
+                'Lô ${batch.code} (${batch.riceName}, tồn ${NumberFormatter.quantity(batch.quantity)} kg) '
                 'chỉ còn $daysUntilExpiry ngày là hết hạn (${DateFormatter.ddMMyyyy(batch.expiryDate)}). Ưu tiên xuất FEFO ngay!',
             severity: AlertSeverity.critical,
             createdAt: now,
@@ -166,7 +168,8 @@ class AlertProvider extends ChangeNotifier {
             batchId: batch.id,
             batchCode: batch.code,
             title: 'Lô sắp hết hạn: ${batch.code}',
-            message: 'Lô ${batch.code} (${batch.riceName}, tồn ${NumberFormatter.quantity(batch.quantity)} kg) '
+            message:
+                'Lô ${batch.code} (${batch.riceName}, tồn ${NumberFormatter.quantity(batch.quantity)} kg) '
                 'còn $daysUntilExpiry ngày đến hạn (${DateFormatter.ddMMyyyy(batch.expiryDate)}).',
             severity: AlertSeverity.warning,
             createdAt: now,

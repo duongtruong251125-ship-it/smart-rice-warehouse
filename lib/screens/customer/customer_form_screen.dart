@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/core/utils/form_validators.dart';
 import 'package:smart_rice_warehouse/models/customer_model.dart';
 import 'package:smart_rice_warehouse/providers/customer_provider.dart';
@@ -71,7 +73,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
 
     final customer = CustomerModel(
       id: _originalCustomer?.id ??
-          'customer-${DateTime.now().microsecondsSinceEpoch}',
+          const Uuid().v4(),
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
       customerType: _customerType!,
@@ -82,9 +84,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
 
     if (widget.isEditing) {
       if (!provider.updateCustomer(customer)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể cập nhật khách hàng')),
-        );
+        AppToast.error(context, 'Không thể cập nhật khách hàng.');
         return;
       }
     } else {
@@ -132,7 +132,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<CustomerType>(
-                      value: _customerType,
+                      initialValue: _customerType,
                       decoration:
                           const InputDecoration(labelText: 'Loại khách'),
                       isExpanded: true,

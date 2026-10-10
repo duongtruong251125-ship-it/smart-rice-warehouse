@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
@@ -51,8 +52,10 @@ class _WarehouseLocationScreenState extends State<WarehouseLocationScreen> {
                 children: [
                   TextFormField(
                     controller: zoneCtrl,
-                    decoration: const InputDecoration(labelText: 'Khu vực (Zone)'),
-                    validator: (v) => v == null || v.isEmpty ? 'Nhập khu vực' : null,
+                    decoration:
+                        const InputDecoration(labelText: 'Khu vực (Zone)'),
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Nhập khu vực' : null,
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -60,16 +63,20 @@ class _WarehouseLocationScreenState extends State<WarehouseLocationScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: rackCtrl,
-                          decoration: const InputDecoration(labelText: 'Kệ (Rack)'),
-                          validator: (v) => v == null || v.isEmpty ? 'Nhập kệ' : null,
+                          decoration:
+                              const InputDecoration(labelText: 'Kệ (Rack)'),
+                          validator: (v) =>
+                              v == null || v.isEmpty ? 'Nhập kệ' : null,
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextFormField(
                           controller: shelfCtrl,
-                          decoration: const InputDecoration(labelText: 'Tầng (Shelf)'),
-                          validator: (v) => v == null || v.isEmpty ? 'Nhập tầng' : null,
+                          decoration:
+                              const InputDecoration(labelText: 'Tầng (Shelf)'),
+                          validator: (v) =>
+                              v == null || v.isEmpty ? 'Nhập tầng' : null,
                         ),
                       ),
                     ],
@@ -78,16 +85,19 @@ class _WarehouseLocationScreenState extends State<WarehouseLocationScreen> {
                   TextFormField(
                     controller: codeCtrl,
                     decoration: const InputDecoration(labelText: 'Mã vị trí'),
-                    validator: (v) => v == null || v.isEmpty ? 'Nhập mã vị trí' : null,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? 'Nhập mã vị trí' : null,
                   ),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: capacityCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Sức chứa tối đa (kg)'),
+                    decoration: const InputDecoration(
+                        labelText: 'Sức chứa tối đa (kg)'),
                     validator: (v) {
-                      if (v == null || double.tryParse(v) == null) {
-                        return 'Nhập số hợp lệ';
+                      final value = double.tryParse(v ?? '');
+                      if (value == null || value <= 0) {
+                        return 'Sức chứa phải lớn hơn 0';
                       }
                       return null;
                     },
@@ -95,7 +105,8 @@ class _WarehouseLocationScreenState extends State<WarehouseLocationScreen> {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: descCtrl,
-                    decoration: const InputDecoration(labelText: 'Ghi chú mô tả'),
+                    decoration:
+                        const InputDecoration(labelText: 'Ghi chú mô tả'),
                   ),
                 ],
               ),
@@ -116,15 +127,22 @@ class _WarehouseLocationScreenState extends State<WarehouseLocationScreen> {
                     shelf: shelfCtrl.text.trim(),
                     code: codeCtrl.text.trim(),
                     capacity: double.parse(capacityCtrl.text.trim()),
-                    description: descCtrl.text.trim().isEmpty ? null : descCtrl.text.trim(),
+                    description: descCtrl.text.trim().isEmpty
+                        ? null
+                        : descCtrl.text.trim(),
                   );
-                  context.read<WarehouseProvider>().addLocation(newLoc);
+                  final added = context.read<WarehouseProvider>().addLocation(
+                        newLoc,
+                      );
+                  if (!added) {
+                    AppToast.error(context,
+                        'Mã vị trí đã tồn tại hoặc sức chứa không hợp lệ.');
+                    return;
+                  }
                   Navigator.of(dialogCtx).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Đã thêm vị trí ${newLoc.fullDisplayName}'),
-                      backgroundColor: AppTheme.successColor,
-                    ),
+                  AppToast.success(
+                    context,
+                    'Đã thêm vị trí ${newLoc.code}.',
                   );
                 }
               },
@@ -188,7 +206,8 @@ class _WarehouseLocationScreenState extends State<WarehouseLocationScreen> {
                       color: isSelected
                           ? AppTheme.primaryColor
                           : AppTheme.textPrimary,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 );
@@ -212,7 +231,8 @@ class _WarehouseLocationScreenState extends State<WarehouseLocationScreen> {
                       final loc = filteredLocations[index];
                       // Tìm các lô đang lưu tại vị trí này
                       final storedBatches = batchProvider.batches
-                          .where((b) => b.warehouseLocationId == loc.id && b.quantity > 0)
+                          .where((b) =>
+                              b.warehouseLocationId == loc.id && b.quantity > 0)
                           .toList();
                       final totalWeight = storedBatches.fold<double>(
                         0.0,
@@ -297,7 +317,8 @@ class _LocationCardState extends State<_LocationCard> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(6),
@@ -346,7 +367,8 @@ class _LocationCardState extends State<_LocationCard> {
                     Expanded(
                       child: Text(
                         'Tải trọng: ${NumberFormatter.quantity(widget.totalWeight)} / ${NumberFormatter.quantity(loc.capacity)} kg',
-                        style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                        style: const TextStyle(
+                            fontSize: 11, color: AppTheme.textSecondary),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -356,7 +378,9 @@ class _LocationCardState extends State<_LocationCard> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: percent > 0.85 ? AppTheme.dangerColor : AppTheme.primaryColor,
+                        color: percent > 0.85
+                            ? AppTheme.dangerColor
+                            : AppTheme.primaryColor,
                       ),
                     ),
                   ],
@@ -369,7 +393,9 @@ class _LocationCardState extends State<_LocationCard> {
                     minHeight: 6,
                     backgroundColor: const Color(0xFFE2E8F0),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      percent > 0.85 ? AppTheme.dangerColor : AppTheme.primaryColor,
+                      percent > 0.85
+                          ? AppTheme.dangerColor
+                          : AppTheme.primaryColor,
                     ),
                   ),
                 ),
@@ -388,7 +414,9 @@ class _LocationCardState extends State<_LocationCard> {
                     children: [
                       Flexible(
                         child: Text(
-                          _isExpanded ? 'Thu gọn danh sách lô' : 'Xem các lô tại vị trí này (${batches.length})',
+                          _isExpanded
+                              ? 'Thu gọn danh sách lô'
+                              : 'Xem các lô tại vị trí này (${batches.length})',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -398,7 +426,9 @@ class _LocationCardState extends State<_LocationCard> {
                         ),
                       ),
                       Icon(
-                        _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        _isExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
                         size: 18,
                         color: AppTheme.accentBlue,
                       ),
@@ -406,7 +436,6 @@ class _LocationCardState extends State<_LocationCard> {
                   ),
                 ),
               ),
-
               if (_isExpanded) ...[
                 const Divider(height: 12),
                 Column(
@@ -414,10 +443,12 @@ class _LocationCardState extends State<_LocationCard> {
                     return ListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.qr_code_2_rounded, size: 20, color: AppTheme.textSecondary),
+                      leading: const Icon(Icons.qr_code_2_rounded,
+                          size: 20, color: AppTheme.textSecondary),
                       title: Text(
                         '${b.code} - ${b.riceName}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(
                         'Tồn: ${NumberFormatter.quantity(b.quantity)} kg',

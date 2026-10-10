@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
+import 'package:smart_rice_warehouse/services/printing_service.dart';
 import 'package:smart_rice_warehouse/widgets/status_chip.dart';
 
 class BatchDetailScreen extends StatefulWidget {
@@ -144,8 +146,8 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                                             fontSize: 13,
                                             fontWeight: FontWeight.w700,
                                             color: isSelected
-                                              ? AppTheme.primaryColor
-                                              : AppTheme.textPrimary,
+                                                ? AppTheme.primaryColor
+                                                : AppTheme.textPrimary,
                                           ),
                                         ),
                                         if (loc.description != null) ...[
@@ -191,20 +193,19 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                               final newLoc = warehouseProvider
                                   .findById(selectedLocationId!);
                               if (newLoc != null) {
-                                context.read<BatchProvider>().assignLocation(
-                                      batchId: batch.id,
-                                      locationId: newLoc.id,
-                                      locationName: newLoc.fullDisplayName,
-                                    );
-                                Navigator.of(sheetContext).pop();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Đã chuyển lô ${batch.code} đến ${newLoc.fullDisplayName}',
-                                    ),
-                                    backgroundColor: AppTheme.successColor,
-                                  ),
+                                final moved = warehouseProvider.assignBatch(
+                                  batchProvider: context.read<BatchProvider>(),
+                                  batchId: batch.id,
+                                  locationId: newLoc.id,
                                 );
+                                if (!moved) {
+                                  AppToast.error(context,
+                                      'Vị trí không hoạt động hoặc không đủ sức chứa.');
+                                  return;
+                                }
+                                Navigator.of(sheetContext).pop();
+                                AppToast.success(context,
+                                    'Đã chuyển lô ${batch.code} đến ${newLoc.code}.');
                               }
                             },
                       child: const Text(
@@ -293,14 +294,15 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
             ElevatedButton.icon(
               icon: const Icon(Icons.print_outlined, size: 18),
               label: const Text('In tem QR'),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(dialogCtx).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Lệnh in tem QR đã được gửi đến máy in!'),
-                    backgroundColor: AppTheme.primaryColor,
-                  ),
-                );
+                final printed = await PrintingService.printBatchLabel(batch);
+                if (!context.mounted) return;
+                if (printed) {
+                  AppToast.success(context, 'Đã gửi tem QR đến máy in.');
+                } else {
+                  AppToast.info(context, 'Đã hủy lệnh in tem QR.');
+                }
               },
             ),
           ],
@@ -326,7 +328,8 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final daysUntilExpiry = batch.expiryDate.difference(today).inDays;
-    final isExpired = daysUntilExpiry < 0 || batch.status == BatchStatus.expired;
+    final isExpired =
+        daysUntilExpiry < 0 || batch.status == BatchStatus.expired;
     final isCritical = daysUntilExpiry <= 7 && !isExpired;
 
     return Scaffold(
@@ -623,7 +626,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                         : 'Còn $daysUntilExpiry ngày',
                     valueColor: isExpired
                         ? AppTheme.dangerColor
-                        : (isCritical ? AppTheme.warningColor : AppTheme.successColor),
+                        : (isCritical
+                            ? AppTheme.warningColor
+                            : AppTheme.successColor),
                   ),
                 ],
               ),

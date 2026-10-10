@@ -37,7 +37,8 @@ class ExportDetailScreen extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.secondaryColor.withValues(alpha: 0.12),
+                          color:
+                              AppTheme.secondaryColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -175,8 +176,10 @@ class ExportDetailScreen extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: isNearExpiry
-                                  ? AppTheme.secondaryColor.withValues(alpha: 0.15)
-                                  : AppTheme.accentGreen.withValues(alpha: 0.15),
+                                  ? AppTheme.secondaryColor
+                                      .withValues(alpha: 0.15)
+                                  : AppTheme.accentGreen
+                                      .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -244,7 +247,8 @@ class ExportDetailScreen extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: isHighlighted ? AppTheme.textPrimary : AppTheme.textSecondary,
+            color:
+                isHighlighted ? AppTheme.textPrimary : AppTheme.textSecondary,
             fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -252,7 +256,8 @@ class ExportDetailScreen extends StatelessWidget {
           value,
           style: TextStyle(
             fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,
-            color: isHighlighted ? AppTheme.secondaryColor : AppTheme.textPrimary,
+            color:
+                isHighlighted ? AppTheme.secondaryColor : AppTheme.textPrimary,
             fontSize: isHighlighted ? 16 : 14,
           ),
         ),

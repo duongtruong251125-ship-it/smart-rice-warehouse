@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/core/utils/form_validators.dart';
 import 'package:smart_rice_warehouse/models/supplier_model.dart';
 import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
@@ -75,7 +77,7 @@ class _SupplierFormScreenState extends State<SupplierFormScreen> {
 
     final supplier = SupplierModel(
       id: _originalSupplier?.id ??
-          'supplier-${DateTime.now().microsecondsSinceEpoch}',
+          const Uuid().v4(),
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
       email: _emailController.text.trim(),
@@ -87,9 +89,7 @@ class _SupplierFormScreenState extends State<SupplierFormScreen> {
 
     if (widget.isEditing) {
       if (!provider.updateSupplier(supplier)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể cập nhật nhà cung cấp')),
-        );
+        AppToast.error(context, 'Không thể cập nhật nhà cung cấp.');
         return;
       }
     } else {

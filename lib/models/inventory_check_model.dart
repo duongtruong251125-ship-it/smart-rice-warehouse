@@ -63,6 +63,29 @@ class InventoryCheckItem {
       note: note ?? this.note,
     );
   }
+
+  Map<String, Object?> toJson() => {
+        'batchId': batchId,
+        'batchCode': batchCode,
+        'riceName': riceName,
+        'expectedQuantity': expectedQuantity,
+        'actualQuantity': actualQuantity,
+        'difference': difference,
+        'reason': reason.name,
+        'note': note,
+      };
+
+  factory InventoryCheckItem.fromJson(Map<String, dynamic> json) =>
+      InventoryCheckItem(
+        batchId: json['batchId'] as String,
+        batchCode: json['batchCode'] as String,
+        riceName: json['riceName'] as String,
+        expectedQuantity: (json['expectedQuantity'] as num).toDouble(),
+        actualQuantity: (json['actualQuantity'] as num).toDouble(),
+        difference: (json['difference'] as num).toDouble(),
+        reason: InventoryCheckReason.values.byName(json['reason'] as String),
+        note: json['note'] as String?,
+      );
 }
 
 class InventoryCheckSession {
@@ -115,4 +138,36 @@ class InventoryCheckSession {
       note: note ?? this.note,
     );
   }
+
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'code': code,
+        'createdAt': createdAt.toIso8601String(),
+        'createdBy': createdBy,
+        'status': status.name,
+        'items': items.map((item) => item.toJson()).toList(),
+        'totalItems': totalItems,
+        'totalDifference': totalDifference,
+        'completedAt': completedAt?.toIso8601String(),
+        'note': note,
+      };
+
+  factory InventoryCheckSession.fromJson(Map<String, dynamic> json) =>
+      InventoryCheckSession(
+        id: json['id'] as String,
+        code: json['code'] as String,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        createdBy: json['createdBy'] as String,
+        status: InventoryCheckStatus.values.byName(json['status'] as String),
+        items: (json['items'] as List<dynamic>? ?? const [])
+            .map((item) => InventoryCheckItem.fromJson(
+                Map<String, dynamic>.from(item as Map)))
+            .toList(),
+        totalItems: (json['totalItems'] as num).toInt(),
+        totalDifference: (json['totalDifference'] as num).toDouble(),
+        completedAt: json['completedAt'] == null
+            ? null
+            : DateTime.parse(json['completedAt'] as String),
+        note: json['note'] as String?,
+      );
 }

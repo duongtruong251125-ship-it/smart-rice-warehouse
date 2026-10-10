@@ -4,11 +4,14 @@ import 'package:smart_rice_warehouse/models/damage_report_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 
 class DamageProvider extends ChangeNotifier {
-  DamageProvider() {
-    _reports = List<DamageReportModel>.from(MockData.initialDamageReports);
+  DamageProvider({List<DamageReportModel>? initial, this.onPersist}) {
+    _reports = List<DamageReportModel>.from(
+      initial ?? MockData.initialDamageReports,
+    );
   }
 
   late List<DamageReportModel> _reports;
+  final ValueChanged<List<DamageReportModel>>? onPersist;
 
   List<DamageReportModel> get reports =>
       List<DamageReportModel>.unmodifiable(_reports);
@@ -37,7 +40,8 @@ class DamageProvider extends ChangeNotifier {
     }
 
     final now = DateTime.now();
-    final code = 'BH-${now.year}${now.month.toString().padLeft(2, '0')}-${(_reports.length + 1).toString().padLeft(3, '0')}';
+    final code =
+        'BH-${now.year}${now.month.toString().padLeft(2, '0')}-${(_reports.length + 1).toString().padLeft(3, '0')}';
 
     final report = DamageReportModel(
       id: 'damage-${now.millisecondsSinceEpoch}',
@@ -63,6 +67,7 @@ class DamageProvider extends ChangeNotifier {
 
     if (success) {
       _reports.insert(0, report);
+      onPersist?.call(reports);
       notifyListeners();
       return true;
     }

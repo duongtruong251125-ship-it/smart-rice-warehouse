@@ -3,14 +3,16 @@ import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
 
 class WarehouseService {
   /// Đếm số lô và tổng khối lượng tại từng vị trí kho
-  static Map<String, ({int batchCount, double totalWeight})> calculateLocationUsage({
+  static Map<String, ({int batchCount, double totalWeight})>
+      calculateLocationUsage({
     required List<WarehouseLocationModel> locations,
     required List<BatchModel> batches,
   }) {
     final result = <String, ({int batchCount, double totalWeight})>{};
 
     for (final loc in locations) {
-      final locBatches = batches.where((b) => b.warehouseLocationId == loc.id && b.quantity > 0);
+      final locBatches = batches
+          .where((b) => b.warehouseLocationId == loc.id && b.quantity > 0);
       final count = locBatches.length;
       final weight = locBatches.fold<double>(0.0, (sum, b) => sum + b.quantity);
       result[loc.id] = (batchCount: count, totalWeight: weight);
@@ -25,7 +27,8 @@ class WarehouseService {
     required List<BatchModel> batches,
     double requiredCapacity = 0,
   }) {
-    final usage = calculateLocationUsage(locations: locations, batches: batches);
+    final usage =
+        calculateLocationUsage(locations: locations, batches: batches);
 
     return locations.where((loc) {
       if (!loc.isActive) return false;

@@ -533,7 +533,8 @@ abstract final class MockData {
     ),
   ];
 
-  static const List<WarehouseLocationModel> warehouseLocations = <WarehouseLocationModel>[
+  static const List<WarehouseLocationModel> warehouseLocations =
+      <WarehouseLocationModel>[
     WarehouseLocationModel(
       id: 'loc-a-01',
       zone: 'Khu A',
@@ -596,7 +597,8 @@ abstract final class MockData {
     ),
   ];
 
-  static final List<InventoryCheckSession> initialInventoryChecks = <InventoryCheckSession>[
+  static final List<InventoryCheckSession> initialInventoryChecks =
+      <InventoryCheckSession>[
     InventoryCheckSession(
       id: 'session-001',
       code: 'KK-202610-001',
@@ -640,7 +642,8 @@ abstract final class MockData {
     ),
   ];
 
-  static final List<DamageReportModel> initialDamageReports = <DamageReportModel>[
+  static final List<DamageReportModel> initialDamageReports =
+      <DamageReportModel>[
     DamageReportModel(
       id: 'damage-001',
       code: 'BH-202609-001',

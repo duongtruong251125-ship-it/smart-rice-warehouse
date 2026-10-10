@@ -42,4 +42,23 @@ class CustomerModel {
       isActive: isActive ?? this.isActive,
     );
   }
+
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'name': name,
+        'phone': phone,
+        'customerType': customerType.name,
+        'address': address,
+        'isActive': isActive,
+      };
+
+  factory CustomerModel.fromJson(Map<String, dynamic> json) => CustomerModel(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        phone: json['phone'] as String,
+        customerType:
+            CustomerType.values.byName(json['customerType'] as String),
+        address: json['address'] as String,
+        isActive: json['isActive'] as bool,
+      );
 }

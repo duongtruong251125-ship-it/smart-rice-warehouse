@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
+import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/widgets/confirmation_dialog.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
@@ -56,16 +58,26 @@ class _RiceListScreenState extends State<RiceListScreen> {
       return;
     }
 
-    final deleted = context.read<RiceProvider>().deleteRice(rice.id);
+    final batchProvider = context.read<BatchProvider>();
+    final deleted = context.read<RiceProvider>().deleteRice(
+          rice.id,
+          isReferenced: (id) => batchProvider.batches.any(
+            (batch) => batch.riceId == id,
+          ),
+        );
     if (deleted) {
       _showMessage('Đã xóa gạo');
+    } else {
+      _showMessage('Không thể xóa: loại gạo đang được sử dụng trong lô hàng.');
     }
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    if (message.startsWith('Không')) {
+      AppToast.error(context, message);
+    } else {
+      AppToast.success(context, message);
+    }
   }
 
   @override
@@ -170,7 +182,13 @@ class _RiceCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.borderColor),
+        boxShadow: AppTheme.softShadow,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -318,4 +336,3 @@ class _PriceLabel extends StatelessWidget {
     );
   }
 }
-

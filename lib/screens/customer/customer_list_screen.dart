@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/models/customer_model.dart';
+import 'package:smart_rice_warehouse/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/providers/customer_provider.dart';
 import 'package:smart_rice_warehouse/widgets/confirmation_dialog.dart';
 import 'package:smart_rice_warehouse/widgets/management_list_scaffold.dart';
@@ -54,15 +57,25 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       return;
     }
 
-    if (context.read<CustomerProvider>().deleteCustomer(customer.id)) {
+    final exportProvider = context.read<ExportProvider>();
+    if (context.read<CustomerProvider>().deleteCustomer(
+          customer.id,
+          isReferenced: (id) => exportProvider.receipts.any(
+            (receipt) => receipt.customerId == id,
+          ),
+        )) {
       _showMessage('Đã xóa khách hàng');
+    } else {
+      _showMessage('Không thể xóa: khách hàng đã có phiếu xuất liên quan.');
     }
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
+    if (message.startsWith('Không')) {
+      AppToast.error(context, message);
+    } else {
+      AppToast.success(context, message);
+    }
   }
 
   @override
@@ -112,7 +125,13 @@ class _CustomerCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.borderColor),
+        boxShadow: AppTheme.softShadow,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -235,4 +254,3 @@ class _InfoLine extends StatelessWidget {
     );
   }
 }
-

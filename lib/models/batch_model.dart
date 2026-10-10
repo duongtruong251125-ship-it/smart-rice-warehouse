@@ -1,7 +1,8 @@
 enum BatchStatus {
   available('Còn hàng'),
   lowStock('Sắp hết'),
-  expired('Hết hạn');
+  expired('Hết hạn'),
+  qualityHold('Tạm giữ');
 
   const BatchStatus(this.label);
 
@@ -70,4 +71,36 @@ class BatchModel {
       locationName: locationName ?? this.locationName,
     );
   }
+
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'code': code,
+        'riceId': riceId,
+        'riceName': riceName,
+        'quantity': quantity,
+        'importDate': importDate.toIso8601String(),
+        'manufactureDate': manufactureDate.toIso8601String(),
+        'expiryDate': expiryDate.toIso8601String(),
+        'status': status.name,
+        'supplierId': supplierId,
+        'supplierName': supplierName,
+        'warehouseLocationId': warehouseLocationId,
+        'locationName': locationName,
+      };
+
+  factory BatchModel.fromJson(Map<String, dynamic> json) => BatchModel(
+        id: json['id'] as String,
+        code: json['code'] as String,
+        riceId: json['riceId'] as String,
+        riceName: json['riceName'] as String,
+        quantity: (json['quantity'] as num).toDouble(),
+        importDate: DateTime.parse(json['importDate'] as String),
+        manufactureDate: DateTime.parse(json['manufactureDate'] as String),
+        expiryDate: DateTime.parse(json['expiryDate'] as String),
+        status: BatchStatus.values.byName(json['status'] as String),
+        supplierId: json['supplierId'] as String?,
+        supplierName: json['supplierName'] as String?,
+        warehouseLocationId: json['warehouseLocationId'] as String?,
+        locationName: json['locationName'] as String?,
+      );
 }

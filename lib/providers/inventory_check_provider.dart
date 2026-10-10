@@ -5,12 +5,18 @@ import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 
 class InventoryCheckProvider extends ChangeNotifier {
-  InventoryCheckProvider() {
-    _history = List<InventoryCheckSession>.from(MockData.initialInventoryChecks);
+  InventoryCheckProvider({
+    List<InventoryCheckSession>? initial,
+    this.onPersist,
+  }) {
+    _history = List<InventoryCheckSession>.from(
+      initial ?? MockData.initialInventoryChecks,
+    );
   }
 
   late List<InventoryCheckSession> _history;
   InventoryCheckSession? _activeSession;
+  final ValueChanged<List<InventoryCheckSession>>? onPersist;
 
   List<InventoryCheckSession> get history =>
       List<InventoryCheckSession>.unmodifiable(_history);
@@ -22,7 +28,8 @@ class InventoryCheckProvider extends ChangeNotifier {
   /// Bắt đầu một phiên kiểm kê mới
   InventoryCheckSession startNewSession({String createdBy = 'Admin'}) {
     final now = DateTime.now();
-    final code = 'KK-${now.year}${now.month.toString().padLeft(2, '0')}-${(_history.length + 1).toString().padLeft(3, '0')}';
+    final code =
+        'KK-${now.year}${now.month.toString().padLeft(2, '0')}-${(_history.length + 1).toString().padLeft(3, '0')}';
     final session = InventoryCheckSession(
       id: 'session-${DateTime.now().millisecondsSinceEpoch}',
       code: code,
@@ -69,7 +76,8 @@ class InventoryCheckProvider extends ChangeNotifier {
       currentItems.add(item);
     }
 
-    final totalDiff = currentItems.fold<double>(0.0, (sum, i) => sum + i.difference);
+    final totalDiff =
+        currentItems.fold<double>(0.0, (sum, i) => sum + i.difference);
 
     _activeSession = _activeSession!.copyWith(
       items: currentItems,
@@ -83,8 +91,10 @@ class InventoryCheckProvider extends ChangeNotifier {
   void removeItem(String batchId) {
     if (_activeSession == null) return;
 
-    final currentItems = _activeSession!.items.where((i) => i.batchId != batchId).toList();
-    final totalDiff = currentItems.fold<double>(0.0, (sum, i) => sum + i.difference);
+    final currentItems =
+        _activeSession!.items.where((i) => i.batchId != batchId).toList();
+    final totalDiff =
+        currentItems.fold<double>(0.0, (sum, i) => sum + i.difference);
 
     _activeSession = _activeSession!.copyWith(
       items: currentItems,
@@ -98,15 +108,13 @@ class InventoryCheckProvider extends ChangeNotifier {
   bool completeSession({required BatchProvider batchProvider}) {
     if (_activeSession == null || _activeSession!.items.isEmpty) return false;
 
-    // Cập nhật tồn kho cho từng batch được kiểm kê
-    for (final item in _activeSession!.items) {
-      if (item.hasDifference) {
-        batchProvider.adjustQuantity(
-          batchId: item.batchId,
-          newQuantity: item.actualQuantity,
-          reason: item.reason.label,
-        );
-      }
+    final adjustments = <String, double>{
+      for (final item in _activeSession!.items)
+        if (item.hasDifference) item.batchId: item.actualQuantity,
+    };
+    if (adjustments.isNotEmpty &&
+        !batchProvider.adjustQuantities(adjustments)) {
+      return false;
     }
 
     final completedSession = _activeSession!.copyWith(
@@ -115,6 +123,7 @@ class InventoryCheckProvider extends ChangeNotifier {
     );
 
     _history.insert(0, completedSession);
+    onPersist?.call(history);
     _activeSession = null;
     notifyListeners();
     return true;

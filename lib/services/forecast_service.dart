@@ -34,7 +34,8 @@ class ForecastService {
           receipt.date.month,
           receipt.date.day,
         );
-        return !receiptDate.isBefore(sevenDaysAgo) && !receiptDate.isAfter(today);
+        return !receiptDate.isBefore(sevenDaysAgo) &&
+            !receiptDate.isAfter(today);
       });
 
       final totalQuantityExported7Days = recentExports.fold(
@@ -107,11 +108,13 @@ class ForecastService {
 
     // Sắp xếp mức độ ưu tiên (Ranking): reorderSoon -> attention -> noData -> safe
     forecasts.sort((a, b) {
-      final statusOrder = _statusWeight(b.status).compareTo(_statusWeight(a.status));
+      final statusOrder =
+          _statusWeight(b.status).compareTo(_statusWeight(a.status));
       if (statusOrder != 0) return statusOrder;
 
       // Nếu cùng status, ưu tiên loại gạo còn số ngày ít hơn
-      if (a.estimatedDaysRemaining != null && b.estimatedDaysRemaining != null) {
+      if (a.estimatedDaysRemaining != null &&
+          b.estimatedDaysRemaining != null) {
         return a.estimatedDaysRemaining!.compareTo(b.estimatedDaysRemaining!);
       }
       return a.currentStock.compareTo(b.currentStock);

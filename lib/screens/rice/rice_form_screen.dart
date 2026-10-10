@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/widgets/custom_text_field.dart';
@@ -119,7 +121,7 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
     final riceProvider = context.read<RiceProvider>();
     final rice = RiceModel(
       id: _originalRice?.id ??
-          'rice-${DateTime.now().microsecondsSinceEpoch.toString()}',
+          const Uuid().v4(),
       code: _codeController.text.trim(),
       name: _nameController.text.trim(),
       category: _categoryController.text.trim(),
@@ -135,10 +137,7 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
         ? riceProvider.updateRice(rice)
         : riceProvider.addRice(rice);
     if (!saved) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Không thể lưu. Vui lòng kiểm tra mã gạo.')),
-      );
+      AppToast.error(context, 'Không thể lưu. Vui lòng kiểm tra mã gạo.');
       return;
     }
 

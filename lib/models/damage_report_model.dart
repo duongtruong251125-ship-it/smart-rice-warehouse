@@ -81,4 +81,37 @@ class DamageReportModel {
       status: status ?? this.status,
     );
   }
+
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'code': code,
+        'batchId': batchId,
+        'batchCode': batchCode,
+        'riceId': riceId,
+        'riceName': riceName,
+        'quantity': quantity,
+        'reason': reason.name,
+        'note': note,
+        'imagePath': imagePath,
+        'createdBy': createdBy,
+        'createdAt': createdAt.toIso8601String(),
+        'status': status.name,
+      };
+
+  factory DamageReportModel.fromJson(Map<String, dynamic> json) =>
+      DamageReportModel(
+        id: json['id'] as String,
+        code: json['code'] as String,
+        batchId: json['batchId'] as String,
+        batchCode: json['batchCode'] as String,
+        riceId: json['riceId'] as String,
+        riceName: json['riceName'] as String,
+        quantity: (json['quantity'] as num).toDouble(),
+        reason: DamageReason.values.byName(json['reason'] as String),
+        note: json['note'] as String?,
+        imagePath: json['imagePath'] as String?,
+        createdBy: json['createdBy'] as String,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        status: DamageReportStatus.values.byName(json['status'] as String),
+      );
 }

@@ -48,4 +48,30 @@ class RiceModel {
       isActive: isActive ?? this.isActive,
     );
   }
+
+  Map<String, Object?> toJson() => {
+        'id': id,
+        'code': code,
+        'name': name,
+        'category': category,
+        'unit': unit,
+        'purchasePrice': purchasePrice,
+        'sellingPrice': sellingPrice,
+        'minimumStock': minimumStock,
+        'description': description,
+        'isActive': isActive,
+      };
+
+  factory RiceModel.fromJson(Map<String, dynamic> json) => RiceModel(
+        id: json['id'] as String,
+        code: json['code'] as String,
+        name: json['name'] as String,
+        category: json['category'] as String,
+        unit: json['unit'] as String,
+        purchasePrice: (json['purchasePrice'] as num).toDouble(),
+        sellingPrice: (json['sellingPrice'] as num).toDouble(),
+        minimumStock: (json['minimumStock'] as num).toDouble(),
+        description: json['description'] as String,
+        isActive: json['isActive'] as bool,
+      );
 }

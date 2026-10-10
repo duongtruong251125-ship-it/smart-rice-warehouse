@@ -10,12 +10,13 @@ import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
 import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
 import 'package:smart_rice_warehouse/widgets/section_title.dart';
 
+/// Màn hình Hub Kho hàng - Tái cấu trúc theo phong cách "AgriWarehouse Modern System"
+/// Nhóm các chức năng thành 3 cụm Bento trực quan: Vận hành & QR, Quản trị hàng hóa & Lô, Đối tác cung ứng
 class WarehouseHub extends StatelessWidget {
   const WarehouseHub({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final riceCount = context.watch<RiceProvider>().rices.length;
     final batchProvider = context.watch<BatchProvider>();
     final supplierCount = context.watch<SupplierProvider>().suppliers.length;
@@ -23,185 +24,317 @@ class WarehouseHub extends StatelessWidget {
     final warehouseProvider = context.watch<WarehouseProvider>();
     final damageProvider = context.watch<DamageProvider>();
 
-    final items = <_WarehouseItem>[
-      _WarehouseItem(
-        title: 'Quét mã QR Lô',
-        subtitle: 'Quét tem QR tra cứu nhanh thông tin lô gạo',
-        badge: 'Quét QR',
-        icon: Icons.qr_code_scanner_rounded,
-        color: const Color(0xFF0284C7),
-        route: AppRoutes.qrScanner,
-      ),
-      _WarehouseItem(
-        title: 'Vị trí kho',
-        subtitle: 'Sơ đồ Khu, Kệ, Tầng & chuyển vị trí lưu kho',
-        badge: '${warehouseProvider.locations.length} vị trí',
-        icon: Icons.warehouse_outlined,
-        color: const Color(0xFFD97706),
-        route: AppRoutes.warehouseLocations,
-      ),
-      _WarehouseItem(
-        title: 'Kiểm kê kho',
-        subtitle: 'Kiểm kê định kỳ bằng QR & cân đối số lượng thực tế',
-        badge: 'Kiểm kê',
-        icon: Icons.fact_check_outlined,
-        color: const Color(0xFF059669),
-        route: AppRoutes.inventoryCheck,
-      ),
-      _WarehouseItem(
-        title: 'Báo hỏng gạo',
-        subtitle: 'Ghi nhận rách bao, ẩm mốc & giảm trừ tồn kho',
-        badge: '${damageProvider.reports.length} phiếu',
-        icon: Icons.report_problem_outlined,
-        color: const Color(0xFFDC2626),
-        route: AppRoutes.damageReportList,
-      ),
-      _WarehouseItem(
-        title: 'Quản lý gạo',
-        subtitle: 'Danh mục mặt hàng, đơn vị, giá nhập & giá bán',
-        badge: '$riceCount loại',
-        icon: Icons.rice_bowl_outlined,
-        color: AppTheme.primaryColor,
-        route: AppRoutes.rice,
-      ),
-      _WarehouseItem(
-        title: 'Tồn kho',
-        subtitle: 'Kiểm tra số lượng tồn thực tế & cảnh báo sắp hết',
-        badge: '${batchProvider.totalStock.round()} kg',
-        icon: Icons.inventory_outlined,
-        color: AppTheme.accentBlue,
-        route: AppRoutes.inventory,
-      ),
-      _WarehouseItem(
-        title: 'Lô gạo',
-        subtitle: 'Quản lý mã lô, ngày sản xuất & hạn sử dụng',
-        badge: '${batchProvider.batches.length} lô',
-        icon: Icons.inventory_2_outlined,
-        color: const Color(0xFF0D9488),
-        route: AppRoutes.batches,
-      ),
-      _WarehouseItem(
-        title: 'Nhà cung cấp',
-        subtitle: 'Thông tin đối tác cung ứng lúa gạo',
-        badge: '$supplierCount ĐT',
-        icon: Icons.local_shipping_outlined,
-        color: AppTheme.secondaryColor,
-        route: AppRoutes.suppliers,
-      ),
-      _WarehouseItem(
-        title: 'Khách hàng',
-        subtitle: 'Danh bạ đại lý, tạp hóa & khách mua lẻ',
-        badge: '$customerCount KH',
-        icon: Icons.groups_outlined,
-        color: const Color(0xFF7C3AED),
-        route: AppRoutes.customers,
-      ),
-    ];
+    final totalKg = batchProvider.totalStock;
+    final totalTons = totalKg / 1000.0;
+    final totalBags = (totalKg / 50.0).round();
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: [
-        const SectionTitle('Nghiệp vụ kho & Quản lý vị trí'),
-        const SizedBox(height: 12),
-        for (var index = 0; index < items.length; index++) ...[
-          Card(
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 8,
+        // --- 1. HERO KPI MINI BANNER ---
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.borderColor),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x05000000),
+                blurRadius: 10,
+                offset: Offset(0, 4),
               ),
-              leading: Container(
-                width: 46,
-                height: 46,
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: items[index].color.withValues(alpha: 0.12),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  items[index].icon,
-                  color: items[index].color,
-                  size: 24,
-                ),
-              ),
-              title: Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      items[index].title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: items[index].color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      items[index].badge,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: items[index].color,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 3),
-                child: Text(
-                  items[index].subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              trailing: Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(8),
-                ),
                 child: const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: AppTheme.textSecondary,
+                  Icons.warehouse_rounded,
+                  color: AppTheme.primaryColor,
+                  size: 26,
                 ),
               ),
-              onTap: () => Navigator.of(context).pushNamed(items[index].route),
-            ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Trung tâm Vận hành Kho Gạo',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${warehouseProvider.locations.length} vị trí kệ • ${batchProvider.batches.length} lô gạo • ~${totalTons.toStringAsFixed(1)} tấn ($totalBags bao)',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          if (index < items.length - 1) const SizedBox(height: 10),
-        ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // --- 2. VẬN HÀNH HIỆN TRƯỜNG & QR ---
+        const SectionTitle('Vận hành hiện trường & Kiểm soát'),
+        const SizedBox(height: 10),
+        const _ModernHubTile(
+          title: 'Quét mã QR Lô gạo',
+          subtitle: 'Tra cứu nhanh thông tin lô gạo',
+          badgeText: 'Quét siêu tốc',
+          badgeColor: Color(0xFF0284C7),
+          icon: Icons.qr_code_scanner_rounded,
+          iconBgColor: Color(0xFF0284C7),
+          route: AppRoutes.qrScanner,
+          isHighlight: true,
+        ),
+        const SizedBox(height: 10),
+        _ModernHubTile(
+          title: 'Sơ đồ vị trí Silo & Kệ',
+          subtitle: 'Quản lý Khu, Dãy, Tầng',
+          badgeText: '${warehouseProvider.locations.length} vị trí',
+          badgeColor: const Color(0xFFD97706),
+          icon: Icons.grid_view_rounded,
+          iconBgColor: const Color(0xFFD97706),
+          route: AppRoutes.warehouseLocations,
+        ),
+        const SizedBox(height: 10),
+        const _ModernHubTile(
+          title: 'Kiểm kê định kỳ kho',
+          subtitle: 'Cân bằng và đối soát tồn kho',
+          badgeText: 'Kiểm kê QR',
+          badgeColor: AppTheme.primaryColor,
+          icon: Icons.fact_check_outlined,
+          iconBgColor: AppTheme.primaryColor,
+          route: AppRoutes.inventoryCheck,
+        ),
+        const SizedBox(height: 10),
+        _ModernHubTile(
+          title: 'Báo hỏng & Hao hụt gạo',
+          subtitle: 'Ghi nhận ẩm mốc, hư hỏng',
+          badgeText: '${damageProvider.reports.length} phiếu',
+          badgeColor: const Color(0xFFDC2626),
+          icon: Icons.warning_amber_rounded,
+          iconBgColor: const Color(0xFFDC2626),
+          route: AppRoutes.damageReportList,
+        ),
+
+        const SizedBox(height: 24),
+
+        // --- 3. QUẢN TRỊ DANH MỤC & TỒN KHO ---
+        const SectionTitle('Quản trị Danh mục & Lô hàng'),
+        const SizedBox(height: 10),
+        _ModernHubTile(
+          title: 'Tồn kho khả dụng',
+          subtitle: 'Kiểm tra chi tiết số lượng',
+          badgeText: '${totalTons.toStringAsFixed(1)} Tấn',
+          badgeColor: AppTheme.accentBlue,
+          icon: Icons.inventory_outlined,
+          iconBgColor: AppTheme.accentBlue,
+          route: AppRoutes.inventory,
+        ),
+        const SizedBox(height: 10),
+        _ModernHubTile(
+          title: 'Quản lý Lô gạo (Batches)',
+          subtitle: 'Theo dõi HSD và truy xuất FEFO',
+          badgeText: '${batchProvider.batches.length} lô',
+          badgeColor: const Color(0xFF0D9488),
+          icon: Icons.inventory_2_outlined,
+          iconBgColor: const Color(0xFF0D9488),
+          route: AppRoutes.batches,
+        ),
+        const SizedBox(height: 10),
+        _ModernHubTile(
+          title: 'Danh mục Loại gạo',
+          subtitle: 'Quản lý thông tin giống gạo',
+          badgeText: '$riceCount giống gạo',
+          badgeColor: AppTheme.primaryColor,
+          icon: Icons.rice_bowl_outlined,
+          iconBgColor: AppTheme.primaryColor,
+          route: AppRoutes.rice,
+        ),
+
+        const SizedBox(height: 24),
+
+        // --- 4. ĐỐI TÁC CHUỖI CUNG ỨNG ---
+        const SectionTitle('Đối tác Chuỗi cung ứng'),
+        const SizedBox(height: 10),
+        _ModernHubTile(
+          title: 'Nhà cung cấp lúa gạo',
+          subtitle: 'Quản lý đối tác cung ứng',
+          badgeText: '$supplierCount đối tác',
+          badgeColor: AppTheme.secondaryColor,
+          icon: Icons.local_shipping_outlined,
+          iconBgColor: AppTheme.secondaryColor,
+          route: AppRoutes.suppliers,
+        ),
+        const SizedBox(height: 10),
+        _ModernHubTile(
+          title: 'Khách hàng & Đại lý',
+          subtitle: 'Danh sách khách hàng và đại lý',
+          badgeText: '$customerCount đại lý',
+          badgeColor: const Color(0xFF7C3AED),
+          icon: Icons.store_mall_directory_outlined,
+          iconBgColor: const Color(0xFF7C3AED),
+          route: AppRoutes.customers,
+        ),
       ],
     );
   }
 }
 
-class _WarehouseItem {
-  const _WarehouseItem({
+class _ModernHubTile extends StatelessWidget {
+  const _ModernHubTile({
     required this.title,
     required this.subtitle,
-    required this.badge,
+    required this.badgeText,
+    required this.badgeColor,
     required this.icon,
-    required this.color,
+    required this.iconBgColor,
     required this.route,
+    this.isHighlight = false,
   });
 
   final String title;
   final String subtitle;
-  final String badge;
+  final String badgeText;
+  final Color badgeColor;
   final IconData icon;
-  final Color color;
+  final Color iconBgColor;
   final String route;
+  final bool isHighlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isHighlight
+              ? iconBgColor.withValues(alpha: 0.35)
+              : AppTheme.borderColor,
+          width: isHighlight ? 1.5 : 1.0,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x06000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.of(context).pushNamed(route),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: iconBgColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: iconBgColor, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: badgeColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              badgeText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: badgeColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.borderColor),
+                  ),
+                  child: const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

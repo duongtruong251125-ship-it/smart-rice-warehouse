@@ -29,7 +29,7 @@ class EmptyState extends StatelessWidget {
               width: 84,
               height: 84,
               decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withOpacity(0.55),
+                color: colorScheme.primaryContainer.withValues(alpha: 0.55),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 42, color: colorScheme.primary),
@@ -57,4 +57,3 @@ class EmptyState extends StatelessWidget {
     );
   }
 }
-

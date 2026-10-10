@@ -21,7 +21,8 @@ class InventoryCheckHistoryScreen extends StatelessWidget {
       ),
       body: history.isEmpty
           ? const EmptyState(
-              message: 'Chưa có phiên kiểm kê nào. Các phiên kiểm kê đã hoàn thành sẽ xuất hiện tại đây.',
+              message:
+                  'Chưa có phiên kiểm kê nào. Các phiên kiểm kê đã hoàn thành sẽ xuất hiện tại đây.',
               icon: Icons.history_toggle_off_rounded,
             )
           : ListView.separated(
@@ -91,15 +92,17 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
                       const SizedBox(height: 2),
                       Text(
                         '${DateFormatter.ddMMyyyy(session.createdAt)} • Người lập: ${session.createdBy}',
-                        style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                        style: const TextStyle(
+                            fontSize: 11, color: AppTheme.textSecondary),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppTheme.successColor.withOpacity(0.12),
+                    color: AppTheme.successColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -119,7 +122,8 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
               children: [
                 Text(
                   'Tổng số lô: ${session.totalItems}',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w600),
                 ),
                 Text(
                   'Chênh lệch: ${session.totalDifference >= 0 ? '+' : ''}${NumberFormatter.quantity(session.totalDifference)} kg',
@@ -127,7 +131,9 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: hasDiff
-                        ? (session.totalDifference < 0 ? AppTheme.dangerColor : AppTheme.primaryColor)
+                        ? (session.totalDifference < 0
+                            ? AppTheme.dangerColor
+                            : AppTheme.primaryColor)
                         : AppTheme.successColor,
                   ),
                 ),
@@ -137,7 +143,10 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
               const SizedBox(height: 6),
               Text(
                 'Ghi chú: ${session.note!}',
-                style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: AppTheme.textSecondary),
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: AppTheme.textSecondary),
               ),
             ],
             if (session.items.isNotEmpty) ...[
@@ -151,11 +160,18 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _isExpanded ? 'Thu gọn chi tiết' : 'Xem chi tiết ${session.items.length} lô',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.accentBlue),
+                        _isExpanded
+                            ? 'Thu gọn chi tiết'
+                            : 'Xem chi tiết ${session.items.length} lô',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.accentBlue),
                       ),
                       Icon(
-                        _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        _isExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
                         size: 18,
                         color: AppTheme.accentBlue,
                       ),
@@ -179,16 +195,22 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
                               children: [
                                 Text(
                                   '${item.batchCode} (${item.riceName})',
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold),
                                 ),
                                 Text(
                                   'Sổ sách: ${NumberFormatter.quantity(item.expectedQuantity)} kg → Thực tế: ${NumberFormatter.quantity(item.actualQuantity)} kg',
-                                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppTheme.textSecondary),
                                 ),
                                 if (itemDiff)
                                   Text(
                                     'Lý do: ${item.reason.label}${item.note != null ? ' - ${item.note}' : ''}',
-                                    style: const TextStyle(fontSize: 10, color: AppTheme.dangerColor),
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        color: AppTheme.dangerColor),
                                   ),
                               ],
                             ),
@@ -200,7 +222,9 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: itemDiff ? AppTheme.warningColor : AppTheme.successColor,
+                              color: itemDiff
+                                  ? AppTheme.warningColor
+                                  : AppTheme.successColor,
                             ),
                           ),
                         ],

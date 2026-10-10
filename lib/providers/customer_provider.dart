@@ -3,10 +3,11 @@ import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:smart_rice_warehouse/models/customer_model.dart';
 
 class CustomerProvider extends ChangeNotifier {
-  CustomerProvider()
-      : _customers = List<CustomerModel>.from(MockData.customers);
+  CustomerProvider({List<CustomerModel>? initial, this.onPersist})
+      : _customers = List<CustomerModel>.from(initial ?? MockData.customers);
 
   final List<CustomerModel> _customers;
+  final ValueChanged<List<CustomerModel>>? onPersist;
 
   List<CustomerModel> get customers =>
       List<CustomerModel>.unmodifiable(_customers);
@@ -22,6 +23,7 @@ class CustomerProvider extends ChangeNotifier {
 
   void addCustomer(CustomerModel customer) {
     _customers.add(customer);
+    onPersist?.call(customers);
     notifyListeners();
   }
 
@@ -32,11 +34,14 @@ class CustomerProvider extends ChangeNotifier {
     }
 
     _customers[index] = customer;
+    onPersist?.call(customers);
     notifyListeners();
+    onPersist?.call(customers);
     return true;
   }
 
-  bool deleteCustomer(String id) {
+  bool deleteCustomer(String id, {bool Function(String id)? isReferenced}) {
+    if (isReferenced?.call(id) ?? false) return false;
     final previousLength = _customers.length;
     _customers.removeWhere((customer) => customer.id == id);
     if (_customers.length == previousLength) {

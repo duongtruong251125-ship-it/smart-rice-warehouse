@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
+import 'package:smart_rice_warehouse/providers/auth_provider.dart';
+import 'package:smart_rice_warehouse/widgets/cute_loading.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,16 +22,19 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     _navigationTimer = Timer(
       const Duration(milliseconds: 1500),
-      _openLogin,
+      _openNextScreen,
     );
   }
 
-  void _openLogin() {
+  void _openNextScreen() {
     if (!mounted) {
       return;
     }
 
-    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+    final route = context.read<AuthProvider>().isLoggedIn
+        ? AppRoutes.home
+        : AppRoutes.login;
+    Navigator.of(context).pushReplacementNamed(route);
   }
 
   @override
@@ -123,14 +129,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ),
                 const SizedBox(height: 36),
-                const SizedBox(
-                  width: 26,
-                  height: 26,
-                  child: CircularProgressIndicator(
-                    color: AppTheme.primaryColor,
-                    strokeWidth: 2.6,
-                  ),
-                ),
+                const CuteLoading(),
               ],
             ),
           ),
@@ -139,4 +138,3 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-

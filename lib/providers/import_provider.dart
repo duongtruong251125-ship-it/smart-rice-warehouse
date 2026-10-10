@@ -5,11 +5,17 @@ import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 
 class ImportProvider extends ChangeNotifier {
-  ImportProvider(this._batchProvider)
-      : _receipts = List<ImportReceiptModel>.from(MockData.importReceipts);
+  ImportProvider(
+    this._batchProvider, {
+    List<ImportReceiptModel>? initial,
+    this.onPersist,
+  }) : _receipts = List<ImportReceiptModel>.from(
+          initial ?? MockData.importReceipts,
+        );
 
   final List<ImportReceiptModel> _receipts;
   final BatchProvider _batchProvider;
+  final ValueChanged<List<ImportReceiptModel>>? onPersist;
 
   List<ImportReceiptModel> get receipts =>
       List<ImportReceiptModel>.unmodifiable(_receipts);
@@ -42,6 +48,15 @@ class ImportProvider extends ChangeNotifier {
     required ImportReceiptModel receipt,
     required BatchModel batch,
   }) {
+    if (receipt.quantity <= 0 ||
+        batch.quantity <= 0 ||
+        receipt.quantity != batch.quantity ||
+        _receipts.any((item) =>
+            item.id == receipt.id ||
+            item.code.trim().toLowerCase() ==
+                receipt.code.trim().toLowerCase())) {
+      return false;
+    }
     if (_batchProvider.isBatchCodeExists(batch.code)) {
       final existingIndex = _batchProvider.batches.indexWhere(
         (item) =>
@@ -49,12 +64,18 @@ class ImportProvider extends ChangeNotifier {
       );
       if (existingIndex != -1) {
         final existing = _batchProvider.batches[existingIndex];
+        final sameLot = existing.riceId == batch.riceId &&
+            existing.supplierId == batch.supplierId &&
+            _isSameDate(existing.manufactureDate, batch.manufactureDate) &&
+            _isSameDate(existing.expiryDate, batch.expiryDate);
+        if (!sameLot) return false;
         _batchProvider.updateBatch(
           existing.copyWith(
             quantity: existing.quantity + batch.quantity,
           ),
         );
         _receipts.add(receipt);
+        onPersist?.call(receipts);
         notifyListeners();
         return true;
       }
@@ -65,6 +86,7 @@ class ImportProvider extends ChangeNotifier {
     }
 
     _receipts.add(receipt);
+    onPersist?.call(receipts);
     notifyListeners();
     return true;
   }

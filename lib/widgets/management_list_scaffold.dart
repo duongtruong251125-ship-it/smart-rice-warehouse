@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
 import 'package:smart_rice_warehouse/widgets/search_field.dart';
 
@@ -33,14 +34,13 @@ class ManagementListScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Column(
         children: [
           Container(
-            color: Colors.white,
+            color: AppTheme.cardColor,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,17 +53,17 @@ class ManagementListScaffold extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.list_alt_rounded,
                       size: 15,
-                      color: colorScheme.primary,
+                      color: AppTheme.primaryColor,
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Tổng cộng: $itemCount mục',
                         style: theme.textTheme.labelMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                          color: AppTheme.textSecondary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -94,6 +94,8 @@ class ManagementListScaffold extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppTheme.primaryColor,
+        foregroundColor: Colors.white,
         onPressed: onAdd,
         icon: const Icon(Icons.add_rounded),
         label: Text(addLabel),
@@ -101,4 +103,3 @@ class ManagementListScaffold extends StatelessWidget {
     );
   }
 }
-

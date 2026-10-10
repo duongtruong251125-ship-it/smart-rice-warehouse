@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -60,14 +61,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final isAuthenticated = context.read<AuthProvider>().login(
           email: _emailController.text,
           password: _passwordController.text,
+          remember: _rememberLogin,
         );
 
     if (!isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email hoặc mật khẩu không chính xác'),
-        ),
-      );
+      AppToast.error(context, 'Email hoặc mật khẩu không chính xác.');
       return;
     }
 
@@ -77,12 +75,40 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _showForgotPasswordMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Chức năng sẽ được phát triển ở giai đoạn sau'),
+  Future<void> _showForgotPasswordMessage() async {
+    final controller = TextEditingController(text: _emailController.text);
+    final email = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Khôi phục mật khẩu cục bộ'),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(labelText: 'Email tài khoản'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Đặt lại'),
+          ),
+        ],
       ),
     );
+    controller.dispose();
+    if (!mounted || email == null) return;
+    final reset = context.read<AuthProvider>().resetPassword(email);
+    if (reset) {
+      AppToast.success(
+        context,
+        'Đã đặt lại mật khẩu thành 123456. Hãy đổi sau khi đăng nhập.',
+      );
+    } else {
+      AppToast.error(context, 'Không tìm thấy tài khoản với email này.');
+    }
   }
 
   @override
@@ -157,103 +183,112 @@ class _LoginScreenState extends State<LoginScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
                                     children: [
-                                  TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.next,
-                                    autofillHints: const [AutofillHints.email],
-                                    validator: _validateEmail,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Email',
-                                      hintText: 'admin@gmail.com',
-                                      prefixIcon: Icon(Icons.email_outlined),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  TextFormField(
-                                    controller: _passwordController,
-                                    obscureText: !_isPasswordVisible,
-                                    textInputAction: TextInputAction.done,
-                                    autofillHints: const [
-                                      AutofillHints.password
-                                    ],
-                                    validator: _validatePassword,
-                                    onFieldSubmitted: (_) => _submit(),
-                                    decoration: InputDecoration(
-                                      labelText: 'Mật khẩu',
-                                      prefixIcon: const Icon(
-                                        Icons.lock_outline_rounded,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        tooltip: _isPasswordVisible
-                                            ? 'Ẩn mật khẩu'
-                                            : 'Hiện mật khẩu',
-                                        onPressed: () {
-                                          setState(() {
-                                            _isPasswordVisible =
-                                                !_isPasswordVisible;
-                                          });
-                                        },
-                                        icon: Icon(
-                                          _isPasswordVisible
-                                              ? Icons.visibility_off_outlined
-                                              : Icons.visibility_outlined,
+                                      TextFormField(
+                                        controller: _emailController,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        textInputAction: TextInputAction.next,
+                                        autofillHints: const [
+                                          AutofillHints.email
+                                        ],
+                                        validator: _validateEmail,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Email',
+                                          hintText: 'admin@gmail.com',
+                                          prefixIcon:
+                                              Icon(Icons.email_outlined),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Wrap(
-                                    alignment: WrapAlignment.spaceBetween,
-                                    crossAxisAlignment:
-                                        WrapCrossAlignment.center,
-                                    spacing: 4,
-                                    children: [
-                                      InkWell(
-                                        borderRadius: BorderRadius.circular(8),
-                                        onTap: () {
-                                          setState(() {
-                                            _rememberLogin = !_rememberLogin;
-                                          });
-                                        },
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Checkbox(
-                                              value: _rememberLogin,
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _rememberLogin =
-                                                      value ?? false;
-                                                });
-                                              },
+                                      const SizedBox(height: 14),
+                                      TextFormField(
+                                        controller: _passwordController,
+                                        obscureText: !_isPasswordVisible,
+                                        textInputAction: TextInputAction.done,
+                                        autofillHints: const [
+                                          AutofillHints.password
+                                        ],
+                                        validator: _validatePassword,
+                                        onFieldSubmitted: (_) => _submit(),
+                                        decoration: InputDecoration(
+                                          labelText: 'Mật khẩu',
+                                          prefixIcon: const Icon(
+                                            Icons.lock_outline_rounded,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            tooltip: _isPasswordVisible
+                                                ? 'Ẩn mật khẩu'
+                                                : 'Hiện mật khẩu',
+                                            onPressed: () {
+                                              setState(() {
+                                                _isPasswordVisible =
+                                                    !_isPasswordVisible;
+                                              });
+                                            },
+                                            icon: Icon(
+                                              _isPasswordVisible
+                                                  ? Icons
+                                                      .visibility_off_outlined
+                                                  : Icons.visibility_outlined,
                                             ),
-                                            const Flexible(
-                                              child: Text(
-                                                'Ghi nhớ đăng nhập',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
+                                          ),
                                         ),
                                       ),
-                                      TextButton(
-                                        onPressed: _showForgotPasswordMessage,
-                                        child: const Text('Quên mật khẩu'),
+                                      const SizedBox(height: 8),
+                                      Wrap(
+                                        alignment: WrapAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: 4,
+                                        children: [
+                                          InkWell(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            onTap: () {
+                                              setState(() {
+                                                _rememberLogin =
+                                                    !_rememberLogin;
+                                              });
+                                            },
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Checkbox(
+                                                  value: _rememberLogin,
+                                                  visualDensity:
+                                                      VisualDensity.compact,
+                                                  onChanged: (value) {
+                                                    setState(() {
+                                                      _rememberLogin =
+                                                          value ?? false;
+                                                    });
+                                                  },
+                                                ),
+                                                const Flexible(
+                                                  child: Text(
+                                                    'Ghi nhớ đăng nhập',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed:
+                                                _showForgotPasswordMessage,
+                                            child: const Text('Quên mật khẩu'),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      FilledButton(
+                                        onPressed: _submit,
+                                        child: const Text('Đăng nhập'),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 12),
-                                  FilledButton(
-                                    onPressed: _submit,
-                                    child: const Text('Đăng nhập'),
-                                  ),
-                                ],
-                              ),
-                            ),
+                                ),
                               ],
                             ),
                           ),
@@ -270,4 +305,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
