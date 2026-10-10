@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
@@ -193,35 +192,42 @@ class _MainScreenState extends State<MainScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              blurRadius: 20,
-              color: Colors.black.withValues(alpha: 0.05),
-              offset: const Offset(0, -5),
+              blurRadius: 15,
+              color: Colors.black.withValues(alpha: 0.04),
+              offset: const Offset(0, -3),
             )
           ],
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10),
-            child: GNav(
-              rippleColor: Colors.grey[200]!,
-              hoverColor: Colors.grey[100]!,
-              gap: 6,
-              activeColor: const Color(0xFF0F766E),
-              iconSize: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: const Color(0xFFCCFBF1),
-              color: Colors.grey[500]!,
-              tabs: const [
-                GButton(icon: Icons.home_rounded, text: 'Trang chủ'),
-                GButton(icon: Icons.inventory_2_rounded, text: 'Kho hàng'),
-                GButton(icon: Icons.sync_alt_rounded, text: 'Giao dịch'),
-                GButton(icon: Icons.bar_chart_rounded, text: 'Báo cáo'),
-                GButton(icon: Icons.person_rounded, text: 'Tài khoản'),
-              ],
-              selectedIndex: _selectedIndex,
-              onTabChange: (index) => setState(() => _selectedIndex = index),
-            ),
+        child: NavigationBarTheme(
+          data: NavigationBarThemeData(
+            backgroundColor: Colors.white,
+            indicatorColor: const Color(0xFFCCFBF1), // AppTheme.primaryLight
+            indicatorShape: const CircleBorder(),
+            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0F766E));
+              }
+              return const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.grey);
+            }),
+            iconTheme: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return const IconThemeData(color: Color(0xFF0F766E), size: 26);
+              }
+              return const IconThemeData(color: Colors.grey, size: 24);
+            }),
+          ),
+          child: NavigationBar(
+            height: 60,
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+            destinations: const [
+              NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Trang chủ'),
+              NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2_rounded), label: 'Kho hàng'),
+              NavigationDestination(icon: Icon(Icons.sync_alt_rounded), selectedIcon: Icon(Icons.sync_alt_rounded), label: 'Giao dịch'),
+              NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart_rounded), label: 'Báo cáo'),
+              NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Tài khoản'),
+            ],
           ),
         ),
       ),
