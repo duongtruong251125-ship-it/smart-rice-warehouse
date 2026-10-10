@@ -15,6 +15,7 @@ import 'package:smart_rice_warehouse/providers/inventory_check_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
 import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
+import 'package:smart_rice_warehouse/providers/theme_provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:smart_rice_warehouse/core/services/settings_service.dart';
 
@@ -119,6 +120,7 @@ class SmartRiceWarehouseApp extends StatelessWidget {
               onPersist: database?.saveInventoryChecks,
             ),
           ),
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(
             create: (_) => DamageProvider(
               initial: snapshot.damageReports,
@@ -126,14 +128,20 @@ class SmartRiceWarehouseApp extends StatelessWidget {
             ),
           ),
         ],
-        child: MaterialApp(
-          title: 'Smart Rice Warehouse',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light,
-          themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          initialRoute: AppRoutes.splash,
+        child: Builder(
+          builder: (context) {
+            final themeProvider = context.watch<ThemeProvider>();
+            return MaterialApp(
+              title: 'Smart Rice Warehouse',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.light,
+              darkTheme: AppTheme.dark,
+              themeMode: themeProvider.themeMode,
+              initialRoute: AppRoutes.splash,
           routes: AppRoutes.routes,
           onGenerateRoute: AppRoutes.onGenerateRoute,
+            );
+          },
         ),
       ),
     );

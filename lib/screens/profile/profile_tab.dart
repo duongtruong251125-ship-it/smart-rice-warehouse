@@ -1,3 +1,4 @@
+import 'package:smart_rice_warehouse/providers/theme_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -38,7 +39,7 @@ class ProfileTab extends StatelessWidget {
                     child: Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Đổi mật khẩu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Center(child: Text('Đổi mật khẩu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                   const SizedBox(height: 20),
                   TextField(
                     obscureText: obscureCurrent,
@@ -94,7 +95,8 @@ class ProfileTab extends StatelessWidget {
   }
 
   void _showSettingsModal(BuildContext context) {
-    bool isDarkMode = false;
+    final themeProvider = context.read<ThemeProvider>();
+    bool isDarkMode = themeProvider.isDarkMode;
     bool pushNotifications = true;
     bool syncData = true;
 
@@ -106,7 +108,10 @@ class ProfileTab extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 20, right: 20, top: 20,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,15 +120,19 @@ class ProfileTab extends StatelessWidget {
                     child: Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Cài đặt hệ thống', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Center(child: Text('Cài đặt hệ thống', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                   const SizedBox(height: 20),
                   SwitchListTile(
                     title: const Text('Chế độ Nền tối (Dark Mode)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                     subtitle: const Text('Giao diện tối giúp dịu mắt hơn', style: TextStyle(fontSize: 12)),
                     value: isDarkMode,
+                    activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.5),
                     activeColor: AppTheme.primaryColor,
                     secondary: const Icon(Icons.dark_mode_rounded),
-                    onChanged: (val) => setState(() => isDarkMode = val),
+                    onChanged: (val) {
+                      setState(() => isDarkMode = val);
+                      themeProvider.toggleTheme(val);
+                    },
                     contentPadding: EdgeInsets.zero,
                   ),
                   const Divider(),
@@ -131,6 +140,7 @@ class ProfileTab extends StatelessWidget {
                     title: const Text('Thông báo Đẩy (Push)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                     subtitle: const Text('Nhận cảnh báo hạn sử dụng, tồn kho', style: TextStyle(fontSize: 12)),
                     value: pushNotifications,
+                    activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.5),
                     activeColor: AppTheme.primaryColor,
                     secondary: const Icon(Icons.notifications_active_rounded),
                     onChanged: (val) => setState(() => pushNotifications = val),
@@ -141,29 +151,31 @@ class ProfileTab extends StatelessWidget {
                     title: const Text('Đồng bộ dữ liệu nền', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                     subtitle: const Text('Tự động tải số liệu mới nhất', style: TextStyle(fontSize: 12)),
                     value: syncData,
+                    activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.5),
                     activeColor: AppTheme.primaryColor,
                     secondary: const Icon(Icons.sync_rounded),
                     onChanged: (val) => setState(() => syncData = val),
                     contentPadding: EdgeInsets.zero,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        side: const BorderSide(color: AppTheme.primaryColor),
                       ),
                       onPressed: () {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Đã lưu cấu hình cài đặt')),
+                          const SnackBar(content: Text('Đã lưu cấu hình cài đặt!')),
                         );
                       },
-                      child: const Text('Lưu & Đóng', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+                      child: const Text('Lưu thông tin', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
             );
@@ -212,9 +224,9 @@ class ProfileTab extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
+                  Center(child: Container(width: 40, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)))),
                   const SizedBox(height: 16),
-                  const Text('Cập nhật Hồ sơ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Center(child: Text('Cập nhật Hồ sơ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
                   const SizedBox(height: 20),
                   GestureDetector(
                     onTap: () async {
