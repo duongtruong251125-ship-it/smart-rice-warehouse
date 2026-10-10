@@ -90,8 +90,8 @@ void main() {
     final batches = BatchProvider(initial: [existing]);
     final imports = ImportProvider(batches, initial: const []);
     final incompatible = batch(
-      id: 'b',
       code: 'LOT-01',
+      id: 'b',
       riceId: 'rice-b',
     );
     final receipt = ImportReceiptModel(

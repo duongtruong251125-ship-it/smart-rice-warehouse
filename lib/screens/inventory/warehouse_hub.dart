@@ -97,7 +97,6 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 10),
         const _ModernHubTile(
           title: 'Quét mã QR Lô gạo',
-          subtitle: 'Tra cứu nhanh thông tin lô gạo',
           badgeText: 'Quét siêu tốc',
           badgeColor: Color(0xFF0284C7),
           icon: Icons.qr_code_scanner_rounded,
@@ -108,7 +107,6 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 10),
         _ModernHubTile(
           title: 'Sơ đồ vị trí Silo & Kệ',
-          subtitle: 'Quản lý Khu, Dãy, Tầng',
           badgeText: '${warehouseProvider.locations.length} vị trí',
           badgeColor: const Color(0xFFD97706),
           icon: Icons.grid_view_rounded,
@@ -118,7 +116,6 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 10),
         const _ModernHubTile(
           title: 'Kiểm kê định kỳ kho',
-          subtitle: 'Cân bằng và đối soát tồn kho',
           badgeText: 'Kiểm kê QR',
           badgeColor: AppTheme.primaryColor,
           icon: Icons.fact_check_outlined,
@@ -128,7 +125,6 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 10),
         _ModernHubTile(
           title: 'Báo hỏng & Hao hụt gạo',
-          subtitle: 'Ghi nhận ẩm mốc, hư hỏng',
           badgeText: '${damageProvider.reports.length} phiếu',
           badgeColor: const Color(0xFFDC2626),
           icon: Icons.warning_amber_rounded,
@@ -143,7 +139,6 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 10),
         _ModernHubTile(
           title: 'Tồn kho khả dụng',
-          subtitle: 'Kiểm tra chi tiết số lượng',
           badgeText: '${totalTons.toStringAsFixed(1)} Tấn',
           badgeColor: AppTheme.accentBlue,
           icon: Icons.inventory_outlined,
@@ -153,7 +148,6 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 10),
         _ModernHubTile(
           title: 'Quản lý Lô gạo (Batches)',
-          subtitle: 'Theo dõi HSD và truy xuất FEFO',
           badgeText: '${batchProvider.batches.length} lô',
           badgeColor: const Color(0xFF0D9488),
           icon: Icons.inventory_2_outlined,
@@ -163,7 +157,6 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 10),
         _ModernHubTile(
           title: 'Danh mục Loại gạo',
-          subtitle: 'Quản lý thông tin giống gạo',
           badgeText: '$riceCount giống gạo',
           badgeColor: AppTheme.primaryColor,
           icon: Icons.rice_bowl_outlined,
@@ -178,7 +171,6 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 10),
         _ModernHubTile(
           title: 'Nhà cung cấp lúa gạo',
-          subtitle: 'Quản lý đối tác cung ứng',
           badgeText: '$supplierCount đối tác',
           badgeColor: AppTheme.secondaryColor,
           icon: Icons.local_shipping_outlined,
@@ -188,7 +180,6 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 10),
         _ModernHubTile(
           title: 'Khách hàng & Đại lý',
-          subtitle: 'Danh sách khách hàng và đại lý',
           badgeText: '$customerCount đại lý',
           badgeColor: const Color(0xFF7C3AED),
           icon: Icons.store_mall_directory_outlined,
@@ -203,7 +194,6 @@ class WarehouseHub extends StatelessWidget {
 class _ModernHubTile extends StatelessWidget {
   const _ModernHubTile({
     required this.title,
-    required this.subtitle,
     required this.badgeText,
     required this.badgeColor,
     required this.icon,
@@ -213,7 +203,6 @@ class _ModernHubTile extends StatelessWidget {
   });
 
   final String title;
-  final String subtitle;
   final String badgeText;
   final Color badgeColor;
   final IconData icon;
@@ -301,17 +290,7 @@ class _ModernHubTile extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
-                          height: 1.25,
-                        ),
-                      ),
+                      
                     ],
                   ),
                 ),

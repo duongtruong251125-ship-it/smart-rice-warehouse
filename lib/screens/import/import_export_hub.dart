@@ -196,8 +196,6 @@ class ImportExportHub extends StatelessWidget {
         const SizedBox(height: 10),
         _ModernTransactionCard(
           title: 'Sổ Phiếu Nhập kho',
-          subtitle:
-              'Quản lý lịch sử nhập, thông số ẩm độ, tạp chất & cân xe tải',
           badgeText: '${importProvider.receipts.length} phiếu',
           badgeColor: AppTheme.accentGreen,
           icon: Icons.download_rounded,
@@ -207,7 +205,6 @@ class ImportExportHub extends StatelessWidget {
         const SizedBox(height: 10),
         _ModernTransactionCard(
           title: 'Sổ Phiếu Xuất kho',
-          subtitle: 'Lịch sử phân bổ FEFO hạn dùng & giao bán đại lý phân phối',
           badgeText: '${exportProvider.receipts.length} phiếu',
           badgeColor: AppTheme.secondaryColor,
           icon: Icons.upload_rounded,
@@ -255,7 +252,6 @@ class ImportExportHub extends StatelessWidget {
 class _ModernTransactionCard extends StatelessWidget {
   const _ModernTransactionCard({
     required this.title,
-    required this.subtitle,
     required this.badgeText,
     required this.badgeColor,
     required this.icon,
@@ -264,7 +260,6 @@ class _ModernTransactionCard extends StatelessWidget {
   });
 
   final String title;
-  final String subtitle;
   final String badgeText;
   final Color badgeColor;
   final IconData icon;
@@ -346,17 +341,7 @@ class _ModernTransactionCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
-                          height: 1.25,
-                        ),
-                      ),
+                      
                     ],
                   ),
                 ),

@@ -35,6 +35,44 @@ class _MainScreenState extends State<MainScreen> {
 
   int _selectedIndex = 0;
 
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final alertProvider = context.read<AlertProvider>();
+      final unreadAlerts = alertProvider.alerts.where((a) => !a.isRead).toList();
+      if (unreadAlerts.isNotEmpty) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                const Icon(Icons.notifications_active, color: Colors.red),
+                const SizedBox(width: 8),
+                const Text('Có thông báo mới!'),
+              ],
+            ),
+            content: Text('Bạn có ${unreadAlerts.length} cảnh báo chưa đọc (Hàng sắp hết, sắp hết hạn, v.v.). Vui lòng kiểm tra!'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Đóng'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, AppRoutes.alerts);
+                },
+                child: const Text('Xem ngay'),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
