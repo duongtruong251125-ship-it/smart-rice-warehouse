@@ -113,11 +113,14 @@ class _HomeTabState extends State<HomeTab> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Xin chào, $userName 👋',
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Xin chào, $userName 👋',
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.white70,
@@ -133,8 +136,10 @@ class _HomeTabState extends State<HomeTab> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 16),
                     GestureDetector(
                       onTap: () => Navigator.pushNamed(context, AppRoutes.profile),
                       child: Container(
