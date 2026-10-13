@@ -129,12 +129,6 @@ class InventoryCheckProvider extends ChangeNotifier {
     return true;
   }
 
-  /// Hủy phiên kiểm kê đang làm
-  void cancelActiveSession() {
-    _activeSession = null;
-    notifyListeners();
-  }
-
   InventoryCheckSession? findById(String id) {
     if (_activeSession?.id == id) return _activeSession;
     try {

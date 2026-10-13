@@ -9,10 +9,13 @@ import 'package:smart_rice_warehouse/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/services/fefo_service.dart';
 import 'package:smart_rice_warehouse/services/forecast_service.dart';
 import 'package:smart_rice_warehouse/services/ocr_service.dart';
+import 'fixtures/ocr_invoice_samples.dart';
 
 void main() {
   group('Week 3 - Task 3.1 & 3.5 Reports and Validation Tests', () {
-    test('Total import and export for month are calculated correctly from real data', () {
+    test(
+        'Total import and export for month are calculated correctly from real data',
+        () {
       final batchProvider = BatchProvider();
       final importProvider = ImportProvider(batchProvider);
       final exportProvider = ExportProvider(batchProvider);
@@ -31,7 +34,9 @@ void main() {
       expect(exportSept, greaterThan(0));
     });
 
-    test('Inventory value equals sum of stock * purchasePrice for all active rices', () {
+    test(
+        'Inventory value equals sum of stock * purchasePrice for all active rices',
+        () {
       final batchProvider = BatchProvider();
       const rices = MockData.rices;
 
@@ -40,12 +45,15 @@ void main() {
 
       var expected = 0.0;
       for (final rice in rices) {
-        expected += batchProvider.totalStockForRice(rice.id) * rice.purchasePrice;
+        expected +=
+            batchProvider.totalStockForRice(rice.id) * rice.purchasePrice;
       }
       expect(calculatedValue, equals(expected));
     });
 
-    test('FEFO never produces negative stock or deducts from expired/zero batches', () {
+    test(
+        'FEFO never produces negative stock or deducts from expired/zero batches',
+        () {
       final batchProvider = BatchProvider();
       const fefoService = FefoService();
 
@@ -96,15 +104,15 @@ void main() {
     });
   });
 
-  group('Week 3 - Task 3.4 OCR Prototype Parser Tests', () {
+  group('Week 3 - Task 3.4 OCR Invoice Parser Tests', () {
     const ocrService = OcrService();
     const suppliers = MockData.suppliers;
     const rices = MockData.rices;
 
-    test('Parses Sample 1: Cty Lúa Việt, ST25, 800kg, 28000 VNĐ, LO-ST25-003', () {
-      final sample = OcrService.samples[0];
+    test('Parses Sample 1: Cty Lúa Việt, ST25, 800kg, 28000 VNĐ, LO-ST25-003',
+        () {
       final extracted = ocrService.parseInvoice(
-        rawText: sample.rawText,
+        rawText: ocrInvoiceSamples[0],
         suppliers: suppliers,
         rices: rices,
       );
@@ -118,10 +126,10 @@ void main() {
       expect(extracted.expiryDate, DateTime(2027, 10, 1));
     });
 
-    test('Parses Sample 2: Cty Đồng Xanh, Jasmine, 500kg, 19500 đ, LO-JAS-002', () {
-      final sample = OcrService.samples[1];
+    test('Parses Sample 2: Cty Đồng Xanh, Jasmine, 500kg, 19500 đ, LO-JAS-002',
+        () {
       final extracted = ocrService.parseInvoice(
-        rawText: sample.rawText,
+        rawText: ocrInvoiceSamples[1],
         suppliers: suppliers,
         rices: rices,
       );
@@ -135,10 +143,11 @@ void main() {
       expect(extracted.expiryDate, DateTime(2027, 9, 20));
     });
 
-    test('Parses Sample 3: Nông sản Mekong, Gạo lứt, 400kg, 26500 VNĐ, LO-LUT-002', () {
-      final sample = OcrService.samples[2];
+    test(
+        'Parses Sample 3: Nông sản Mekong, Gạo lứt, 400kg, 26500 VNĐ, LO-LUT-002',
+        () {
       final extracted = ocrService.parseInvoice(
-        rawText: sample.rawText,
+        rawText: ocrInvoiceSamples[2],
         suppliers: suppliers,
         rices: rices,
       );
@@ -154,7 +163,9 @@ void main() {
   });
 
   group('Week 3 - Task 3.6 Full End-to-End Business Flow Test', () {
-    test('Import -> Batch Created -> Export with FEFO -> Inventory Updated -> Alerts Updated', () {
+    test(
+        'Import -> Batch Created -> Export with FEFO -> Inventory Updated -> Alerts Updated',
+        () {
       final batchProvider = BatchProvider();
       final importProvider = ImportProvider(batchProvider);
       final exportProvider = ExportProvider(batchProvider);

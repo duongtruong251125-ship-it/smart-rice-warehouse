@@ -43,14 +43,27 @@ class ForecastService {
         (sum, receipt) => sum + receipt.quantity,
       );
 
-      final averageDailyExport = totalQuantityExported7Days / 7.0;
+      double dailyExportRate = totalQuantityExported7Days / 7.0;
+      bool usedFallback = false;
+
+      // Fallback thông minh: Nếu 7 ngày qua chưa có đơn nhưng trong lịch sử kho có phát sinh xuất
+      if (dailyExportRate <= 0.00000001) {
+        final allExportsForRice =
+            exportReceipts.where((receipt) => receipt.riceId == rice.id).toList();
+        if (allExportsForRice.isNotEmpty) {
+          final totalHistoryQty =
+              allExportsForRice.fold(0.0, (sum, receipt) => sum + receipt.quantity);
+          dailyExportRate = totalHistoryQty / 30.0; // Ước tính bình quân 30 ngày
+          usedFallback = true;
+        }
+      }
 
       double? estimatedDaysRemaining;
       ForecastStatus status;
       String suggestion;
 
       // Xử lý an toàn: Tránh chia cho 0
-      if (averageDailyExport <= 0.00000001) {
+      if (dailyExportRate <= 0.00000001) {
         estimatedDaysRemaining = null;
         if (currentStock <= 0) {
           status = ForecastStatus.reorderSoon;
@@ -59,15 +72,15 @@ class ForecastService {
         } else if (currentStock <= rice.minimumStock) {
           status = ForecastStatus.attention;
           suggestion =
-              'Chưa có đơn xuất 7 ngày qua nhưng tồn kho (${NumberFormatter.quantity(currentStock)} ${rice.unit}) đang dưới mức an toàn (${NumberFormatter.quantity(rice.minimumStock)} ${rice.unit}).';
+              'Chưa phát sinh đơn xuất gần đây nhưng tồn kho (${NumberFormatter.quantity(currentStock)} ${rice.unit}) đang chạm ngưỡng an toàn (${NumberFormatter.quantity(rice.minimumStock)} ${rice.unit}).';
         } else {
-          status = ForecastStatus.noData;
+          status = ForecastStatus.safe;
           suggestion =
-              'Chưa phát sinh lượt xuất nào trong 7 ngày qua. Tồn hiện tại (${NumberFormatter.quantity(currentStock)} ${rice.unit}) vẫn ở ngưỡng ổn định.';
+              'Tồn kho hiện tại (${NumberFormatter.quantity(currentStock)} ${rice.unit}) đảm bảo ổn định. Chưa phát sinh nhu cầu xuất lớn.';
         }
       } else {
-        // Có phát sinh xuất kho trong 7 ngày qua
-        final days = currentStock / averageDailyExport;
+        // Có phát sinh xuất kho (theo 7 ngày hoặc theo bình quân lịch sử)
+        final days = currentStock / dailyExportRate;
         estimatedDaysRemaining = days;
 
         if (days <= 7 || currentStock <= rice.minimumStock) {
@@ -75,13 +88,13 @@ class ForecastService {
           final recommendedReorder =
               ((rice.minimumStock * 2) - currentStock).clamp(50.0, 50000.0);
           suggestion =
-              'Tiêu thụ ~${NumberFormatter.quantity(averageDailyExport)} ${rice.unit}/ngày. '
-              'Tồn kho dự kiến chỉ đủ duy trì trong ${days.toStringAsFixed(1)} ngày. '
+              'Tiêu thụ ~${NumberFormatter.quantity(dailyExportRate)} ${rice.unit}/ngày${usedFallback ? " (BQ tháng)" : ""}. '
+              'Tồn kho chỉ đủ duy trì trong ${days.toStringAsFixed(1)} ngày. '
               'Khuyến nghị nhập thêm ~${NumberFormatter.quantity(recommendedReorder)} ${rice.unit}!';
         } else if (days <= 14) {
           status = ForecastStatus.attention;
           suggestion =
-              'Tiêu thụ ~${NumberFormatter.quantity(averageDailyExport)} ${rice.unit}/ngày. '
+              'Tiêu thụ ~${NumberFormatter.quantity(dailyExportRate)} ${rice.unit}/ngày. '
               'Tồn kho ước tính đủ dùng trong ${days.toStringAsFixed(1)} ngày. Hãy chuẩn bị liên hệ nhà cung cấp.';
         } else {
           status = ForecastStatus.safe;
@@ -98,7 +111,7 @@ class ForecastService {
           unit: rice.unit,
           currentStock: currentStock,
           minimumStock: rice.minimumStock,
-          averageDailyExport: averageDailyExport,
+          averageDailyExport: dailyExportRate,
           estimatedDaysRemaining: estimatedDaysRemaining,
           status: status,
           reorderSuggestion: suggestion,

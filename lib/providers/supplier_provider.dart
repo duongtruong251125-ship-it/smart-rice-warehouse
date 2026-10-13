@@ -36,7 +36,6 @@ class SupplierProvider extends ChangeNotifier {
     _suppliers[index] = supplier;
     onPersist?.call(suppliers);
     notifyListeners();
-    onPersist?.call(suppliers);
     return true;
   }
 
@@ -48,6 +47,7 @@ class SupplierProvider extends ChangeNotifier {
       return false;
     }
 
+    onPersist?.call(suppliers);
     notifyListeners();
     return true;
   }

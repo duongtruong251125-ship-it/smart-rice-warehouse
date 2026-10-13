@@ -49,7 +49,6 @@ class RiceProvider extends ChangeNotifier {
     _rices[index] = rice;
     onPersist?.call(rices);
     notifyListeners();
-    onPersist?.call(rices);
     return true;
   }
 
@@ -61,6 +60,7 @@ class RiceProvider extends ChangeNotifier {
       return false;
     }
 
+    onPersist?.call(rices);
     notifyListeners();
     return true;
   }

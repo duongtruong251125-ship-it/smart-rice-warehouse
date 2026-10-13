@@ -16,13 +16,16 @@ import 'package:smart_rice_warehouse/screens/reports/reports_tab.dart';
 import 'package:smart_rice_warehouse/services/fefo_service.dart';
 import 'package:smart_rice_warehouse/services/forecast_service.dart';
 import 'package:smart_rice_warehouse/services/ocr_service.dart';
+import 'fixtures/ocr_invoice_samples.dart';
 
 void main() {
   group('Kiểm tra toàn diện 6 mục Member 2 theo yêu cầu', () {
     // ----------------------------------------------------
     // MỤC 1: Thuật toán Xuất kho FEFO & Phân bổ lô
     // ----------------------------------------------------
-    test('Mục 1: Thuật toán FEFO phân bổ đúng lô cận hạn trước, trừ kho chính xác', () {
+    test(
+        'Mục 1: Thuật toán FEFO phân bổ đúng lô cận hạn trước, trừ kho chính xác',
+        () {
       const fefoService = FefoService();
       final today = DateTime(2026, 10, 1);
 
@@ -81,7 +84,9 @@ void main() {
     // ----------------------------------------------------
     // MỤC 2: Banner Kho Thông Minh & Chuông cảnh báo trên Trang chủ
     // ----------------------------------------------------
-    test('Mục 2: AlertProvider quét dữ liệu thực tế, phát hiện lô cận hạn và tồn thấp', () {
+    test(
+        'Mục 2: AlertProvider quét dữ liệu thực tế, phát hiện lô cận hạn và tồn thấp',
+        () {
       final alertProvider = AlertProvider();
       final now = DateTime.now();
 
@@ -109,12 +114,14 @@ void main() {
           quantity: 200, // Tồn 200 <= min 500 -> Low stock!
           importDate: now.subtract(const Duration(days: 10)),
           manufactureDate: now.subtract(const Duration(days: 20)),
-          expiryDate: now.add(const Duration(days: 5)), // Còn 5 ngày -> Critical expiring!
+          expiryDate: now
+              .add(const Duration(days: 5)), // Còn 5 ngày -> Critical expiring!
           status: BatchStatus.available,
         ),
       ];
 
-      alertProvider.scanAlerts(rices: rices, batches: batches, referenceDate: now);
+      alertProvider.scanAlerts(
+          rices: rices, batches: batches, referenceDate: now);
 
       expect(alertProvider.alerts.isNotEmpty, isTrue);
       expect(alertProvider.lowStockCount, greaterThanOrEqualTo(1));
@@ -130,7 +137,9 @@ void main() {
     // ----------------------------------------------------
     // MỤC 3: Hệ thống Cảnh báo kho (Smart Alerts) & Bộ lọc
     // ----------------------------------------------------
-    test('Mục 3: Cảnh báo phân loại đúng loại (lowStock, expiringSoon, expired)', () {
+    test(
+        'Mục 3: Cảnh báo phân loại đúng loại (lowStock, expiringSoon, expired)',
+        () {
       final alertProvider = AlertProvider();
       final now = DateTime.now();
 
@@ -158,7 +167,8 @@ void main() {
           quantity: 300,
           importDate: now,
           manufactureDate: now,
-          expiryDate: now.add(const Duration(days: 20)), // 20 ngày -> warning expiringSoon
+          expiryDate: now
+              .add(const Duration(days: 20)), // 20 ngày -> warning expiringSoon
           status: BatchStatus.available,
         ),
         BatchModel(
@@ -169,15 +179,21 @@ void main() {
           quantity: 50,
           importDate: now.subtract(const Duration(days: 40)),
           manufactureDate: now.subtract(const Duration(days: 60)),
-          expiryDate: now.subtract(const Duration(days: 2)), // Đã hết hạn -> expired
+          expiryDate:
+              now.subtract(const Duration(days: 2)), // Đã hết hạn -> expired
           status: BatchStatus.expired,
         ),
       ];
 
-      alertProvider.scanAlerts(rices: rices, batches: batches, referenceDate: now);
+      alertProvider.scanAlerts(
+          rices: rices, batches: batches, referenceDate: now);
 
-      final expiredAlerts = alertProvider.alerts.where((a) => a.type == AlertType.expired).toList();
-      final expiringAlerts = alertProvider.alerts.where((a) => a.type == AlertType.expiringSoon).toList();
+      final expiredAlerts = alertProvider.alerts
+          .where((a) => a.type == AlertType.expired)
+          .toList();
+      final expiringAlerts = alertProvider.alerts
+          .where((a) => a.type == AlertType.expiringSoon)
+          .toList();
 
       expect(expiredAlerts.length, 1);
       expect(expiredAlerts.first.batchCode, 'LO-EXPIRED');
@@ -189,7 +205,9 @@ void main() {
     // ----------------------------------------------------
     // MỤC 4: Dự báo nhu cầu AI & An toàn chia 0
     // ----------------------------------------------------
-    test('Mục 4: Forecast Service tính xuất TB 7 ngày, Days Remaining và không chia 0', () {
+    test(
+        'Mục 4: Forecast Service tính xuất TB 7 ngày, Days Remaining và không chia 0',
+        () {
       const forecastService = ForecastService();
       final now = DateTime(2026, 10, 8);
 
@@ -250,7 +268,8 @@ void main() {
       expect(st25Forecast.estimatedDaysRemaining, greaterThanOrEqualTo(0));
 
       // Mặt hàng không có xuất -> average = 0, không crash chia 0
-      final jasForecast = forecasts.firstWhere((f) => f.riceId == 'r-no-export');
+      final jasForecast =
+          forecasts.firstWhere((f) => f.riceId == 'r-no-export');
       expect(jasForecast.averageDailyExport, 0);
       expect(jasForecast.estimatedDaysRemaining, isNull);
     });
@@ -258,7 +277,9 @@ void main() {
     // ----------------------------------------------------
     // MỤC 5: Tab Báo cáo Thống kê & 2 bảng tổng nhập/xuất có cột
     // ----------------------------------------------------
-    testWidgets('Mục 5: Báo cáo hiển thị thẻ tổng quan, biểu đồ cột tuần và 2 bảng 5 cột', (tester) async {
+    testWidgets(
+        'Mục 5: Báo cáo hiển thị thẻ tổng quan, biểu đồ cột tuần và 2 bảng 5 cột',
+        (tester) async {
       final batchProvider = BatchProvider();
       final importProvider = ImportProvider(batchProvider);
       final exportProvider = ExportProvider(batchProvider);
@@ -301,16 +322,18 @@ void main() {
     });
 
     // ----------------------------------------------------
-    // MỤC 6: Prototype OCR Quét hóa đơn & Chọn mã lô có sẵn / tạo mới
+    // MỤC 6: OCR Quét hóa đơn & Chọn mã lô có sẵn / tạo mới
     // ----------------------------------------------------
-    test('Mục 6: OCR trích xuất chính xác 3 mẫu và hỗ trợ chọn mã lô có sẵn / tạo mới', () {
+    test(
+        'Mục 6: OCR trích xuất chính xác 3 mẫu và hỗ trợ chọn mã lô có sẵn / tạo mới',
+        () {
       const ocr = OcrService();
       const suppliers = MockData.suppliers;
       const rices = MockData.rices;
 
       // Test Mẫu 1
       final res1 = ocr.parseInvoice(
-        rawText: OcrService.samples[0].rawText,
+        rawText: ocrInvoiceSamples[0],
         suppliers: suppliers,
         rices: rices,
       );
@@ -322,7 +345,7 @@ void main() {
 
       // Test Mẫu 2
       final res2 = ocr.parseInvoice(
-        rawText: OcrService.samples[1].rawText,
+        rawText: ocrInvoiceSamples[1],
         suppliers: suppliers,
         rices: rices,
       );
@@ -334,7 +357,7 @@ void main() {
 
       // Test Mẫu 3
       final res3 = ocr.parseInvoice(
-        rawText: OcrService.samples[2].rawText,
+        rawText: ocrInvoiceSamples[2],
         suppliers: suppliers,
         rices: rices,
       );
@@ -349,7 +372,8 @@ void main() {
       final importProvider = ImportProvider(batchProvider);
 
       final initialStock = batchProvider.totalStockForRice('rice-st25');
-      final existingBatch = batchProvider.batches.firstWhere((b) => b.riceId == 'rice-st25');
+      final existingBatch =
+          batchProvider.batches.firstWhere((b) => b.riceId == 'rice-st25');
       final initialBatchQty = existingBatch.quantity;
 
       // Tạo phiếu nhập bổ sung cho mã lô có sẵn
@@ -380,7 +404,8 @@ void main() {
 
       expect(success, isTrue);
       // Kiểm tra số lượng của lô được cộng dồn chính xác
-      final updatedBatch = batchProvider.batches.firstWhere((b) => b.code == existingBatch.code);
+      final updatedBatch =
+          batchProvider.batches.firstWhere((b) => b.code == existingBatch.code);
       expect(updatedBatch.quantity, initialBatchQty + 250);
       // Tổng tồn kho của gạo tăng đúng 250kg
       expect(batchProvider.totalStockForRice('rice-st25'), initialStock + 250);

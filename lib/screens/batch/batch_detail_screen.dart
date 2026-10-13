@@ -598,7 +598,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                   const SizedBox(height: 12),
                   _DetailRow(
                     label: 'Nhà cung cấp',
-                    value: batch.supplierName ?? 'Công ty Lúa Việt',
+                    value: batch.supplierName ?? 'Chưa cập nhật',
                   ),
                   const Divider(height: 18),
                   _DetailRow(

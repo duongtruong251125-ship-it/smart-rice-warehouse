@@ -18,7 +18,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   static const _titles = <String>[
-    'Trang chủ',
+    'Bàn làm việc',
     'Kho hàng',
     'Nhập / Xuất',
     'Báo cáo',
@@ -46,25 +46,41 @@ class _MainScreenState extends State<MainScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Row(
+            title: const Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.notifications_active, color: Colors.red),
-                const SizedBox(width: 8),
-                const Text('Có thông báo mới!'),
+                Icon(Icons.notifications_active, color: AppTheme.dangerColor),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Có thông báo mới!',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
-            content: Text('Bạn có ${unreadAlerts.length} cảnh báo chưa đọc (Hàng sắp hết, sắp hết hạn, v.v.). Vui lòng kiểm tra!'),
+            content: Text(
+              'Bạn có ${unreadAlerts.length} cảnh báo chưa đọc (Hàng sắp hết, sắp hết hạn, v.v.). Vui lòng kiểm tra!',
+            ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Đóng'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamed(context, AppRoutes.alerts);
-                },
-                child: const Text('Xem ngay'),
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Đóng'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, AppRoutes.alerts);
+                    },
+                    child: const Text('Xem ngay'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -189,45 +205,81 @@ class _MainScreenState extends State<MainScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           boxShadow: [
             BoxShadow(
-              blurRadius: 15,
-              color: Colors.black.withValues(alpha: 0.04),
-              offset: const Offset(0, -3),
+              blurRadius: 16,
+              color: Colors.black.withValues(alpha: 0.05),
+              offset: const Offset(0, -4),
             )
           ],
         ),
-        child: NavigationBarTheme(
-          data: NavigationBarThemeData(
-            backgroundColor: Colors.white,
-            indicatorColor: const Color(0xFFCCFBF1), // AppTheme.primaryLight
-            indicatorShape: const CircleBorder(),
-            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-            labelTextStyle: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
-                return const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0F766E));
-              }
-              return const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.grey);
-            }),
-            iconTheme: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
-                return const IconThemeData(color: Color(0xFF0F766E), size: 26);
-              }
-              return const IconThemeData(color: Colors.grey, size: 24);
-            }),
-          ),
-          child: NavigationBar(
-            height: 60,
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (index) => setState(() => _selectedIndex = index),
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Trang chủ'),
-              NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2_rounded), label: 'Kho hàng'),
-              NavigationDestination(icon: Icon(Icons.sync_alt_rounded), selectedIcon: Icon(Icons.sync_alt_rounded), label: 'Giao dịch'),
-              NavigationDestination(icon: Icon(Icons.bar_chart_outlined), selectedIcon: Icon(Icons.bar_chart_rounded), label: 'Báo cáo'),
-              NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Tài khoản'),
-            ],
+        child: SafeArea(
+          top: false,
+          child: NavigationBarTheme(
+            data: NavigationBarThemeData(
+              backgroundColor: Theme.of(context).cardColor,
+              indicatorColor: AppTheme.primaryLight,
+              indicatorShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.primaryColor,
+                  );
+                }
+                return TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                );
+              }),
+              iconTheme: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const IconThemeData(color: AppTheme.primaryColor, size: 24);
+                }
+                return IconThemeData(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  size: 22,
+                );
+              }),
+            ),
+            child: NavigationBar(
+              height: 66,
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home_rounded),
+                  label: 'Trang chủ',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.inventory_2_outlined),
+                  selectedIcon: Icon(Icons.inventory_2_rounded),
+                  label: 'Kho hàng',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.sync_alt_rounded),
+                  selectedIcon: Icon(Icons.sync_alt_rounded),
+                  label: 'Nhập/Xuất',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.bar_chart_outlined),
+                  selectedIcon: Icon(Icons.bar_chart_rounded),
+                  label: 'Báo cáo',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline_rounded),
+                  selectedIcon: Icon(Icons.person_rounded),
+                  label: 'Tài khoản',
+                ),
+              ],
+            ),
           ),
         ),
       ),

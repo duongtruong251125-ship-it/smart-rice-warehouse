@@ -29,6 +29,9 @@ import 'package:smart_rice_warehouse/screens/supplier/supplier_list_screen.dart'
 import 'package:smart_rice_warehouse/screens/warehouse/warehouse_location_screen.dart';
 
 abstract final class AppRoutes {
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   static const String splash = '/';
   static const String login = '/login';
   static const String home = '/home';
@@ -51,7 +54,7 @@ abstract final class AppRoutes {
   static const String profile = '/profile';
   static const String alerts = '/alerts';
   static const String forecast = '/forecast';
-  static const String ocrPrototype = '/ocr/prototype';
+  static const String ocrInvoice = '/ocr/invoice';
 
   // Member 1 dynamic routes
   static const String batchDetail = '/batch/detail';
@@ -116,8 +119,8 @@ abstract final class AppRoutes {
     if (settings.name == forecast) {
       return MaterialPageRoute(builder: (_) => const ForecastScreen());
     }
-    if (settings.name == ocrPrototype) {
-      return MaterialPageRoute(builder: (_) => const OcrPrototypeScreen());
+    if (settings.name == ocrInvoice) {
+      return MaterialPageRoute(builder: (_) => const OcrInvoiceScreen());
     }
     if (settings.name == batchDetail) {
       final batchId = settings.arguments as String?;

@@ -18,14 +18,14 @@ import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
 import 'package:smart_rice_warehouse/services/ocr_service.dart';
 import 'package:smart_rice_warehouse/widgets/custom_text_field.dart';
 
-class OcrPrototypeScreen extends StatefulWidget {
-  const OcrPrototypeScreen({super.key});
+class OcrInvoiceScreen extends StatefulWidget {
+  const OcrInvoiceScreen({super.key});
 
   @override
-  State<OcrPrototypeScreen> createState() => _OcrPrototypeScreenState();
+  State<OcrInvoiceScreen> createState() => _OcrInvoiceScreenState();
 }
 
-class _OcrPrototypeScreenState extends State<OcrPrototypeScreen> {
+class _OcrInvoiceScreenState extends State<OcrInvoiceScreen> {
   final _ocrService = const OcrService();
   final _imagePicker = ImagePicker();
   final _textController = TextEditingController();
@@ -42,26 +42,12 @@ class _OcrPrototypeScreenState extends State<OcrPrototypeScreen> {
   DateTime? _expiryDate;
 
   @override
-  void initState() {
-    super.initState();
-    // Khởi tạo sẵn bằng hóa đơn mẫu 1
-    _loadSample(OcrService.samples.first);
-  }
-
-  @override
   void dispose() {
     _textController.dispose();
     _quantityController.dispose();
     _purchasePriceController.dispose();
     _batchCodeController.dispose();
     super.dispose();
-  }
-
-  void _loadSample(OcrSampleInvoice sample) {
-    setState(() {
-      _textController.text = sample.rawText.trim();
-    });
-    _runOcrExtraction();
   }
 
   Future<void> _scanDocument(ImageSource source) async {
@@ -277,38 +263,7 @@ class _OcrPrototypeScreenState extends State<OcrPrototypeScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Sample chips
-            Text(
-              'Chọn mẫu hóa đơn thử nghiệm:',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: OcrService.samples.map((sample) {
-                  final isSelected = _textController.text.contains(
-                    sample.rawText.trim().substring(0, 15),
-                  );
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ActionChip(
-                      avatar: const Icon(Icons.receipt_outlined, size: 16),
-                      label: Text(sample.title),
-                      backgroundColor: isSelected
-                          ? AppTheme.primaryLight
-                          : AppTheme.cardColor,
-                      onPressed: () => _loadSample(sample),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Raw text / OCR simulator box
+            // Văn bản nhận dạng có thể được rà soát trước khi tạo phiếu.
             Text(
               'Nội dung quét OCR (Văn bản nhận dạng):',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -322,7 +277,7 @@ class _OcrPrototypeScreenState extends State<OcrPrototypeScreen> {
               maxLines: 4,
               style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
               decoration: InputDecoration(
-                hintText: 'Dán nội dung hóa đơn hoặc chọn mẫu phía trên...',
+                hintText: 'Chụp ảnh, chọn ảnh hoặc dán nội dung hóa đơn...',
                 suffixIcon: IconButton(
                   tooltip: 'Chạy phân tích OCR',
                   onPressed: _runOcrExtraction,

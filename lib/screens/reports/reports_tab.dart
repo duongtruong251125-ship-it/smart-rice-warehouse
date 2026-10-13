@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
@@ -16,7 +17,7 @@ import 'package:smart_rice_warehouse/screens/reports/report_charts.dart';
 import 'package:smart_rice_warehouse/widgets/dashboard_card.dart';
 import 'package:smart_rice_warehouse/widgets/section_title.dart';
 import 'package:smart_rice_warehouse/models/inventory_snapshot_model.dart';
-import 'package:smart_rice_warehouse/data/app_database.dart';
+import 'package:smart_rice_warehouse/providers/inventory_snapshot_provider.dart';
 
 class ReportsTab extends StatefulWidget {
   const ReportsTab({super.key});
@@ -57,19 +58,11 @@ class _ReportsTabState extends State<ReportsTab> {
         )
         .toList();
 
-    final effectiveImports = currentMonthImports.isNotEmpty
-        ? currentMonthImports
-        : importProvider.receipts.reversed.take(6).toList();
-    final effectiveExports = currentMonthExports.isNotEmpty
-        ? currentMonthExports
-        : exportProvider.receipts.reversed.take(6).toList();
+    final effectiveImports = currentMonthImports;
+    final effectiveExports = currentMonthExports;
 
-    final monthImportAmount = currentMonthImports.isNotEmpty
-        ? importProvider.totalAmountForMonth(now)
-        : effectiveImports.fold(0.0, (s, r) => s + r.totalAmount);
-    final monthExportAmount = currentMonthExports.isNotEmpty
-        ? exportProvider.totalAmountForMonth(now)
-        : effectiveExports.fold(0.0, (s, r) => s + r.totalAmount);
+    final monthImportAmount = importProvider.totalAmountForMonth(now);
+    final monthExportAmount = exportProvider.totalAmountForMonth(now);
 
     final monthImportQty = effectiveImports.fold(0.0, (s, r) => s + r.quantity);
     final monthExportQty = effectiveExports.fold(0.0, (s, r) => s + r.quantity);
@@ -83,7 +76,8 @@ class _ReportsTabState extends State<ReportsTab> {
       rices: riceProvider.rices,
     );
     final inventoryValuePoints = _buildInventoryValuePoints(
-      snapshots: context.read<AppSnapshot>().snapshots,
+      snapshots:
+          context.watch<InventorySnapshotStore?>()?.snapshots ?? const [],
       today: now,
       currentValue: batchProvider.inventoryValue(riceProvider.rices),
       importReceipts: importProvider.receipts,
@@ -97,10 +91,21 @@ class _ReportsTabState extends State<ReportsTab> {
         activities.fold(0.0, (s, a) => s + a.exportQuantity);
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _ReportsHeroBanner(
+            month: now.month,
+            year: now.year,
+            importCount: effectiveImports.length,
+            exportCount: effectiveExports.length,
+            totalStockTons: batchProvider.totalStock / 1000.0,
+            onViewForecast: () =>
+                Navigator.of(context).pushNamed(AppRoutes.forecast),
+          ).animate().fadeIn(duration: 250.ms),
+          const SizedBox(height: 20),
           const SectionTitle('Tổng quan tháng này'),
           const SizedBox(height: 12),
           GridView.count(
@@ -1964,9 +1969,18 @@ List<ReportValuePoint> _buildInventoryValuePoints({
     for (final rice in rices) rice.id: rice.purchasePrice,
   };
   final startOfToday = DateTime(today.year, today.month, today.day);
+  final snapshotValues = <DateTime, double>{
+    for (final snapshot in snapshots)
+      DateTime(snapshot.date.year, snapshot.date.month, snapshot.date.day):
+          snapshot.totalValue,
+  };
 
   return List.generate(7, (index) {
     final date = startOfToday.subtract(Duration(days: 6 - index));
+    final snapshotValue = snapshotValues[date];
+    if (snapshotValue != null) {
+      return ReportValuePoint(date: date, value: snapshotValue);
+    }
     final nextDay = date.add(const Duration(days: 1));
     final laterImports = importReceipts
         .where((receipt) => !receipt.date.isBefore(nextDay))
@@ -1994,4 +2008,141 @@ String _formatDate(DateTime d) {
   final day = d.day.toString().padLeft(2, '0');
   final month = d.month.toString().padLeft(2, '0');
   return '$day/$month';
+}
+
+class _ReportsHeroBanner extends StatelessWidget {
+  const _ReportsHeroBanner({
+    required this.month,
+    required this.year,
+    required this.importCount,
+    required this.exportCount,
+    required this.totalStockTons,
+    required this.onViewForecast,
+  });
+
+  final int month;
+  final int year;
+  final int importCount;
+  final int exportCount;
+  final double totalStockTons;
+  final VoidCallback onViewForecast;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      decoration: BoxDecoration(
+        gradient: AppTheme.heroEmeraldGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppTheme.modernElevation,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'BÁO CÁO & PHÂN TÍCH KHO',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white70,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'T$month/$year',
+                  style: const TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Phân Tích Xuất Nhập & Cơ Cấu Hàng Tồn',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _buildMiniChip('$importCount Phiếu Nhập'),
+              _buildMiniChip('$exportCount Phiếu Xuất'),
+              _buildMiniChip('~${totalStockTons.toStringAsFixed(1)} Tấn tồn'),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              onTap: onViewForecast,
+              borderRadius: BorderRadius.circular(12),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.insights_rounded, size: 16, color: AppTheme.primaryDark),
+                    SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'Xem Dự Báo Tiêu Thụ',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.primaryDark,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
 }

@@ -3,16 +3,6 @@ import 'package:smart_rice_warehouse/models/ocr_invoice_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/models/supplier_model.dart';
 
-class OcrSampleInvoice {
-  const OcrSampleInvoice({
-    required this.title,
-    required this.rawText,
-  });
-
-  final String title;
-  final String rawText;
-}
-
 class OcrService {
   const OcrService();
 
@@ -26,60 +16,6 @@ class OcrService {
       await recognizer.close();
     }
   }
-
-  static const List<OcrSampleInvoice> samples = [
-    OcrSampleInvoice(
-      title: 'Hóa đơn Cty Lúa Việt (ST25)',
-      rawText: '''
-CÔNG TY LÚA VIỆT
-HÓA ĐƠN NHẬP KHO NÔNG SẢN
-Số HĐ: HD-2026-9901
-Ngày giao: 05/10/2026
-Mã lô: LO-ST25-003
-Tên hàng hóa: Gạo ST25 (Gạo thơm cao cấp)
-Số lượng: 800 kg
-Đơn giá: 28.000 VNĐ/kg
-Thành tiền: 22.400.000 VNĐ
-Ngày sản xuất: 01/10/2026
-Hạn sử dụng: 01/10/2027
-Đại diện giao hàng: Nguyễn Văn A
-''',
-    ),
-    OcrSampleInvoice(
-      title: 'Phiếu giao hàng Cty Đồng Xanh (Jasmine)',
-      rawText: '''
-CÔNG TY ĐỒNG XANH
-PHIẾU GIAO HÀNG & CHỨNG NHẬN CHẤT LƯỢNG
-Ngày: 06/10/2026
-Nhà cung cấp: Công ty Đồng Xanh
-Sản phẩm: Gạo Jasmine
-Quy cách: Đóng bao 50kg
-Số lượng: 500 kg
-Đơn giá nhập: 19.500 đ
-Tổng tiền: 9.750.000 đ
-Số lô sản xuất: LO-JAS-002
-NSX: 20/09/2026
-HSD: 20/09/2027
-''',
-    ),
-    OcrSampleInvoice(
-      title: 'Hóa đơn Nông sản Mekong (Gạo lứt)',
-      rawText: '''
-NÔNG SẢN MEKONG
-HÓA ĐƠN BÁN HÀNG
-Ngày lập: 07/10/2026
-Khách hàng: Kho gạo Thông minh
-Đơn vị bán: Nông sản Mekong
-Mặt hàng: Gạo lứt dinh dưỡng
-Mã lô: LO-LUT-002
-Khối lượng: 400 kg
-Giá mua: 26.500 VNĐ/kg
-Tổng cộng: 10.600.000 VNĐ
-NSX: 25/09/2026
-HSD: 25/03/2027
-''',
-    ),
-  ];
 
   /// Trích xuất các trường thông tin từ văn bản hóa đơn OCR
   OcrExtractedInvoice parseInvoice({

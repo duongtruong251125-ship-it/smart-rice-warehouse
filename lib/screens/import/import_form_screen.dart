@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'package:smart_rice_warehouse/widgets/modern_date_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
+import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
@@ -208,6 +209,8 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
       status: _expiryDate!.isBefore(today)
           ? BatchStatus.expired
           : BatchStatus.available,
+      supplierId: supplier.id,
+      supplierName: supplier.name,
     );
 
     final created = provider.createImportReceipt(
@@ -215,9 +218,7 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
       batch: batch,
     );
     if (!created) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Không thể tạo phiếu nhập cho mã lô này')),
-      );
+      AppToast.error(context, 'Không thể tạo phiếu nhập cho mã lô này');
       return;
     }
 

@@ -2,14 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
 import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
-import 'package:smart_rice_warehouse/data/app_database.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/services/fefo_service.dart';
 
 class ExportProvider extends ChangeNotifier {
   ExportProvider(
     this._batchProvider, {
-    this.database,
     List<ExportReceiptModel>? initial,
     this.onPersist,
   }) : _receipts = List<ExportReceiptModel>.from(
@@ -17,8 +15,7 @@ class ExportProvider extends ChangeNotifier {
         );
 
   final List<ExportReceiptModel> _receipts;
-  BatchProvider _batchProvider;
-  final AppDatabase? database;
+  final BatchProvider _batchProvider;
   final ValueChanged<List<ExportReceiptModel>>? onPersist;
   final FefoService _fefoService = const FefoService();
 
@@ -45,16 +42,6 @@ class ExportProvider extends ChangeNotifier {
         .fold(0, (total, receipt) => total + receipt.quantity);
   }
 
-  void updateBatchProvider(BatchProvider batchProvider) {
-    _batchProvider = batchProvider;
-  }
-
-  bool canExport({required String riceId, required double quantity}) {
-    if (quantity <= 0) return false;
-    final result = previewFefoAllocation(riceId: riceId, quantity: quantity);
-    return result.isSuccess;
-  }
-
   /// Tính toán trước phân bổ lô hàng theo nguyên tắc FEFO mà chưa trừ kho
   FefoAllocationResult previewFefoAllocation({
     required String riceId,
@@ -79,19 +66,6 @@ class ExportProvider extends ChangeNotifier {
     } catch (_) {
       return null;
     }
-  }
-
-  List<ExportReceiptModel> searchReceipts(String query) {
-    final normalized = query.trim().toLowerCase();
-    if (normalized.isEmpty) return receipts;
-    return _receipts
-        .where(
-          (r) =>
-              r.code.toLowerCase().contains(normalized) ||
-              r.customerName.toLowerCase().contains(normalized) ||
-              r.riceName.toLowerCase().contains(normalized),
-        )
-        .toList(growable: false);
   }
 
   /// Tạo phiếu xuất kho áp dụng thuật toán FEFO

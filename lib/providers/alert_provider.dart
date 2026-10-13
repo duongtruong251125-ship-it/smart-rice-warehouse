@@ -27,10 +27,6 @@ class AlertProvider extends ChangeNotifier {
   int get criticalCount =>
       _alerts.where((a) => a.severity == AlertSeverity.critical).length;
 
-  List<AlertModel> get criticalAlerts => _alerts
-      .where((a) => a.severity == AlertSeverity.critical)
-      .toList(growable: false);
-
   void markAsRead(String alertId) {
     _readAlertIds.add(alertId);
     final index = _alerts.indexWhere((a) => a.id == alertId);

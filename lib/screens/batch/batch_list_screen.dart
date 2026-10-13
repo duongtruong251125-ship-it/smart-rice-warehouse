@@ -84,10 +84,19 @@ class _BatchListScreenState extends State<BatchListScreen> {
           IconButton(
             tooltip: 'Xuất báo cáo Excel',
             icon: const Icon(Icons.file_download_rounded),
-            onPressed: () {
+            onPressed: () async {
               final batches = context.read<BatchProvider>().batches;
               final rices = context.read<RiceProvider>().rices;
-              ExcelExportService.exportInventoryReport(batches, rices);
+              try {
+                await ExcelExportService.exportInventoryReport(batches, rices);
+                if (context.mounted) {
+                  AppToast.success(context, 'Đã tạo báo cáo Excel');
+                }
+              } catch (_) {
+                if (context.mounted) {
+                  AppToast.error(context, 'Không thể tạo báo cáo Excel');
+                }
+              }
             },
           ),
           IconButton(

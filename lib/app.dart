@@ -12,6 +12,7 @@ import 'package:smart_rice_warehouse/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/providers/forecast_provider.dart';
 import 'package:smart_rice_warehouse/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/providers/inventory_check_provider.dart';
+import 'package:smart_rice_warehouse/providers/inventory_snapshot_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
 import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
@@ -34,6 +35,9 @@ class SmartRiceWarehouseApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ToastificationWrapper(
+      config: const ToastificationConfig(
+        maxToastLimit: 1,
+      ),
       child: MultiProvider(
         providers: [
           Provider<AppSnapshot>.value(value: snapshot),
@@ -42,11 +46,20 @@ class SmartRiceWarehouseApp extends StatelessWidget {
             create: (_) => AuthProvider(
               email: snapshot.authEmail,
               passwordHash: snapshot.passwordHash,
+              userName: snapshot.userName,
+              userRole: snapshot.userRole,
+              avatarPath: snapshot.avatarPath,
               rememberedSession: snapshot.rememberedSession,
               onPersist: (email, hash, remembered) => database?.saveAuth(
                 email: email,
                 passwordHash: hash,
                 rememberedSession: remembered,
+              ),
+              onProfilePersist: (name, role, avatarPath) =>
+                  database?.saveUserProfile(
+                name: name,
+                role: role,
+                avatarPath: avatarPath,
               ),
             ),
           ),
@@ -74,14 +87,34 @@ class SmartRiceWarehouseApp extends StatelessWidget {
               onPersist: database?.saveBatches,
             ),
           ),
+          ProxyProvider2<RiceProvider, BatchProvider, InventorySnapshotStore>(
+            create: (_) => InventorySnapshotStore(
+              initial: snapshot.snapshots,
+              onPersist: database?.saveInventorySnapshots,
+            ),
+            update: (_, rices, batches, store) {
+              final snapshotStore = store ??
+                  InventorySnapshotStore(
+                    initial: snapshot.snapshots,
+                    onPersist: database?.saveInventorySnapshots,
+                  );
+              snapshotStore.synchronize(
+                batches: batches.batches,
+                rices: rices.rices,
+              );
+              return snapshotStore;
+            },
+          ),
           ChangeNotifierProvider(
-            create: (context) => ImportProvider(context.read<BatchProvider>(), database: database,
+            create: (context) => ImportProvider(
+              context.read<BatchProvider>(),
               initial: snapshot.importReceipts,
               onPersist: database?.saveImportReceipts,
             ),
           ),
           ChangeNotifierProvider(
-            create: (context) => ExportProvider(context.read<BatchProvider>(), database: database,
+            create: (context) => ExportProvider(
+              context.read<BatchProvider>(),
               initial: snapshot.exportReceipts,
               onPersist: database?.saveExportReceipts,
             ),
@@ -120,7 +153,12 @@ class SmartRiceWarehouseApp extends StatelessWidget {
               onPersist: database?.saveInventoryChecks,
             ),
           ),
-          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(
+            create: (_) => ThemeProvider(
+              initialDarkMode: settings.isDarkMode,
+              onChanged: settings.setDarkMode,
+            ),
+          ),
           ChangeNotifierProvider(
             create: (_) => DamageProvider(
               initial: snapshot.damageReports,
@@ -132,14 +170,15 @@ class SmartRiceWarehouseApp extends StatelessWidget {
           builder: (context) {
             final themeProvider = context.watch<ThemeProvider>();
             return MaterialApp(
+              navigatorKey: AppRoutes.navigatorKey,
               title: 'Smart Rice Warehouse',
               debugShowCheckedModeBanner: false,
               theme: AppTheme.light,
               darkTheme: AppTheme.dark,
               themeMode: themeProvider.themeMode,
               initialRoute: AppRoutes.splash,
-          routes: AppRoutes.routes,
-          onGenerateRoute: AppRoutes.onGenerateRoute,
+              routes: AppRoutes.routes,
+              onGenerateRoute: AppRoutes.onGenerateRoute,
             );
           },
         ),

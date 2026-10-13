@@ -15,7 +15,8 @@ import 'package:sqflite/sqflite.dart';
 
 class AppSnapshot {
   final List<InventorySnapshotModel> snapshots;
-  const AppSnapshot({this.snapshots = const [], 
+  const AppSnapshot({
+    this.snapshots = const [],
     this.rices,
     this.suppliers,
     this.customers,
@@ -27,6 +28,9 @@ class AppSnapshot {
     this.inventoryChecks,
     this.authEmail,
     this.passwordHash,
+    this.userName,
+    this.userRole,
+    this.avatarPath,
     this.rememberedSession = false,
   });
 
@@ -41,6 +45,9 @@ class AppSnapshot {
   final List<InventoryCheckSession>? inventoryChecks;
   final String? authEmail;
   final String? passwordHash;
+  final String? userName;
+  final String? userRole;
+  final String? avatarPath;
   final bool rememberedSession;
 }
 
@@ -76,8 +83,16 @@ class AppDatabase {
       damageReports: await _load('damage_reports', DamageReportModel.fromJson),
       inventoryChecks:
           await _load('inventory_checks', InventoryCheckSession.fromJson),
+      snapshots: await _load(
+            'inventory_snapshots',
+            InventorySnapshotModel.fromJson,
+          ) ??
+          const [],
       authEmail: await _loadValue<String>('auth_email'),
       passwordHash: await _loadValue<String>('password_hash'),
+      userName: await _loadValue<String>('user_name'),
+      userRole: await _loadValue<String>('user_role'),
+      avatarPath: await _loadValue<String>('avatar_path'),
       rememberedSession: await _loadValue<bool>('remembered_session') ?? false,
     );
   }
@@ -131,6 +146,10 @@ class AppDatabase {
       _save('damage_reports', value.map((item) => item.toJson()).toList());
   void saveInventoryChecks(List<InventoryCheckSession> value) =>
       _save('inventory_checks', value.map((item) => item.toJson()).toList());
+  void saveInventorySnapshots(List<InventorySnapshotModel> value) => _save(
+        'inventory_snapshots',
+        value.map((item) => item.toJson()).toList(),
+      );
   void saveAuth({
     required String email,
     required String passwordHash,
@@ -139,6 +158,16 @@ class AppDatabase {
     _saveValue('auth_email', email);
     _saveValue('password_hash', passwordHash);
     _saveValue('remembered_session', rememberedSession);
+  }
+
+  void saveUserProfile({
+    required String name,
+    required String role,
+    String? avatarPath,
+  }) {
+    _saveValue('user_name', name);
+    _saveValue('user_role', role);
+    if (avatarPath != null) _saveValue('avatar_path', avatarPath);
   }
 
   void _saveValue(String key, Object value) {

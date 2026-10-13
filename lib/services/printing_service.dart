@@ -51,46 +51,6 @@ abstract final class PrintingService {
     );
   }
 
-  static Future<bool> printWeightReceipt({
-    required String riceName,
-    required String supplierName,
-    required double quantity,
-    required double moisture,
-    required double impurity,
-    required double totalAmount,
-  }) async {
-    final document = pw.Document();
-    document.addPage(
-      pw.Page(
-        build: (_) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text('SMART RICE WAREHOUSE',
-                style: const pw.TextStyle(
-                    fontSize: 20, fontWeight: pw.FontWeight.bold)),
-            pw.Text('WEIGHT RECEIPT'),
-            pw.Divider(),
-            pw.Text('Rice: ${_ascii(riceName)}'),
-            pw.Text('Supplier: ${_ascii(supplierName)}'),
-            pw.Text('Weight: ${quantity.toStringAsFixed(2)} kg'),
-            pw.Text('Moisture: ${moisture.toStringAsFixed(2)}%'),
-            pw.Text('Impurity: ${impurity.toStringAsFixed(2)}%'),
-            pw.Text('Total: ${totalAmount.toStringAsFixed(0)} VND'),
-            pw.SizedBox(height: 30),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [pw.Text('Warehouse staff'), pw.Text('Supplier')],
-            ),
-          ],
-        ),
-      ),
-    );
-    return Printing.layoutPdf(
-      name: 'weight-receipt.pdf',
-      onLayout: (_) => document.save(),
-    );
-  }
-
   static String _date(DateTime value) =>
       '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
 

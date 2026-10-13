@@ -13,9 +13,9 @@ class InventorySnapshotModel {
     this.note = '',
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, Object?> toJson() {
     return {
-      'id': id == 0 ? null : id, // Cho autoincrement
+      'id': id,
       'date': date.toIso8601String(),
       'totalQuantity': totalQuantity,
       'totalValue': totalValue,
@@ -23,13 +23,18 @@ class InventorySnapshotModel {
     };
   }
 
-  factory InventorySnapshotModel.fromMap(Map<String, dynamic> map) {
+  Map<String, Object?> toMap() => toJson();
+
+  factory InventorySnapshotModel.fromJson(Map<String, dynamic> map) {
     return InventorySnapshotModel(
-      id: map['id'] as int,
+      id: (map['id'] as num).toInt(),
       date: DateTime.parse(map['date'] as String),
       totalQuantity: (map['totalQuantity'] as num).toDouble(),
       totalValue: (map['totalValue'] as num).toDouble(),
       note: map['note'] as String? ?? '',
     );
   }
+
+  factory InventorySnapshotModel.fromMap(Map<String, dynamic> map) =>
+      InventorySnapshotModel.fromJson(map);
 }

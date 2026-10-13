@@ -1,21 +1,21 @@
 import 'dart:typed_data';
-import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
 
 class ExcelExportService {
-  static Future<void> exportInventoryReport(
+  static Uint8List buildInventoryReport(
     List<BatchModel> batches,
     List<RiceModel> rices,
-  ) async {
+  ) {
     final xlsio.Workbook workbook = xlsio.Workbook();
     final xlsio.Worksheet sheet = workbook.worksheets[0];
     sheet.name = 'TonKho_FEFO';
 
     // Tiêu đề lớn
-    sheet.getRangeByName('A1:H1').merge();
+    sheet.getRangeByName('A1:J1').merge();
     final xlsio.Range headerTitle = sheet.getRangeByName('A1');
     headerTitle.setText('BÁO CÁO TỒN KHO & LÔ HÀNG FEFO');
     headerTitle.cellStyle.fontSize = 16;
@@ -31,7 +31,9 @@ class ExcelExportService {
       'Vị trí',
       'Ngày Nhập',
       'Hạn SD',
-      'Trạng Thái'
+      'Trạng Thái',
+      'Giá vốn (VNĐ)',
+      'Giá trị tồn (VNĐ)',
     ];
     for (int i = 0; i < headers.length; i++) {
       final cell = sheet.getRangeByIndex(3, i + 1);
@@ -43,16 +45,23 @@ class ExcelExportService {
 
     int rowIndex = 4;
     double totalKg = 0;
+    double totalValue = 0;
     final now = DateTime.now();
+    final pricesByRiceId = {
+      for (final rice in rices) rice.id: rice.purchasePrice,
+    };
 
     for (var batch in batches) {
-      final bags = (batch.quantity / 50).round();
+      final bags = batch.quantity / 50;
+      final purchasePrice = pricesByRiceId[batch.riceId] ?? 0;
+      final inventoryValue = batch.quantity * purchasePrice;
       totalKg += batch.quantity;
+      totalValue += inventoryValue;
 
       sheet.getRangeByIndex(rowIndex, 1).setText(batch.code);
       sheet.getRangeByIndex(rowIndex, 2).setText(batch.riceName);
       sheet.getRangeByIndex(rowIndex, 3).setNumber(batch.quantity);
-      sheet.getRangeByIndex(rowIndex, 4).setNumber(bags.toDouble());
+      sheet.getRangeByIndex(rowIndex, 4).setNumber(bags);
       sheet.getRangeByIndex(rowIndex, 5).setText(batch.locationName ?? '');
       sheet
           .getRangeByIndex(rowIndex, 6)
@@ -63,6 +72,8 @@ class ExcelExportService {
 
       final cellStatus = sheet.getRangeByIndex(rowIndex, 8);
       cellStatus.setText(batch.status.label);
+      sheet.getRangeByIndex(rowIndex, 9).setNumber(purchasePrice);
+      sheet.getRangeByIndex(rowIndex, 10).setNumber(inventoryValue);
 
       final daysUntilExpiry = batch.expiryDate.difference(now).inDays;
       if (daysUntilExpiry <= 7) {
@@ -80,16 +91,36 @@ class ExcelExportService {
     sheet.getRangeByIndex(rowIndex, 1).cellStyle.bold = true;
     sheet.getRangeByIndex(rowIndex, 3).setNumber(totalKg);
     sheet.getRangeByIndex(rowIndex, 3).cellStyle.bold = true;
+    sheet.getRangeByIndex(rowIndex, 10).setNumber(totalValue);
+    sheet.getRangeByIndex(rowIndex, 10).cellStyle.bold = true;
 
     // Căn chỉnh độ rộng
-    for (int i = 1; i <= 8; i++) {
+    for (int i = 1; i <= 10; i++) {
       sheet.autoFitColumn(i);
     }
 
-    final List<int> bytes = workbook.saveAsStream();
+    final bytes = Uint8List.fromList(workbook.saveAsStream());
     workbook.dispose();
+    return bytes;
+  }
 
-    // Dùng Printing (share) để lưu/share file xlsx
-    await Printing.sharePdf(bytes: Uint8List.fromList(bytes), filename: 'BaoCaoTonKho.xlsx');
+  static Future<void> exportInventoryReport(
+    List<BatchModel> batches,
+    List<RiceModel> rices,
+  ) async {
+    final bytes = buildInventoryReport(batches, rices);
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [
+          XFile.fromData(
+            bytes,
+            mimeType:
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          ),
+        ],
+        fileNameOverrides: const ['BaoCaoTonKho.xlsx'],
+        subject: 'Báo cáo tồn kho Smart Rice Warehouse',
+      ),
+    );
   }
 }

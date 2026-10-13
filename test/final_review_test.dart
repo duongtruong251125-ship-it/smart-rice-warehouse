@@ -11,8 +11,33 @@ import 'package:smart_rice_warehouse/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
+import 'package:smart_rice_warehouse/screens/auth/login_screen.dart';
 
 void main() {
+  testWidgets('login is unified and exposes the account creation form', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ChangeNotifierProvider(
+        create: (_) => AuthProvider(),
+        child: const MaterialApp(home: LoginScreen()),
+      ),
+    );
+
+    expect(find.textContaining('Firebase'), findsNothing);
+    expect(find.textContaining('Demo Nhanh'), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Đăng nhập'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Đăng ký'));
+    await tester.tap(find.text('Đăng ký'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Họ và tên'), findsOneWidget);
+    expect(find.text('Nhập lại mật khẩu'), findsOneWidget);
+    expect(find.text('Vai trò'), findsOneWidget);
+    expect(find.textContaining('Firebase'), findsNothing);
+  });
+
   test('all declared application routes are registered', () {
     const expectedRoutes = <String>{
       AppRoutes.splash,

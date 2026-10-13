@@ -3,6 +3,7 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:smart_rice_warehouse/app.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/data/app_database.dart';
+import 'package:smart_rice_warehouse/core/services/firebase_auth_service.dart';
 import 'package:smart_rice_warehouse/core/services/settings_service.dart';
 
 class WarehouseBootstrapApp extends StatefulWidget {
@@ -24,6 +25,8 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
   Future<({AppDatabase database, AppSnapshot snapshot, SettingsService settings})> _load() async {
     final settings = SettingsService();
     await settings.init();
+    // Khởi tạo an toàn Firebase (nếu có cấu hình, nếu không sẽ tự động chạy Local)
+    await FirebaseAuthService.instance.initialize();
     final database = await AppDatabase.open();
     final snapshot = await database.loadSnapshot();
     return (database: database, snapshot: snapshot, settings: settings);

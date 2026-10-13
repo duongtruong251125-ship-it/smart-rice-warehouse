@@ -1,4 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smart_rice_warehouse/core/services/settings_service.dart';
+import 'package:smart_rice_warehouse/core/services/excel_export_service.dart';
+import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
@@ -6,8 +10,13 @@ import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
 import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
 import 'package:smart_rice_warehouse/providers/auth_provider.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/providers/customer_provider.dart';
 import 'package:smart_rice_warehouse/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/providers/inventory_check_provider.dart';
+import 'package:smart_rice_warehouse/providers/inventory_snapshot_provider.dart';
+import 'package:smart_rice_warehouse/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
+import 'package:smart_rice_warehouse/providers/theme_provider.dart';
 import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
 
 void main() {
@@ -193,5 +202,149 @@ void main() {
       auth.login(email: 'admin@gmail.com', password: 'new-password'),
       isTrue,
     );
+  });
+
+  test('catalog deletes persist the resulting collections', () {
+    var ricePersisted = false;
+    var supplierPersisted = false;
+    var customerPersisted = false;
+    final riceProvider = RiceProvider(
+      initial: [MockData.rices.first],
+      onPersist: (items) => ricePersisted = items.isEmpty,
+    );
+    final supplierProvider = SupplierProvider(
+      initial: [MockData.suppliers.first],
+      onPersist: (items) => supplierPersisted = items.isEmpty,
+    );
+    final customerProvider = CustomerProvider(
+      initial: [MockData.customers.first],
+      onPersist: (items) => customerPersisted = items.isEmpty,
+    );
+
+    expect(riceProvider.deleteRice(MockData.rices.first.id), isTrue);
+    expect(
+      supplierProvider.deleteSupplier(MockData.suppliers.first.id),
+      isTrue,
+    );
+    expect(
+      customerProvider.deleteCustomer(MockData.customers.first.id),
+      isTrue,
+    );
+    expect(ricePersisted, isTrue);
+    expect(supplierPersisted, isTrue);
+    expect(customerPersisted, isTrue);
+  });
+
+  test('inventory quantity adjustments are persisted', () {
+    List<BatchModel>? persisted;
+    final provider = BatchProvider(
+      initial: [batch(id: 'a', code: 'A')],
+      onPersist: (items) => persisted = items,
+    );
+
+    expect(provider.adjustQuantities({'a': 42}), isTrue);
+    expect(provider.findById('a')!.quantity, 42);
+    expect(persisted, isNotNull);
+    expect(persisted!.single.quantity, 42);
+  });
+
+  test('profile updates are validated, notified and persisted', () {
+    String? savedName;
+    String? savedRole;
+    String? savedAvatar;
+    final auth = AuthProvider(
+      rememberedSession: true,
+      onProfilePersist: (name, role, avatar) {
+        savedName = name;
+        savedRole = role;
+        savedAvatar = avatar;
+      },
+    );
+
+    expect(
+      auth.updateProfile(
+        name: 'Quản lý Kho A',
+        role: 'Quản lý vận hành',
+        avatarPath: 'avatar/profile.jpg',
+      ),
+      isTrue,
+    );
+    expect(auth.currentUser!.name, 'Quản lý Kho A');
+    expect(auth.currentUser!.role, 'Quản lý vận hành');
+    expect(auth.currentUser!.avatarPath, 'avatar/profile.jpg');
+    expect(savedName, 'Quản lý Kho A');
+    expect(savedRole, 'Quản lý vận hành');
+    expect(savedAvatar, 'avatar/profile.jpg');
+  });
+
+  test('theme and operational settings survive service recreation', () async {
+    SharedPreferences.setMockInitialValues({});
+    final settings = SettingsService();
+    await settings.init();
+    final theme = ThemeProvider(
+      initialDarkMode: settings.isDarkMode,
+      onChanged: settings.setDarkMode,
+    );
+
+    theme.toggleTheme(true);
+    await settings.setPushNotifications(false);
+    await settings.setBackgroundSync(false);
+    await Future<void>.delayed(Duration.zero);
+
+    final reloaded = SettingsService();
+    await reloaded.init();
+    expect(reloaded.isDarkMode, isTrue);
+    expect(reloaded.pushNotifications, isFalse);
+    expect(reloaded.backgroundSync, isFalse);
+  });
+
+  test('inventory snapshots upsert one accurate value per day', () {
+    var persistCount = 0;
+    final rice = MockData.rices.first;
+    final store = InventorySnapshotStore(
+      onPersist: (_) => persistCount++,
+    );
+    final firstBatch = batch(
+      id: 'snapshot-a',
+      code: 'SNAP-A',
+      quantity: 10,
+      riceId: rice.id,
+    );
+    final date = DateTime(2026, 10, 11, 8);
+
+    store.synchronize(
+      batches: [firstBatch],
+      rices: [rice],
+      recordedAt: date,
+    );
+    store.synchronize(
+      batches: [firstBatch.copyWith(quantity: 6)],
+      rices: [rice],
+      recordedAt: date.add(const Duration(hours: 2)),
+    );
+
+    expect(store.snapshots, hasLength(1));
+    expect(store.snapshots.single.totalQuantity, 6);
+    expect(store.snapshots.single.totalValue, 6 * rice.purchasePrice);
+    expect(persistCount, 2);
+  });
+
+  test('inventory Excel report is generated as a real XLSX archive', () {
+    final rice = MockData.rices.first;
+    final bytes = ExcelExportService.buildInventoryReport(
+      [
+        batch(
+          id: 'excel-a',
+          code: 'EXCEL-A',
+          quantity: 25,
+          riceId: rice.id,
+        ),
+      ],
+      [rice],
+    );
+
+    expect(bytes.length, greaterThan(100));
+    expect(bytes[0], 0x50);
+    expect(bytes[1], 0x4B);
   });
 }

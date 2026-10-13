@@ -252,14 +252,14 @@ class InventoryCompositionChart extends StatelessWidget {
                             style: AppTheme.tabularFigures(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
-                          const Text(
+                          Text(
                             'kg tồn kho',
                             style: TextStyle(
                               fontSize: 10,
-                              color: AppTheme.textSecondary,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
@@ -489,18 +489,18 @@ class _ReportChartCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10.5,
-                          color: AppTheme.textSecondary,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],

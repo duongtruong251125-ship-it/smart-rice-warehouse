@@ -20,10 +20,6 @@ class ForecastProvider extends ChangeNotifier {
   int get attentionCount =>
       _forecasts.where((f) => f.status == ForecastStatus.attention).length;
 
-  List<ForecastModel> get criticalForecasts => _forecasts
-      .where((f) => f.status == ForecastStatus.reorderSoon)
-      .toList(growable: false);
-
   void refreshForecasts({
     required List<RiceModel> rices,
     required List<ExportReceiptModel> exportReceipts,

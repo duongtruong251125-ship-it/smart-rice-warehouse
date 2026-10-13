@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "558204832077",
+    "project_id": "smart-rice-warehouse-fc00d",
+    "storage_bucket": "smart-rice-warehouse-fc00d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:558204832077:android:d0393400a5d166f858cf04",
+        "android_client_info": {
+          "package_name": "com.example.smart_rice_warehouse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKKU5ye-NemTLpSK8UHjyN9plHrJD_GRg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

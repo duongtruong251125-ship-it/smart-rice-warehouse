@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:toastification/toastification.dart';
 
 abstract final class AppToast {
-  static void success(BuildContext context, String message) => _show(
+  static void success(BuildContext? context, String message) => _show(
         context,
         message: message,
         type: ToastificationType.success,
         color: AppTheme.successColor,
       );
 
-  static void error(BuildContext context, String message) => _show(
+  static void error(BuildContext? context, String message) => _show(
         context,
         message: message,
         type: ToastificationType.error,
@@ -18,7 +19,7 @@ abstract final class AppToast {
         duration: const Duration(seconds: 4),
       );
 
-  static void warning(BuildContext context, String message) => _show(
+  static void warning(BuildContext? context, String message) => _show(
         context,
         message: message,
         type: ToastificationType.warning,
@@ -26,23 +27,39 @@ abstract final class AppToast {
         duration: const Duration(seconds: 4),
       );
 
-  static void info(BuildContext context, String message) => _show(
+  static void info(BuildContext? context, String message) => _show(
         context,
         message: message,
         type: ToastificationType.info,
         color: AppTheme.infoColor,
       );
 
+  static BuildContext? get _currentRouteContext {
+    BuildContext? current;
+    AppRoutes.navigatorKey.currentState?.popUntil((route) {
+      if (route is ModalRoute) {
+        current = route.subtreeContext;
+      }
+      return true;
+    });
+    return current;
+  }
+
   static void _show(
-    BuildContext context, {
+    BuildContext? context, {
     required String message,
     required ToastificationType type,
     required Color color,
     Duration duration = const Duration(seconds: 3),
   }) {
-    toastification.dismissAll(delayForAnimation: false);
+    final effectiveContext = (context != null && context.mounted)
+        ? context
+        : _currentRouteContext;
+
+    if (effectiveContext == null) return;
+
     toastification.show(
-      context: context,
+      context: effectiveContext,
       type: type,
       style: ToastificationStyle.minimal,
       title: Text(

@@ -36,7 +36,6 @@ class CustomerProvider extends ChangeNotifier {
     _customers[index] = customer;
     onPersist?.call(customers);
     notifyListeners();
-    onPersist?.call(customers);
     return true;
   }
 
@@ -48,6 +47,7 @@ class CustomerProvider extends ChangeNotifier {
       return false;
     }
 
+    onPersist?.call(customers);
     notifyListeners();
     return true;
   }

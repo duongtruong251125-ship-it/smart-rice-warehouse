@@ -73,26 +73,6 @@ class WarehouseProvider extends ChangeNotifier {
     return true;
   }
 
-  void updateLocation(WarehouseLocationModel location) {
-    final index = _locations.indexWhere((item) => item.id == location.id);
-    if (index >= 0) {
-      _locations[index] = location;
-      _persist();
-      notifyListeners();
-    }
-  }
-
-  void updateBatchCount(String locationId, int delta) {
-    final index = _locations.indexWhere((item) => item.id == locationId);
-    if (index >= 0) {
-      final current = _locations[index];
-      final newCount = (current.currentBatchCount + delta).clamp(0, 9999);
-      _locations[index] = current.copyWith(currentBatchCount: newCount);
-      _persist();
-      notifyListeners();
-    }
-  }
-
   /// Moves a batch only when the target is active and has enough capacity,
   /// then derives displayed batch counts from the actual batch collection.
   bool assignBatch({
