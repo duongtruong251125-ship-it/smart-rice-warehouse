@@ -8,8 +8,10 @@ import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
 import 'package:smart_rice_warehouse/services/printing_service.dart';
+import 'package:smart_rice_warehouse/widgets/rice_thumbnail.dart';
 import 'package:smart_rice_warehouse/widgets/status_chip.dart';
 
 class BatchDetailScreen extends StatefulWidget {
@@ -331,6 +333,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
     final isExpired =
         daysUntilExpiry < 0 || batch.status == BatchStatus.expired;
     final isCritical = daysUntilExpiry <= 7 && !isExpired;
+    final rice = context.watch<RiceProvider>().findById(batch.riceId);
 
     return Scaffold(
       appBar: AppBar(
@@ -356,18 +359,12 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryLight,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.inventory_2_outlined,
-                          color: AppTheme.primaryColor,
-                          size: 24,
-                        ),
+                      RiceThumbnail(
+                        rice: rice,
+                        name: batch.riceName,
+                        size: 48,
+                        borderRadius: 12,
+                        enablePreview: true,
                       ),
                       const SizedBox(width: 12),
                       Expanded(

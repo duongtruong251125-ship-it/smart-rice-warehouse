@@ -6,10 +6,12 @@ import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
+import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/services/printing_service.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
+import 'package:smart_rice_warehouse/widgets/rice_thumbnail.dart';
 import 'package:smart_rice_warehouse/widgets/search_field.dart';
 import 'package:smart_rice_warehouse/widgets/status_chip.dart';
 import 'package:smart_rice_warehouse/core/services/excel_export_service.dart';
@@ -198,6 +200,7 @@ class _BatchListScreenState extends State<BatchListScreen> {
                       return _ModernBatchCard(
                         batch: batch,
                         unit: rice?.unit ?? 'kg',
+                        rice: rice,
                       );
                     },
                   ),
@@ -209,10 +212,15 @@ class _BatchListScreenState extends State<BatchListScreen> {
 }
 
 class _ModernBatchCard extends StatelessWidget {
-  const _ModernBatchCard({required this.batch, required this.unit});
+  const _ModernBatchCard({
+    required this.batch,
+    required this.unit,
+    this.rice,
+  });
 
   final BatchModel batch;
   final String unit;
+  final RiceModel? rice;
 
   @override
   Widget build(BuildContext context) {
@@ -246,9 +254,12 @@ class _ModernBatchCard extends StatelessWidget {
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: AppTheme.cardColor,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.borderColor, width: 1),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+            width: 1,
+          ),
           boxShadow: AppTheme.softShadow,
         ),
         child: IntrinsicHeight(
@@ -266,9 +277,16 @@ class _ModernBatchCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            RiceThumbnail(
+                              rice: rice,
+                              name: batch.riceName,
+                              size: 42,
+                              borderRadius: 10,
+                              enablePreview: true,
+                            ),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,

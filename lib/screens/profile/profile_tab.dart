@@ -473,6 +473,7 @@ class ProfileTab extends StatelessWidget {
                             oldPathToDelete: user?.avatarPath,
                           );
                         }
+                        if (!rootContext.mounted) return;
                         final updated =
                             rootContext.read<AuthProvider>().updateProfile(
                                   name: nameController.text,
@@ -480,19 +481,23 @@ class ProfileTab extends StatelessWidget {
                                   avatarPath: permanentAvatarPath,
                                 );
                         if (!updated) {
-                          AppToast.error(
-                            rootContext,
-                            'Họ tên và chức vụ không được để trống',
-                          );
+                          if (rootContext.mounted) {
+                            AppToast.error(
+                              rootContext,
+                              'Họ tên và chức vụ không được để trống',
+                            );
+                          }
                           return;
                         }
                         if (bottomSheetContext.mounted) {
                           Navigator.pop(bottomSheetContext);
                         }
-                        AppToast.success(
-                          rootContext,
-                          'Đã cập nhật hồ sơ và ảnh đại diện!',
-                        );
+                        if (rootContext.mounted) {
+                          AppToast.success(
+                            rootContext,
+                            'Đã cập nhật hồ sơ và ảnh đại diện!',
+                          );
+                        }
                       },
                       child: const Text(
                         'Lưu thông tin',

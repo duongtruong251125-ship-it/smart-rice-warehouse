@@ -10,6 +10,7 @@ class RiceModel {
     required this.minimumStock,
     required this.description,
     required this.isActive,
+    this.imagePath,
   });
 
   final String id;
@@ -22,6 +23,7 @@ class RiceModel {
   final double minimumStock;
   final String description;
   final bool isActive;
+  final String? imagePath;
 
   RiceModel copyWith({
     String? id,
@@ -34,6 +36,7 @@ class RiceModel {
     double? minimumStock,
     String? description,
     bool? isActive,
+    String? imagePath,
   }) {
     return RiceModel(
       id: id ?? this.id,
@@ -46,6 +49,7 @@ class RiceModel {
       minimumStock: minimumStock ?? this.minimumStock,
       description: description ?? this.description,
       isActive: isActive ?? this.isActive,
+      imagePath: imagePath ?? this.imagePath,
     );
   }
 
@@ -60,6 +64,7 @@ class RiceModel {
         'minimumStock': minimumStock,
         'description': description,
         'isActive': isActive,
+        'imagePath': imagePath,
       };
 
   factory RiceModel.fromJson(Map<String, dynamic> json) => RiceModel(
@@ -73,5 +78,6 @@ class RiceModel {
         minimumStock: (json['minimumStock'] as num).toDouble(),
         description: json['description'] as String,
         isActive: json['isActive'] as bool,
+        imagePath: json['imagePath'] as String?,
       );
 }

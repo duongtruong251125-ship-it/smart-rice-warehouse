@@ -7,6 +7,7 @@ import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
+import 'package:smart_rice_warehouse/widgets/rice_thumbnail.dart';
 import 'package:smart_rice_warehouse/widgets/search_field.dart';
 import 'package:smart_rice_warehouse/widgets/status_chip.dart';
 
@@ -214,12 +215,13 @@ class _ModernInventoryCard extends StatelessWidget {
     final bagsCount = (totalStock / 50.0).round();
     final tons = totalStock / 1000.0;
 
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isLowStock ? AppTheme.warningBorder : AppTheme.borderColor,
+          color: isLowStock ? AppTheme.warningBorder : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: AppTheme.softShadow,
@@ -232,22 +234,15 @@ class _ModernInventoryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header thẻ: Icon gạo + Tên sản phẩm + Badge trạng thái
+              // Header thẻ: Thumbnail gạo + Tên sản phẩm + Badge trạng thái
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryLight,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.rice_bowl_outlined,
-                      color: AppTheme.primaryColor,
-                      size: 24,
-                    ),
+                  RiceThumbnail(
+                    rice: rice,
+                    size: 44,
+                    borderRadius: 12,
+                    enablePreview: true,
                   ),
                   const SizedBox(width: 12),
                   Expanded(

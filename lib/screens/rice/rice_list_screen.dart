@@ -9,6 +9,7 @@ import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/widgets/confirmation_dialog.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
+import 'package:smart_rice_warehouse/widgets/rice_thumbnail.dart';
 import 'package:smart_rice_warehouse/widgets/search_field.dart';
 import 'package:smart_rice_warehouse/widgets/status_chip.dart';
 
@@ -197,18 +198,11 @@ class _RiceCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.rice_bowl_rounded,
-                    color: colorScheme.primary,
-                    size: 24,
-                  ),
+                RiceThumbnail(
+                  rice: rice,
+                  size: 48,
+                  borderRadius: 12,
+                  enablePreview: true,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

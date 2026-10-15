@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:smart_rice_warehouse/core/services/image_storage_service.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 
@@ -54,10 +55,14 @@ class RiceProvider extends ChangeNotifier {
 
   bool deleteRice(String id, {bool Function(String id)? isReferenced}) {
     if (isReferenced?.call(id) ?? false) return false;
-    final removedCount = _rices.length;
-    _rices.removeWhere((rice) => rice.id == id);
-    if (_rices.length == removedCount) {
+    final index = _rices.indexWhere((rice) => rice.id == id);
+    if (index == -1) {
       return false;
+    }
+
+    final removedRice = _rices.removeAt(index);
+    if (removedRice.imagePath != null && removedRice.imagePath!.isNotEmpty) {
+      ImageStorageService.deleteImageIfExists(removedRice.imagePath);
     }
 
     onPersist?.call(rices);
