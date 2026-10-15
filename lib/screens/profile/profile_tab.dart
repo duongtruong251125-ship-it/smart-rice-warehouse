@@ -11,6 +11,7 @@ import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/models/user_model.dart';
 import 'package:smart_rice_warehouse/providers/auth_provider.dart';
 import 'package:smart_rice_warehouse/widgets/confirmation_dialog.dart';
+import 'package:smart_rice_warehouse/core/services/image_storage_service.dart';
 
 /// Màn hình Tài khoản - Tái cấu trúc theo phong cách "AgriWarehouse Modern System"
 class ProfileTab extends StatelessWidget {
@@ -462,12 +463,21 @@ class ProfileTab extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
+                        String? permanentAvatarPath = user?.avatarPath;
+                        if (selectedImage != null) {
+                          permanentAvatarPath =
+                              await ImageStorageService.saveImagePermanently(
+                            selectedImage!.path,
+                            subDirectory: 'avatars',
+                            oldPathToDelete: user?.avatarPath,
+                          );
+                        }
                         final updated =
                             rootContext.read<AuthProvider>().updateProfile(
                                   name: nameController.text,
                                   role: roleController.text,
-                                  avatarPath: selectedImage?.path,
+                                  avatarPath: permanentAvatarPath,
                                 );
                         if (!updated) {
                           AppToast.error(
@@ -476,7 +486,9 @@ class ProfileTab extends StatelessWidget {
                           );
                           return;
                         }
-                        Navigator.pop(bottomSheetContext);
+                        if (bottomSheetContext.mounted) {
+                          Navigator.pop(bottomSheetContext);
+                        }
                         AppToast.success(
                           rootContext,
                           'Đã cập nhật hồ sơ và ảnh đại diện!',

@@ -13,6 +13,7 @@ import 'package:smart_rice_warehouse/widgets/empty_state.dart';
 import 'package:smart_rice_warehouse/widgets/search_field.dart';
 import 'package:smart_rice_warehouse/widgets/status_chip.dart';
 import 'package:smart_rice_warehouse/core/services/excel_export_service.dart';
+import 'package:smart_rice_warehouse/widgets/pressable_scale.dart';
 
 class BatchListScreen extends StatefulWidget {
   const BatchListScreen({super.key});
@@ -235,24 +236,24 @@ class _ModernBatchCard extends StatelessWidget {
 
     final tons = batch.quantity / 1000.0;
 
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: AppTheme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor, width: 1),
-        boxShadow: AppTheme.softShadow,
+    return PressableScale(
+      onTap: () => Navigator.of(context).pushNamed(
+        AppRoutes.batchDetail,
+        arguments: batch.id,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => Navigator.of(context).pushNamed(
-            AppRoutes.batchDetail,
-            arguments: batch.id,
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      scaleFactor: 0.98,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: AppTheme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.borderColor, width: 1),
+          boxShadow: AppTheme.softShadow,
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
                   width: 5,
@@ -441,7 +442,6 @@ class _ModernBatchCard extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }

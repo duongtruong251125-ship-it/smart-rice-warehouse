@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
@@ -215,21 +216,115 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                 ),
                               ],
                               if (item.imagePath != null) ...[
-                                const SizedBox(height: 8),
-                                const Row(
-                                  children: [
-                                    Icon(Icons.attachment_rounded,
-                                        size: 14, color: AppTheme.accentBlue),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Có ảnh minh chứng đính kèm',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.accentBlue,
+                                const SizedBox(height: 10),
+                                InkWell(
+                                  onTap: () {
+                                    final file = File(item.imagePath!);
+                                    if (file.existsSync()) {
+                                      showDialog<void>(
+                                        context: context,
+                                        builder: (ctx) => Dialog(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          clipBehavior: Clip.antiAlias,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              AppBar(
+                                                title: Text(
+                                                  'Ảnh minh chứng ${item.code}',
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                automaticallyImplyLeading:
+                                                    false,
+                                                actions: [
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                        Icons.close_rounded),
+                                                    onPressed: () =>
+                                                        Navigator.pop(ctx),
+                                                  ),
+                                                ],
+                                              ),
+                                              ConstrainedBox(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                  maxHeight: 400,
+                                                ),
+                                                child: Image.file(
+                                                  file,
+                                                  fit: BoxFit.contain,
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.all(12),
+                                                child: Text(
+                                                  'Lô: ${item.batchCode} • Lý do: ${item.reason.label}',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color:
+                                                        AppTheme.textSecondary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.infoLight,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: AppTheme.infoColor
+                                            .withValues(alpha: 0.2),
                                       ),
                                     ),
-                                  ],
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        if (File(item.imagePath!).existsSync())
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            child: Image.file(
+                                              File(item.imagePath!),
+                                              width: 24,
+                                              height: 24,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          )
+                                        else
+                                          const Icon(
+                                            Icons.attachment_rounded,
+                                            size: 16,
+                                            color: AppTheme.infoColor,
+                                          ),
+                                        const SizedBox(width: 6),
+                                        const Text(
+                                          'Xem ảnh minh chứng 🔍',
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppTheme.infoColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ],
                             ],

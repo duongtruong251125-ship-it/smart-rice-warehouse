@@ -16,6 +16,7 @@ import 'package:smart_rice_warehouse/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/providers/forecast_provider.dart';
 import 'package:smart_rice_warehouse/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/widgets/pressable_scale.dart';
 
 /// =======================================================================
 /// MÀN HÌNH BÀN LÀM VIỆC CHÍNH (HOME TAB / DASHBOARD)
@@ -430,50 +431,48 @@ class _HeroActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Icon(icon, color: iconColor, size: 24),
-                ),
-              ),
-              const SizedBox(height: 7),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: 0.1,
+    return PressableScale(
+      onTap: onTap,
+      scaleFactor: 0.94,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
+                ],
+              ),
+              child: Center(
+                child: Icon(icon, color: iconColor, size: 24),
+              ),
+            ),
+            const SizedBox(height: 7),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.1,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -680,8 +679,9 @@ class _FefoMiniPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
+      scaleFactor: 0.96,
       borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 4),

@@ -8,6 +8,7 @@ import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
 import 'package:smart_rice_warehouse/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/providers/import_provider.dart';
+import 'package:smart_rice_warehouse/widgets/pressable_scale.dart';
 
 /// =======================================================================
 /// TAB 3: HUB NHẬP / XUẤT KHO (IMPORT / EXPORT HUB)
@@ -266,34 +267,35 @@ class _BannerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
+    return PressableScale(
+      onTap: onTap,
+      scaleFactor: 0.95,
       borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 16, color: AppTheme.primaryDark),
-              const SizedBox(width: 6),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.primaryDark,
-                    ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: AppTheme.primaryDark),
+            const SizedBox(width: 6),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.primaryDark,
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -480,8 +482,9 @@ class _OcrQuickBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
+      scaleFactor: 0.98,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -569,8 +572,9 @@ class _HubItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return PressableScale(
       onTap: () => Navigator.of(context).pushNamed(route),
+      scaleFactor: 0.98,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),

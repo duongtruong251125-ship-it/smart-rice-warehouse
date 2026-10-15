@@ -11,6 +11,7 @@ import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/damage_report_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/providers/damage_provider.dart';
+import 'package:smart_rice_warehouse/core/services/image_storage_service.dart';
 
 class DamageFormScreen extends StatefulWidget {
   const DamageFormScreen({super.key, this.initialBatch});
@@ -75,7 +76,7 @@ class _DamageFormScreenState extends State<DamageFormScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_selectedBatch == null) {
       AppToast.warning(context, 'Vui lòng chọn lô gạo cần báo hỏng.');
@@ -100,6 +101,14 @@ class _DamageFormScreenState extends State<DamageFormScreen> {
     final batchProvider = context.read<BatchProvider>();
     final damageProvider = context.read<DamageProvider>();
 
+    String? permanentImagePath;
+    if (_selectedImagePath != null) {
+      permanentImagePath = await ImageStorageService.saveImagePermanently(
+        _selectedImagePath,
+        subDirectory: 'damage_reports',
+      );
+    }
+
     final success = damageProvider.createDamageReport(
       batchId: _selectedBatch!.id,
       batchCode: _selectedBatch!.code,
@@ -111,17 +120,19 @@ class _DamageFormScreenState extends State<DamageFormScreen> {
       note: _noteController.text.trim().isEmpty
           ? null
           : _noteController.text.trim(),
-      imagePath: _selectedImagePath,
+      imagePath: permanentImagePath,
       createdBy: 'Admin',
     );
 
     if (success) {
+      if (!mounted) return;
       AppToast.success(
         context,
         'Đã ghi nhận $qty kg hư hỏng cho lô ${_selectedBatch!.code}.',
       );
       Navigator.of(context).pushReplacementNamed(AppRoutes.damageReportList);
     } else {
+      if (!mounted) return;
       AppToast.error(context, 'Không thể tạo báo hỏng. Kiểm tra lại tồn kho.');
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -51,6 +52,7 @@ class _OcrInvoiceScreenState extends State<OcrInvoiceScreen> {
   }
 
   Future<void> _scanDocument(ImageSource source) async {
+    HapticFeedback.selectionClick();
     final image = await _imagePicker.pickImage(
       source: source,
       imageQuality: 90,
@@ -62,6 +64,7 @@ class _OcrInvoiceScreenState extends State<OcrInvoiceScreen> {
       final text = await _ocrService.recognizeTextFromImage(image.path);
       if (!mounted) return;
       if (text.isEmpty) {
+        HapticFeedback.vibrate();
         AppToast.warning(context, 'Không nhận diện được chữ trong ảnh.');
         return;
       }
@@ -69,6 +72,7 @@ class _OcrInvoiceScreenState extends State<OcrInvoiceScreen> {
       _runOcrExtraction();
     } catch (error) {
       if (!mounted) return;
+      HapticFeedback.vibrate();
       AppToast.error(context, 'Không thể đọc ảnh: $error');
     } finally {
       if (mounted) setState(() => _isScanning = false);
@@ -88,6 +92,8 @@ class _OcrInvoiceScreenState extends State<OcrInvoiceScreen> {
       suppliers: suppliers,
       rices: rices,
     );
+
+    HapticFeedback.lightImpact();
 
     setState(() {
       _isScanning = false;

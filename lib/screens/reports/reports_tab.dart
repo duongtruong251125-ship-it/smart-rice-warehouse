@@ -18,6 +18,7 @@ import 'package:smart_rice_warehouse/widgets/dashboard_card.dart';
 import 'package:smart_rice_warehouse/widgets/section_title.dart';
 import 'package:smart_rice_warehouse/models/inventory_snapshot_model.dart';
 import 'package:smart_rice_warehouse/providers/inventory_snapshot_provider.dart';
+import 'package:smart_rice_warehouse/widgets/pressable_scale.dart';
 
 class ReportsTab extends StatefulWidget {
   const ReportsTab({super.key});
@@ -1677,8 +1678,9 @@ class _MonthlyMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
+      scaleFactor: 0.97,
       borderRadius: BorderRadius.circular(12),
       child: Card(
         clipBehavior: Clip.antiAlias,
@@ -2093,33 +2095,34 @@ class _ReportsHeroBanner extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          Material(
-            color: Colors.white,
+          PressableScale(
+            onTap: onViewForecast,
+            scaleFactor: 0.95,
             borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: onViewForecast,
-              borderRadius: BorderRadius.circular(12),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 9, horizontal: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.insights_rounded, size: 16, color: AppTheme.primaryDark),
-                    SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        'Xem Dự Báo Tiêu Thụ',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.primaryDark,
-                        ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.insights_rounded, size: 16, color: AppTheme.primaryDark),
+                  SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Xem Dự Báo Tiêu Thụ',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.primaryDark,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
