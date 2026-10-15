@@ -13,6 +13,7 @@ import 'package:smart_rice_warehouse/providers/forecast_provider.dart';
 import 'package:smart_rice_warehouse/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/providers/inventory_check_provider.dart';
 import 'package:smart_rice_warehouse/providers/inventory_snapshot_provider.dart';
+import 'package:smart_rice_warehouse/providers/rice_characteristic_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
 import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
@@ -67,6 +68,12 @@ class SmartRiceWarehouseApp extends StatelessWidget {
             create: (_) => RiceProvider(
               initial: snapshot.rices,
               onPersist: database?.saveRices,
+            ),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => RiceCharacteristicProvider(
+              initial: snapshot.characteristics,
+              onPersist: database?.saveCharacteristics,
             ),
           ),
           ChangeNotifierProvider(

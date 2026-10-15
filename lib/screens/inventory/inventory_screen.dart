@@ -5,6 +5,7 @@ import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/providers/rice_characteristic_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
 import 'package:smart_rice_warehouse/widgets/rice_thumbnail.dart';
@@ -300,6 +301,43 @@ class _ModernInventoryCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   StatusChip(isLowStock: isLowStock),
                 ],
+              ),
+              Builder(
+                builder: (context) {
+                  final charProvider = context.watch<RiceCharacteristicProvider>();
+                  final chars = charProvider.getCharacteristicsForIds(rice.characteristicIds);
+                  if (chars.isEmpty) return const SizedBox.shrink();
+
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Wrap(
+                      spacing: 5,
+                      runSpacing: 4,
+                      children: chars.map((char) {
+                        final color = Color(char.colorValue);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: color.withValues(alpha: 0.3),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            char.name,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: color,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 12),
 

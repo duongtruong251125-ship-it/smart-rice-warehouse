@@ -7,7 +7,9 @@ import 'package:smart_rice_warehouse/core/services/image_storage_service.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
+import 'package:smart_rice_warehouse/providers/rice_characteristic_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/screens/rice/rice_characteristics_screen.dart';
 import 'package:smart_rice_warehouse/widgets/custom_text_field.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
 
@@ -38,6 +40,7 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
 
   RiceModel? _originalRice;
   String? _imagePath;
+  List<String> _selectedCharacteristicIds = [];
   bool _isSaving = false;
   bool _isActive = true;
   bool _initialized = false;
@@ -66,6 +69,7 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
         _descriptionController.text = rice.description;
         _isActive = rice.isActive;
         _imagePath = rice.imagePath;
+        _selectedCharacteristicIds = List<String>.from(rice.characteristicIds);
       }
     }
   }
@@ -237,6 +241,7 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
       description: _descriptionController.text.trim(),
       isActive: _isActive,
       imagePath: permanentImagePath,
+      characteristicIds: _selectedCharacteristicIds,
     );
 
     final saved = widget.isEditing
@@ -398,6 +403,125 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
     );
   }
 
+  Widget _buildCharacteristicsSection(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final charProvider = context.watch<RiceCharacteristicProvider>();
+    final characteristics = charProvider.characteristics;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.auto_awesome_rounded,
+                        size: 18, color: colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Đặc tính gạo',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  onPressed: () =>
+                      RiceCharacteristicsScreen.showAddOrEditDialog(context),
+                  icon: const Icon(Icons.add_rounded, size: 16),
+                  label: const Text('Thêm mới', style: TextStyle(fontSize: 12)),
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Chọn một hoặc nhiều đặc tính (Dẻo, Xốp, Thơm, Mềm, Khô...):',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (characteristics.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Chưa có đặc tính nào. Nhấn "+ Thêm mới" để tạo.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: characteristics.map((char) {
+                  final isSelected =
+                      _selectedCharacteristicIds.contains(char.id);
+                  final color = Color(char.colorValue);
+
+                  return FilterChip(
+                    label: Text(
+                      char.name,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight:
+                            isSelected ? FontWeight.w800 : FontWeight.w600,
+                        color: isSelected ? color : colorScheme.onSurface,
+                      ),
+                    ),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedCharacteristicIds.add(char.id);
+                        } else {
+                          _selectedCharacteristicIds.remove(char.id);
+                        }
+                      });
+                    },
+                    selectedColor: color.withValues(alpha: 0.16),
+                    checkmarkColor: color,
+                    backgroundColor: colorScheme.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: BorderSide(
+                        color: isSelected
+                            ? color
+                            : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = widget.isEditing ? 'Sửa gạo' : 'Thêm gạo';
@@ -439,6 +563,7 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
+                    _buildCharacteristicsSection(context),
                     CustomTextField(
                       controller: _unitController,
                       label: 'Đơn vị',

@@ -20,6 +20,7 @@ import 'package:smart_rice_warehouse/screens/inventory_check/inventory_check_scr
 import 'package:smart_rice_warehouse/screens/ocr/ocr_prototype_screen.dart';
 import 'package:smart_rice_warehouse/screens/profile/profile_tab.dart';
 import 'package:smart_rice_warehouse/screens/reports/reports_tab.dart';
+import 'package:smart_rice_warehouse/screens/rice/rice_characteristics_screen.dart';
 import 'package:smart_rice_warehouse/screens/rice/rice_form_screen.dart';
 import 'package:smart_rice_warehouse/screens/rice/rice_list_screen.dart';
 import 'package:smart_rice_warehouse/screens/scanner/qr_scanner_screen.dart';
@@ -38,6 +39,7 @@ abstract final class AppRoutes {
   static const String rice = '/rice';
   static const String addRice = '/rice/add';
   static const String editRice = '/rice/edit';
+  static const String riceCharacteristics = '/rice/characteristics';
   static const String suppliers = '/suppliers';
   static const String addSupplier = '/suppliers/add';
   static const String editSupplier = '/suppliers/edit';
@@ -78,6 +80,7 @@ abstract final class AppRoutes {
         isEditing: true,
       );
     },
+    riceCharacteristics: (_) => const RiceCharacteristicsScreen(),
     suppliers: (_) => const SupplierListScreen(),
     addSupplier: (_) => const SupplierFormScreen(),
     editSupplier: (context) {

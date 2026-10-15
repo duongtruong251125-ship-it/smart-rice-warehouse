@@ -4,6 +4,7 @@ import 'package:smart_rice_warehouse/models/damage_report_model.dart';
 import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
 import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
 import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
+import 'package:smart_rice_warehouse/models/rice_characteristic_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/models/supplier_model.dart';
 import 'package:smart_rice_warehouse/models/user_model.dart';
@@ -17,6 +18,51 @@ abstract final class MockData {
     role: 'admin',
   );
 
+  static const List<RiceCharacteristicModel> defaultCharacteristics = <RiceCharacteristicModel>[
+    RiceCharacteristicModel(
+      id: 'char-deo',
+      name: 'Dẻo',
+      description: 'Hạt cơm dẻo quánh, kết dính tốt, giữ độ ẩm lâu khi để nguội.',
+      colorValue: 0xFF0D9488,
+      isDefault: true,
+    ),
+    RiceCharacteristicModel(
+      id: 'char-thom',
+      name: 'Thơm',
+      description: 'Mùi thơm tự nhiên đặc trưng như hoa lài, lá dứa thoang thoảng.',
+      colorValue: 0xFFD97706,
+      isDefault: true,
+    ),
+    RiceCharacteristicModel(
+      id: 'char-mem',
+      name: 'Mềm',
+      description: 'Cơm mềm tơi, dễ nhai, phù hợp gia đình, người lớn tuổi và trẻ em.',
+      colorValue: 0xFF2563EB,
+      isDefault: true,
+    ),
+    RiceCharacteristicModel(
+      id: 'char-xop',
+      name: 'Xốp',
+      description: 'Cơm xốp, nở hạt nhiều, ráo nước, rất thích hợp cho quán cơm chiên.',
+      colorValue: 0xFF7C3AED,
+      isDefault: true,
+    ),
+    RiceCharacteristicModel(
+      id: 'char-kho',
+      name: 'Khô',
+      description: 'Ít dẻo, hạt rời rạc, thích hợp làm bún phở, bánh cuốn và chế biến.',
+      colorValue: 0xFFB45309,
+      isDefault: true,
+    ),
+    RiceCharacteristicModel(
+      id: 'char-ngot',
+      name: 'Ngọt cơm',
+      description: 'Vị ngọt thanh hậu đậm đà từ tinh bột nguyên chất của lúa mùa.',
+      colorValue: 0xFFE11D48,
+      isDefault: true,
+    ),
+  ];
+
   static const List<RiceModel> rices = <RiceModel>[
     RiceModel(
       id: 'rice-st25',
@@ -29,6 +75,7 @@ abstract final class MockData {
       minimumStock: 300,
       description: 'Gạo thơm, hạt dài và mềm cơm.',
       isActive: true,
+      characteristicIds: ['char-deo', 'char-thom', 'char-mem'],
     ),
     RiceModel(
       id: 'rice-jasmine',
@@ -41,6 +88,7 @@ abstract final class MockData {
       minimumStock: 250,
       description: 'Gạo thơm nhẹ, phù hợp bữa ăn hằng ngày.',
       isActive: true,
+      characteristicIds: ['char-thom', 'char-mem'],
     ),
     RiceModel(
       id: 'rice-brown',
@@ -53,6 +101,7 @@ abstract final class MockData {
       minimumStock: 120,
       description: 'Gạo nguyên cám giàu chất xơ.',
       isActive: true,
+      characteristicIds: ['char-kho'],
     ),
     RiceModel(
       id: 'rice-nang-huong',

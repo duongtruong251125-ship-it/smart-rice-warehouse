@@ -7,6 +7,7 @@ import 'package:smart_rice_warehouse/models/damage_report_model.dart';
 import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
 import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
 import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
+import 'package:smart_rice_warehouse/models/rice_characteristic_model.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/models/supplier_model.dart';
 import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
@@ -18,6 +19,7 @@ class AppSnapshot {
   const AppSnapshot({
     this.snapshots = const [],
     this.rices,
+    this.characteristics,
     this.suppliers,
     this.customers,
     this.batches,
@@ -35,6 +37,7 @@ class AppSnapshot {
   });
 
   final List<RiceModel>? rices;
+  final List<RiceCharacteristicModel>? characteristics;
   final List<SupplierModel>? suppliers;
   final List<CustomerModel>? customers;
   final List<BatchModel>? batches;
@@ -72,6 +75,7 @@ class AppDatabase {
   Future<AppSnapshot> loadSnapshot() async {
     return AppSnapshot(
       rices: await _load('rices', RiceModel.fromJson),
+      characteristics: await _load('characteristics', RiceCharacteristicModel.fromJson),
       suppliers: await _load('suppliers', SupplierModel.fromJson),
       customers: await _load('customers', CustomerModel.fromJson),
       batches: await _load('batches', BatchModel.fromJson),
@@ -130,6 +134,8 @@ class AppDatabase {
 
   void saveRices(List<RiceModel> value) =>
       _save('rices', value.map((item) => item.toJson()).toList());
+  void saveCharacteristics(List<RiceCharacteristicModel> value) =>
+      _save('characteristics', value.map((item) => item.toJson()).toList());
   void saveSuppliers(List<SupplierModel> value) =>
       _save('suppliers', value.map((item) => item.toJson()).toList());
   void saveCustomers(List<CustomerModel> value) =>

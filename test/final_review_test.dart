@@ -46,6 +46,7 @@ void main() {
       AppRoutes.rice,
       AppRoutes.addRice,
       AppRoutes.editRice,
+      AppRoutes.riceCharacteristics,
       AppRoutes.suppliers,
       AppRoutes.addSupplier,
       AppRoutes.editSupplier,

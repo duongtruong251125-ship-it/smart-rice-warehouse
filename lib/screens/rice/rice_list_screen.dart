@@ -6,6 +6,7 @@ import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/providers/rice_characteristic_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/widgets/confirmation_dialog.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
@@ -22,6 +23,7 @@ class RiceListScreen extends StatefulWidget {
 
 class _RiceListScreenState extends State<RiceListScreen> {
   final _searchController = TextEditingController();
+  final Set<String> _selectedCharacteristicIds = {};
   String _query = '';
 
   @override
@@ -86,11 +88,27 @@ class _RiceListScreenState extends State<RiceListScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final riceProvider = context.watch<RiceProvider>();
-    final filteredRices = riceProvider.searchRice(_query);
-    final hasSearchQuery = _query.trim().isNotEmpty;
+    final charProvider = context.watch<RiceCharacteristicProvider>();
+    final characteristics = charProvider.characteristics;
+    final filteredRices = riceProvider.filterRices(
+      query: _query,
+      selectedCharacteristicIds: _selectedCharacteristicIds,
+    );
+    final hasSearchQuery = _query.trim().isNotEmpty || _selectedCharacteristicIds.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Quản lý gạo')),
+      appBar: AppBar(
+        title: const Text('Quản lý gạo'),
+        actions: [
+          IconButton(
+            tooltip: 'Quản lý đặc tính gạo',
+            icon: const Icon(Icons.style_outlined),
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.riceCharacteristics);
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Container(
@@ -108,6 +126,96 @@ class _RiceListScreenState extends State<RiceListScreen> {
                     });
                   },
                 ),
+                if (characteristics.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        FilterChip(
+                          label: const Text('Tất cả đặc tính'),
+                          selected: _selectedCharacteristicIds.isEmpty,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedCharacteristicIds.clear();
+                              });
+                            }
+                          },
+                          showCheckmark: false,
+                          labelStyle: TextStyle(
+                            fontSize: 12,
+                            fontWeight: _selectedCharacteristicIds.isEmpty
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: _selectedCharacteristicIds.isEmpty
+                                ? colorScheme.primary
+                                : colorScheme.onSurfaceVariant,
+                          ),
+                          backgroundColor: Colors.grey.shade100,
+                          selectedColor: colorScheme.primary.withValues(alpha: 0.15),
+                          side: BorderSide(
+                            color: _selectedCharacteristicIds.isEmpty
+                                ? colorScheme.primary
+                                : Colors.grey.shade300,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        const SizedBox(width: 8),
+                        ...characteristics.map((char) {
+                          final isSelected =
+                              _selectedCharacteristicIds.contains(char.id);
+                          final color = Color(char.colorValue);
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: FilterChip(
+                              avatar: CircleAvatar(
+                                radius: 4,
+                                backgroundColor: color,
+                              ),
+                              label: Text(char.name),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    _selectedCharacteristicIds.add(char.id);
+                                  } else {
+                                    _selectedCharacteristicIds.remove(char.id);
+                                  }
+                                });
+                              },
+                              showCheckmark: false,
+                              labelStyle: TextStyle(
+                                fontSize: 12,
+                                fontWeight:
+                                    isSelected ? FontWeight.w700 : FontWeight.w500,
+                                color: isSelected
+                                    ? color
+                                    : colorScheme.onSurfaceVariant,
+                              ),
+                              backgroundColor: Colors.grey.shade100,
+                              selectedColor: color.withValues(alpha: 0.15),
+                              side: BorderSide(
+                                color: isSelected ? color : Colors.grey.shade300,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -126,6 +234,22 @@ class _RiceListScreenState extends State<RiceListScreen> {
                         ),
                       ),
                     ),
+                    if (_selectedCharacteristicIds.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedCharacteristicIds.clear();
+                          });
+                        },
+                        child: Text(
+                          'Xóa lọc',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.error,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ],
@@ -137,7 +261,7 @@ class _RiceListScreenState extends State<RiceListScreen> {
                 ? EmptyState(
                     icon: Icons.rice_bowl_outlined,
                     message: hasSearchQuery
-                        ? 'Không tìm thấy gạo phù hợp'
+                        ? 'Không tìm thấy gạo phù hợp với bộ lọc'
                         : 'Chưa có loại gạo nào',
                     actionLabel: hasSearchQuery ? null : 'Thêm gạo',
                     onAction: hasSearchQuery ? null : _openAddRice,
@@ -238,6 +362,57 @@ class _RiceCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            Builder(
+              builder: (context) {
+                final charProvider = context.watch<RiceCharacteristicProvider>();
+                final chars = charProvider.getCharacteristicsForIds(rice.characteristicIds);
+                if (chars.isEmpty) return const SizedBox.shrink();
+
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: chars.map((char) {
+                      final color = Color(char.colorValue);
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: color.withValues(alpha: 0.35),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              char.name,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 12),
             Container(
