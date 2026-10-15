@@ -65,7 +65,7 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -81,14 +81,17 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
       isActive: _isActive,
     );
     final provider = context.read<CustomerProvider>();
+    final success = widget.isEditing
+        ? await provider.updateCustomerOnline(customer)
+        : await provider.addCustomerOnline(customer);
 
-    if (widget.isEditing) {
-      if (!provider.updateCustomer(customer)) {
-        AppToast.error(context, 'Không thể cập nhật khách hàng.');
-        return;
-      }
-    } else {
-      provider.addCustomer(customer);
+    if (!mounted) return;
+    if (!success) {
+      AppToast.error(
+        context,
+        provider.errorMessage ?? 'Không thể lưu thông tin khách hàng.',
+      );
+      return;
     }
 
     Navigator.of(context).pop(

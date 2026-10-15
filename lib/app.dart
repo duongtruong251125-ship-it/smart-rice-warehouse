@@ -3,6 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
 import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/data/app_database.dart';
+import 'package:smart_rice_warehouse/models/batch_model.dart';
+import 'package:smart_rice_warehouse/models/customer_model.dart';
+import 'package:smart_rice_warehouse/models/damage_report_model.dart';
+import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
+import 'package:smart_rice_warehouse/models/rice_characteristic_model.dart';
+import 'package:smart_rice_warehouse/models/rice_model.dart';
+import 'package:smart_rice_warehouse/models/supplier_model.dart';
+import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
 import 'package:smart_rice_warehouse/providers/alert_provider.dart';
 import 'package:smart_rice_warehouse/providers/auth_provider.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
@@ -16,8 +26,11 @@ import 'package:smart_rice_warehouse/providers/inventory_snapshot_provider.dart'
 import 'package:smart_rice_warehouse/providers/rice_characteristic_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
-import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
 import 'package:smart_rice_warehouse/providers/theme_provider.dart';
+import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
+import 'package:smart_rice_warehouse/repositories/contracts/crud_repository.dart';
+import 'package:smart_rice_warehouse/repositories/contracts/user_profile_repository.dart';
+import 'package:smart_rice_warehouse/repositories/firestore/inventory_transaction_repository.dart';
 import 'package:toastification/toastification.dart';
 import 'package:smart_rice_warehouse/core/services/settings_service.dart';
 
@@ -26,12 +39,36 @@ class SmartRiceWarehouseApp extends StatelessWidget {
     super.key,
     this.database,
     this.snapshot = const AppSnapshot(),
+    this.userProfiles,
+    this.riceProducts,
+    this.riceCharacteristics,
+    this.suppliers,
+    this.customers,
+    this.batches,
+    this.warehouseLocations,
+    this.importReceipts,
+    this.exportReceipts,
+    this.damageReports,
+    this.inventoryChecks,
+    this.transactionRepository,
     required this.settings,
   });
 
   final AppDatabase? database;
   final AppSnapshot snapshot;
   final SettingsService settings;
+  final UserProfileRepository? userProfiles;
+  final CrudRepository<RiceModel>? riceProducts;
+  final CrudRepository<RiceCharacteristicModel>? riceCharacteristics;
+  final CrudRepository<SupplierModel>? suppliers;
+  final CrudRepository<CustomerModel>? customers;
+  final CrudRepository<BatchModel>? batches;
+  final CrudRepository<WarehouseLocationModel>? warehouseLocations;
+  final CrudRepository<ImportReceiptModel>? importReceipts;
+  final CrudRepository<ExportReceiptModel>? exportReceipts;
+  final CrudRepository<DamageReportModel>? damageReports;
+  final CrudRepository<InventoryCheckSession>? inventoryChecks;
+  final InventoryTransactionRepository? transactionRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +88,9 @@ class SmartRiceWarehouseApp extends StatelessWidget {
               userRole: snapshot.userRole,
               avatarPath: snapshot.avatarPath,
               rememberedSession: snapshot.rememberedSession,
+              userProfileRepository: userProfiles,
+              loadAvatarPath: database?.loadAvatarPath,
+              onAvatarPersist: database?.saveAvatarPath,
               onPersist: (email, hash, remembered) => database?.saveAuth(
                 email: email,
                 passwordHash: hash,
@@ -68,30 +108,35 @@ class SmartRiceWarehouseApp extends StatelessWidget {
             create: (_) => RiceProvider(
               initial: snapshot.rices,
               onPersist: database?.saveRices,
+              repository: riceProducts,
             ),
           ),
           ChangeNotifierProvider(
             create: (_) => RiceCharacteristicProvider(
               initial: snapshot.characteristics,
               onPersist: database?.saveCharacteristics,
+              repository: riceCharacteristics,
             ),
           ),
           ChangeNotifierProvider(
             create: (_) => SupplierProvider(
               initial: snapshot.suppliers,
               onPersist: database?.saveSuppliers,
+              repository: suppliers,
             ),
           ),
           ChangeNotifierProvider(
             create: (_) => CustomerProvider(
               initial: snapshot.customers,
               onPersist: database?.saveCustomers,
+              repository: customers,
             ),
           ),
           ChangeNotifierProvider(
             create: (_) => BatchProvider(
               initial: snapshot.batches,
               onPersist: database?.saveBatches,
+              repository: batches,
             ),
           ),
           ProxyProvider2<RiceProvider, BatchProvider, InventorySnapshotStore>(
@@ -117,6 +162,8 @@ class SmartRiceWarehouseApp extends StatelessWidget {
               context.read<BatchProvider>(),
               initial: snapshot.importReceipts,
               onPersist: database?.saveImportReceipts,
+              repository: importReceipts,
+              transactionRepository: transactionRepository,
             ),
           ),
           ChangeNotifierProvider(
@@ -124,6 +171,8 @@ class SmartRiceWarehouseApp extends StatelessWidget {
               context.read<BatchProvider>(),
               initial: snapshot.exportReceipts,
               onPersist: database?.saveExportReceipts,
+              repository: exportReceipts,
+              transactionRepository: transactionRepository,
             ),
           ),
           ChangeNotifierProxyProvider2<RiceProvider, BatchProvider,
@@ -152,12 +201,15 @@ class SmartRiceWarehouseApp extends StatelessWidget {
             create: (_) => WarehouseProvider(
               initial: snapshot.locations,
               onPersist: database?.saveLocations,
+              repository: warehouseLocations,
             ),
           ),
           ChangeNotifierProvider(
             create: (_) => InventoryCheckProvider(
               initial: snapshot.inventoryChecks,
               onPersist: database?.saveInventoryChecks,
+              repository: inventoryChecks,
+              transactionRepository: transactionRepository,
             ),
           ),
           ChangeNotifierProvider(
@@ -170,6 +222,8 @@ class SmartRiceWarehouseApp extends StatelessWidget {
             create: (_) => DamageProvider(
               initial: snapshot.damageReports,
               onPersist: database?.saveDamageReports,
+              repository: damageReports,
+              transactionRepository: transactionRepository,
             ),
           ),
         ],

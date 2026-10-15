@@ -216,6 +216,7 @@ class _GreetingHeader extends StatelessWidget {
     final weekdayNames = ['Hai', 'Ba', 'Tư', 'Năm', 'Sáu', 'Bảy', 'Chủ Nhật'];
     final weekdayStr = 'Thứ ${weekdayNames[now.weekday - 1]}';
     final dateStr = '$weekdayStr, ${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+    final isDark = AppTheme.isDark(context);
 
     return Row(
       children: [
@@ -224,7 +225,7 @@ class _GreetingHeader extends StatelessWidget {
           height: 42,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: AppTheme.primaryGradient,
+            gradient: isDark ? AppTheme.darkHeroGradient : AppTheme.primaryGradient,
             boxShadow: [
               BoxShadow(
                 color: AppTheme.primaryColor.withValues(alpha: 0.25),
@@ -247,10 +248,10 @@ class _GreetingHeader extends StatelessWidget {
                   Flexible(
                     child: Text(
                       'Xin chào, $userName',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.textPrimaryColor(context),
                         letterSpacing: -0.2,
                       ),
                       maxLines: 1,
@@ -266,10 +267,10 @@ class _GreetingHeader extends StatelessWidget {
                 dateStr,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
+                  color: AppTheme.textSecondaryColor(context),
                 ),
               ),
             ],
@@ -279,9 +280,9 @@ class _GreetingHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
           decoration: BoxDecoration(
-            color: AppTheme.primaryLight,
+            color: AppTheme.safeBgColor(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.primaryColor.withValues(alpha: 0.2)),
+            border: Border.all(color: AppTheme.safeBorderColor(context)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -289,18 +290,18 @@ class _GreetingHeader extends StatelessWidget {
               Container(
                 width: 6,
                 height: 6,
-                decoration: const BoxDecoration(
-                  color: AppTheme.primaryColor,
+                decoration: BoxDecoration(
+                  color: AppTheme.safeTextColor(context),
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 5),
-              const Text(
+              Text(
                 'Kho Online',
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.primaryDark,
+                  color: AppTheme.safeTextColor(context),
                 ),
               ),
             ],
@@ -330,10 +331,12 @@ class _HeroQuickActionsBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
-        gradient: AppTheme.heroEmeraldGradient,
+        gradient: isDark ? AppTheme.darkHeroGradient : AppTheme.heroEmeraldGradient,
         borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.modernElevation,
       ),
@@ -431,6 +434,8 @@ class _HeroActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return PressableScale(
       onTap: onTap,
       scaleFactor: 0.94,
@@ -444,11 +449,12 @@ class _HeroActionButton extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? AppTheme.darkCardElevated : Colors.white,
                 borderRadius: BorderRadius.circular(14),
+                border: isDark ? Border.all(color: AppTheme.darkBorder, width: 1) : null,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -503,13 +509,15 @@ class _WarehouseKpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.borderColor),
-        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.border(context)),
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,7 +526,7 @@ class _WarehouseKpiCard extends StatelessWidget {
             children: [
               const Icon(Icons.analytics_rounded, size: 18, color: AppTheme.primaryColor),
               const SizedBox(width: 6),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Hiện trạng Tồn kho & FEFO',
                   maxLines: 1,
@@ -526,15 +534,15 @@ class _WarehouseKpiCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.textPrimaryColor(context),
                   ),
                 ),
               ),
               InkWell(
                 onTap: onViewInventory,
                 borderRadius: BorderRadius.circular(8),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -543,10 +551,14 @@ class _WarehouseKpiCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.primaryColor,
+                          color: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded, size: 16, color: AppTheme.primaryColor),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
+                      ),
                     ],
                   ),
                 ),
@@ -570,18 +582,18 @@ class _WarehouseKpiCard extends StatelessWidget {
                           style: AppTheme.tabularFigures(
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.textPrimaryColor(context),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Text(
+                    Text(
                       'Tấn',
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textSecondary,
+                        color: AppTheme.textSecondaryColor(context),
                       ),
                     ),
                   ],
@@ -591,15 +603,16 @@ class _WarehouseKpiCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
+                  color: isDark ? AppTheme.darkCardElevated : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(8),
+                  border: isDark ? Border.all(color: AppTheme.darkBorder, width: 1) : null,
                 ),
                 child: Text(
                   'Lấp đầy: ${(capacityPercent * 100).toInt()}%',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.textSecondaryColor(context),
                   ),
                 ),
               ),
@@ -611,9 +624,11 @@ class _WarehouseKpiCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: capacityPercent,
               minHeight: 7,
-              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
               valueColor: AlwaysStoppedAnimation<Color>(
-                capacityPercent > 0.85 ? AppTheme.dangerColor : AppTheme.primaryColor,
+                capacityPercent > 0.85
+                    ? (isDark ? AppTheme.darkDangerText : AppTheme.dangerColor)
+                    : (isDark ? AppTheme.darkSafeText : AppTheme.primaryColor),
               ),
             ),
           ),
@@ -624,9 +639,9 @@ class _WarehouseKpiCard extends StatelessWidget {
                 child: _FefoMiniPill(
                   label: 'Sẵn sàng',
                   count: availableBatches,
-                  color: const Color(0xFF10B981),
-                  bgColor: const Color(0xFFECFDF5),
-                  borderColor: const Color(0xFFA7F3D0),
+                  color: isDark ? AppTheme.darkSafeText : const Color(0xFF10B981),
+                  bgColor: isDark ? AppTheme.darkSafeBg : const Color(0xFFECFDF5),
+                  borderColor: isDark ? AppTheme.darkSafeBorder : const Color(0xFFA7F3D0),
                   onTap: onViewBatches,
                 ),
               ),
@@ -635,9 +650,9 @@ class _WarehouseKpiCard extends StatelessWidget {
                 child: _FefoMiniPill(
                   label: 'Cận hạn 30d',
                   count: nearExpiryBatches,
-                  color: const Color(0xFFD97706),
-                  bgColor: const Color(0xFFFFFBEB),
-                  borderColor: const Color(0xFFFDE68A),
+                  color: isDark ? AppTheme.darkWarningText : const Color(0xFFD97706),
+                  bgColor: isDark ? AppTheme.darkWarningBg : const Color(0xFFFFFBEB),
+                  borderColor: isDark ? AppTheme.darkWarningBorder : const Color(0xFFFDE68A),
                   onTap: onViewBatches,
                 ),
               ),
@@ -646,9 +661,9 @@ class _WarehouseKpiCard extends StatelessWidget {
                 child: _FefoMiniPill(
                   label: 'Quá hạn',
                   count: expiredBatches,
-                  color: const Color(0xFFDC2626),
-                  bgColor: const Color(0xFFFEF2F2),
-                  borderColor: const Color(0xFFFECACA),
+                  color: isDark ? AppTheme.darkDangerText : const Color(0xFFDC2626),
+                  bgColor: isDark ? AppTheme.darkDangerBg : const Color(0xFFFEF2F2),
+                  borderColor: isDark ? AppTheme.darkDangerBorder : const Color(0xFFFECACA),
                   onTap: onViewBatches,
                 ),
               ),
@@ -736,16 +751,20 @@ class _MiniWeeklyTrendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final maxVal = chartData.fold<double>(0.0, (curr, d) => math.max(curr, math.max(d.importKg, d.exportKg)));
     final safeMax = maxVal <= 0 ? 1000.0 : maxVal * 1.2;
+
+    final importColor = isDark ? const Color(0xFF34D399) : AppTheme.primaryColor;
+    final exportColor = isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.borderColor),
-        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.border(context)),
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -754,7 +773,7 @@ class _MiniWeeklyTrendCard extends StatelessWidget {
             children: [
               const Icon(Icons.show_chart_rounded, size: 18, color: AppTheme.primaryColor),
               const SizedBox(width: 6),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Biến động Xuất / Nhập 7 ngày qua',
                   maxLines: 1,
@@ -762,15 +781,15 @@ class _MiniWeeklyTrendCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.textPrimaryColor(context),
                   ),
                 ),
               ),
               InkWell(
                 onTap: onViewReports,
                 borderRadius: BorderRadius.circular(8),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -779,10 +798,14 @@ class _MiniWeeklyTrendCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.primaryColor,
+                          color: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded, size: 16, color: AppTheme.primaryColor),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
+                      ),
                     ],
                   ),
                 ),
@@ -794,8 +817,8 @@ class _MiniWeeklyTrendCard extends StatelessWidget {
             spacing: 12,
             runSpacing: 4,
             children: [
-              _indicatorItem(AppTheme.primaryColor, 'Nhập kho (kg)'),
-              _indicatorItem(const Color(0xFFD97706), 'Xuất kho (kg)'),
+              _indicatorItem(context, importColor, 'Nhập kho (kg)'),
+              _indicatorItem(context, exportColor, 'Xuất kho (kg)'),
             ],
           ),
           const SizedBox(height: 14),
@@ -822,10 +845,10 @@ class _MiniWeeklyTrendCard extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
                             chartData[idx].dayLabel,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.textSecondary,
+                              color: AppTheme.textSecondaryColor(context),
                             ),
                           ),
                         );
@@ -841,13 +864,13 @@ class _MiniWeeklyTrendCard extends StatelessWidget {
                       barRods: [
                         BarChartRodData(
                           toY: chartData[i].importKg,
-                          color: AppTheme.primaryColor,
+                          color: importColor,
                           width: 8,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         BarChartRodData(
                           toY: chartData[i].exportKg,
-                          color: const Color(0xFFD97706),
+                          color: exportColor,
                           width: 8,
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -862,7 +885,7 @@ class _MiniWeeklyTrendCard extends StatelessWidget {
     );
   }
 
-  Widget _indicatorItem(Color color, String label) {
+  Widget _indicatorItem(BuildContext context, Color color, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -874,7 +897,11 @@ class _MiniWeeklyTrendCard extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w500, color: AppTheme.textSecondary),
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.textSecondaryColor(context),
+          ),
         ),
       ],
     );
@@ -907,15 +934,17 @@ class _DispatchHubSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Điều độ Giao dịch Hôm nay',
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,
-            color: AppTheme.textPrimary,
+            color: AppTheme.textPrimaryColor(context),
             letterSpacing: -0.2,
           ),
         ),
@@ -929,8 +958,8 @@ class _DispatchHubSection extends StatelessWidget {
                 quantityKg: todayImportKg,
                 alertCount: alertImportsCount,
                 icon: Icons.south_west_rounded,
-                accentColor: AppTheme.primaryColor,
-                lightColor: AppTheme.primaryLight,
+                accentColor: isDark ? const Color(0xFF34D399) : AppTheme.primaryColor,
+                lightColor: isDark ? AppTheme.darkSafeBg : AppTheme.primaryLight,
                 onTap: onTapImport,
               ),
             ),
@@ -942,8 +971,8 @@ class _DispatchHubSection extends StatelessWidget {
                 quantityKg: todayExportKg,
                 alertCount: alertExportsCount,
                 icon: Icons.north_east_rounded,
-                accentColor: const Color(0xFFD97706),
-                lightColor: const Color(0xFFFEF3C7),
+                accentColor: isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
+                lightColor: isDark ? AppTheme.darkWarningBg : const Color(0xFFFEF3C7),
                 onTap: onTapExport,
               ),
             ),
@@ -977,6 +1006,7 @@ class _DispatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final quantityText = quantityKg >= 1000
         ? '${(quantityKg / 1000).toStringAsFixed(1)} Tấn'
         : '${quantityKg.toInt()} kg';
@@ -989,8 +1019,8 @@ class _DispatchCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.borderColor),
-          boxShadow: AppTheme.cardShadow,
+          border: Border.all(color: AppTheme.border(context)),
+          boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.cardShadow,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1003,6 +1033,7 @@ class _DispatchCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: lightColor,
                     borderRadius: BorderRadius.circular(8),
+                    border: isDark ? Border.all(color: accentColor.withValues(alpha: 0.3), width: 1) : null,
                   ),
                   child: Icon(icon, color: accentColor, size: 18),
                 ),
@@ -1012,17 +1043,18 @@ class _DispatchCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFEE2E2),
+                        color: isDark ? AppTheme.darkDangerBg : const Color(0xFFFEE2E2),
                         borderRadius: BorderRadius.circular(6),
+                        border: isDark ? Border.all(color: AppTheme.darkDangerBorder, width: 1) : null,
                       ),
                       child: Text(
                         '$alertCount lưu ý',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFFDC2626),
+                          color: isDark ? AppTheme.darkDangerText : const Color(0xFFDC2626),
                         ),
                       ),
                     ),
@@ -1034,10 +1066,10 @@ class _DispatchCard extends StatelessWidget {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textSecondary,
+                color: AppTheme.textSecondaryColor(context),
               ),
             ),
             const SizedBox(height: 2),
@@ -1048,16 +1080,16 @@ class _DispatchCard extends StatelessWidget {
                   style: AppTheme.tabularFigures(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.textPrimaryColor(context),
                   ),
                 ),
                 const SizedBox(width: 3),
-                const Text(
+                Text(
                   'phiếu',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.textSecondaryColor(context),
                   ),
                 ),
               ],
@@ -1096,13 +1128,15 @@ class _TopStockRiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.borderColor),
-        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.border(context)),
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1111,7 +1145,7 @@ class _TopStockRiceCard extends StatelessWidget {
             children: [
               const Icon(Icons.rice_bowl_outlined, size: 18, color: AppTheme.primaryColor),
               const SizedBox(width: 6),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Top Giống Gạo Tồn Kho Lớn',
                   maxLines: 1,
@@ -1119,15 +1153,15 @@ class _TopStockRiceCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.textPrimaryColor(context),
                   ),
                 ),
               ),
               InkWell(
                 onTap: onViewAllRices,
                 borderRadius: BorderRadius.circular(8),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1136,10 +1170,14 @@ class _TopStockRiceCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.primaryColor,
+                          color: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded, size: 16, color: AppTheme.primaryColor),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
+                      ),
                     ],
                   ),
                 ),
@@ -1148,7 +1186,7 @@ class _TopStockRiceCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           for (var i = 0; i < topRices.length; i++) ...[
-            _topRiceRow(topRices[i], i + 1),
+            _topRiceRow(context, topRices[i], i + 1),
             if (i < topRices.length - 1) const SizedBox(height: 10),
           ],
         ],
@@ -1156,11 +1194,12 @@ class _TopStockRiceCard extends StatelessWidget {
     );
   }
 
-  Widget _topRiceRow(_RiceStockSummary item, int rank) {
+  Widget _topRiceRow(BuildContext context, _RiceStockSummary item, int rank) {
+    final isDark = AppTheme.isDark(context);
     final colors = [
-      const Color(0xFF10B981),
-      const Color(0xFFD97706),
-      const Color(0xFF2563EB),
+      isDark ? const Color(0xFF34D399) : const Color(0xFF10B981),
+      isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706),
+      isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB),
     ];
     final color = colors[(rank - 1) % colors.length];
 
@@ -1170,8 +1209,9 @@ class _TopStockRiceCard extends StatelessWidget {
           width: 24,
           height: 24,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
+            color: color.withValues(alpha: isDark ? 0.2 : 0.12),
             shape: BoxShape.circle,
+            border: isDark ? Border.all(color: color.withValues(alpha: 0.35), width: 1) : null,
           ),
           child: Center(
             child: Text(
@@ -1187,13 +1227,20 @@ class _TopStockRiceCard extends StatelessWidget {
             children: [
               Text(
                 item.name,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimaryColor(context),
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
                 'Mã: ${item.code}',
-                style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textSecondaryColor(context),
+                ),
               ),
             ],
           ),
@@ -1231,11 +1278,13 @@ class _RecentActivitySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Column(
       children: [
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
                 'Biến động Gần đây',
                 maxLines: 1,
@@ -1243,7 +1292,7 @@ class _RecentActivitySection extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
+                  color: AppTheme.textPrimaryColor(context),
                   letterSpacing: -0.2,
                 ),
               ),
@@ -1255,12 +1304,12 @@ class _RecentActivitySection extends StatelessWidget {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
+              child: Text(
                 'Xem tất cả',
                 style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.primaryColor,
+                  color: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
                 ),
               ),
             ),
@@ -1273,12 +1322,12 @@ class _RecentActivitySection extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.borderColor),
+              border: Border.all(color: AppTheme.border(context)),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'Chưa có giao dịch nhập xuất nào gần đây',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12.5),
+                style: TextStyle(color: AppTheme.textSecondaryColor(context), fontSize: 12.5),
               ),
             ),
           )
@@ -1303,9 +1352,14 @@ class _ActivityItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final isImport = activity.isImport;
-    final color = isImport ? AppTheme.primaryColor : const Color(0xFFD97706);
-    final bgColor = isImport ? AppTheme.primaryLight : const Color(0xFFFEF3C7);
+    final color = isImport
+        ? (isDark ? const Color(0xFF34D399) : AppTheme.primaryColor)
+        : (isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706));
+    final bgColor = isImport
+        ? (isDark ? AppTheme.darkSafeBg : AppTheme.primaryLight)
+        : (isDark ? AppTheme.darkWarningBg : const Color(0xFFFEF3C7));
     final formattedDate = DateFormatter.ddMMyyyy(activity.date);
 
     return InkWell(
@@ -1316,8 +1370,8 @@ class _ActivityItemCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppTheme.borderColor),
-          boxShadow: AppTheme.softShadow,
+          border: Border.all(color: AppTheme.border(context)),
+          boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.softShadow,
         ),
         child: Row(
           children: [
@@ -1327,6 +1381,7 @@ class _ActivityItemCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: bgColor,
                 borderRadius: BorderRadius.circular(10),
+                border: isDark ? Border.all(color: color.withValues(alpha: 0.35), width: 1) : null,
               ),
               child: Icon(
                 isImport ? Icons.south_west_rounded : Icons.north_east_rounded,
@@ -1341,10 +1396,10 @@ class _ActivityItemCard extends StatelessWidget {
                 children: [
                   Text(
                     activity.riceName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.textPrimaryColor(context),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1352,10 +1407,10 @@ class _ActivityItemCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '${activity.code} • $formattedDate',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                      color: AppTheme.textSecondaryColor(context),
                     ),
                   ),
                 ],
@@ -1382,6 +1437,7 @@ class _ActivityItemCard extends StatelessWidget {
   }
 
   void _showActivityDetailSheet(BuildContext context, _DashboardActivity activity) {
+    final isDark = AppTheme.isDark(context);
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -1389,7 +1445,12 @@ class _ActivityItemCard extends StatelessWidget {
       ),
       builder: (context) {
         final isImport = activity.isImport;
-        final color = isImport ? AppTheme.primaryColor : const Color(0xFFD97706);
+        final color = isImport
+            ? (isDark ? const Color(0xFF34D399) : AppTheme.primaryColor)
+            : (isDark ? const Color(0xFFFBBF24) : const Color(0xFFD97706));
+        final bgColor = isImport
+            ? (isDark ? AppTheme.darkSafeBg : AppTheme.primaryLight)
+            : (isDark ? AppTheme.darkWarningBg : const Color(0xFFFEF3C7));
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
@@ -1402,7 +1463,7 @@ class _ActivityItemCard extends StatelessWidget {
                   width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -1413,8 +1474,9 @@ class _ActivityItemCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: isImport ? AppTheme.primaryLight : const Color(0xFFFEF3C7),
+                      color: bgColor,
                       borderRadius: BorderRadius.circular(8),
+                      border: isDark ? Border.all(color: color.withValues(alpha: 0.35), width: 1) : null,
                     ),
                     child: Icon(
                       isImport ? Icons.south_west_rounded : Icons.north_east_rounded,
@@ -1429,17 +1491,17 @@ class _ActivityItemCard extends StatelessWidget {
                       children: [
                         Text(
                           isImport ? 'Phiếu Nhập Kho' : 'Phiếu Xuất Kho',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.textPrimaryColor(context),
                           ),
                         ),
                         Text(
                           'Mã: ${activity.code}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11.5,
-                            color: AppTheme.textSecondary,
+                            color: AppTheme.textSecondaryColor(context),
                           ),
                         ),
                       ],
@@ -1450,18 +1512,24 @@ class _ActivityItemCard extends StatelessWidget {
               const SizedBox(height: 14),
               const Divider(),
               const SizedBox(height: 10),
-              _detailRow('Loại gạo', activity.riceName),
+              _detailRow(context, 'Loại gạo', activity.riceName),
               const SizedBox(height: 8),
               _detailRow(
+                context,
                 'Khối lượng',
                 '${NumberFormatter.quantity(activity.quantity)} ${activity.unit}',
                 valueColor: color,
                 isBold: true,
               ),
               const SizedBox(height: 8),
-              _detailRow('Thời gian', DateFormatter.ddMMyyyy(activity.date)),
+              _detailRow(context, 'Thời gian', DateFormatter.ddMMyyyy(activity.date)),
               const SizedBox(height: 8),
-              _detailRow('Trạng thái', 'Đã ghi nhận', valueColor: AppTheme.primaryColor),
+              _detailRow(
+                context,
+                'Trạng thái',
+                'Đã ghi nhận',
+                valueColor: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
+              ),
               const SizedBox(height: 18),
               SizedBox(
                 width: double.infinity,
@@ -1485,20 +1553,20 @@ class _ActivityItemCard extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(String label, String value, {Color? valueColor, bool isBold = false}) {
+  Widget _detailRow(BuildContext context, String label, String value, {Color? valueColor, bool isBold = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 12.5, color: AppTheme.textSecondary),
+          style: TextStyle(fontSize: 12.5, color: AppTheme.textSecondaryColor(context)),
         ),
         Text(
           value,
           style: TextStyle(
             fontSize: 13,
             fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
-            color: valueColor ?? AppTheme.textPrimary,
+            color: valueColor ?? AppTheme.textPrimaryColor(context),
           ),
         ),
       ],

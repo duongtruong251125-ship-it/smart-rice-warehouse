@@ -69,7 +69,7 @@ class _SupplierFormScreenState extends State<SupplierFormScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -86,14 +86,17 @@ class _SupplierFormScreenState extends State<SupplierFormScreen> {
       isActive: _isActive,
     );
     final provider = context.read<SupplierProvider>();
+    final success = widget.isEditing
+        ? await provider.updateSupplierOnline(supplier)
+        : await provider.addSupplierOnline(supplier);
 
-    if (widget.isEditing) {
-      if (!provider.updateSupplier(supplier)) {
-        AppToast.error(context, 'Không thể cập nhật nhà cung cấp.');
-        return;
-      }
-    } else {
-      provider.addSupplier(supplier);
+    if (!mounted) return;
+    if (!success) {
+      AppToast.error(
+        context,
+        provider.errorMessage ?? 'Không thể lưu thông tin nhà cung cấp.',
+      );
+      return;
     }
 
     Navigator.of(context).pop(

@@ -129,13 +129,21 @@ class _AlertListScreenState extends State<AlertListScreen> {
     required bool isSelected,
     required VoidCallback onSelected,
   }) {
+    final isDark = AppTheme.isDark(context);
+    final activeColor = isDark ? const Color(0xFF34D399) : AppTheme.primaryColor;
+
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => onSelected(),
-      selectedColor: AppTheme.primaryLight,
+      selectedColor: isDark
+          ? AppTheme.primaryDark.withValues(alpha: 0.35)
+          : AppTheme.primaryLight,
+      side: BorderSide(
+        color: isSelected ? activeColor : AppTheme.border(context),
+      ),
       labelStyle: TextStyle(
-        color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
+        color: isSelected ? activeColor : AppTheme.textSecondaryColor(context),
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         fontSize: 13,
       ),
@@ -155,12 +163,15 @@ class _AlertItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
     final isCritical = alert.severity == AlertSeverity.critical;
     final isWarning = alert.severity == AlertSeverity.warning;
 
     final Color indicatorColor = isCritical
-        ? const Color(0xFFDC2626)
-        : (isWarning ? AppTheme.secondaryColor : AppTheme.primaryColor);
+        ? (isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626))
+        : (isWarning
+            ? (isDark ? const Color(0xFFFBBF24) : AppTheme.secondaryColor)
+            : (isDark ? const Color(0xFF34D399) : AppTheme.primaryColor));
 
     final IconData icon = isCritical
         ? Icons.error_outline_rounded
@@ -168,19 +179,28 @@ class _AlertItemCard extends StatelessWidget {
             ? Icons.warning_amber_rounded
             : Icons.info_outline_rounded);
 
+    final cardBg = isDark
+        ? (alert.isRead
+            ? AppTheme.cardBg(context)
+            : Color.alphaBlend(
+                indicatorColor.withValues(alpha: 0.08),
+                AppTheme.cardBg(context),
+              ))
+        : (alert.isRead ? AppTheme.cardColor : const Color(0xFFF8FAFC));
+
     return Card(
-      color: alert.isRead ? AppTheme.cardColor : const Color(0xFFF8FAFC),
+      color: cardBg,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: alert.isRead
-              ? AppTheme.borderColor
-              : indicatorColor.withValues(alpha: 0.35),
+              ? AppTheme.border(context)
+              : indicatorColor.withValues(alpha: isDark ? 0.45 : 0.35),
           width: alert.isRead ? 1 : 1.5,
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -190,7 +210,7 @@ class _AlertItemCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: indicatorColor.withValues(alpha: 0.12),
+                  color: indicatorColor.withValues(alpha: isDark ? 0.18 : 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: indicatorColor, size: 20),
@@ -211,8 +231,8 @@ class _AlertItemCard extends StatelessWidget {
                                   ? FontWeight.w600
                                   : FontWeight.w800,
                               color: isCritical
-                                  ? const Color(0xFFDC2626)
-                                  : AppTheme.textPrimary,
+                                  ? indicatorColor
+                                  : AppTheme.textPrimaryColor(context),
                             ),
                           ),
                         ),
@@ -221,8 +241,10 @@ class _AlertItemCard extends StatelessWidget {
                             width: 8,
                             height: 8,
                             margin: const EdgeInsets.only(left: 6),
-                            decoration: const BoxDecoration(
-                              color: AppTheme.primaryColor,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF34D399)
+                                  : AppTheme.primaryColor,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -232,7 +254,7 @@ class _AlertItemCard extends StatelessWidget {
                     Text(
                       alert.message,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.textPrimaryColor(context),
                         fontSize: 13,
                         height: 1.35,
                       ),
@@ -247,7 +269,7 @@ class _AlertItemCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: indicatorColor.withValues(alpha: 0.1),
+                            color: indicatorColor.withValues(alpha: isDark ? 0.18 : 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -261,8 +283,8 @@ class _AlertItemCard extends StatelessWidget {
                         ),
                         Text(
                           DateFormatter.ddMMyyyy(alert.createdAt),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textSecondary,
+                          style: TextStyle(
+                            color: AppTheme.textSecondaryColor(context),
                             fontSize: 11,
                           ),
                         ),

@@ -278,6 +278,11 @@ class _MonthlyDetailTableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: AppTheme.cardBg(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppTheme.border(context)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -291,19 +296,25 @@ class _MonthlyDetailTableCard extends StatelessWidget {
                 _TableModeChip(
                   label: '📥 Bảng Cột Nhập (${importReceipts.length})',
                   isSelected: selectedMode == 0,
-                  activeColor: AppTheme.accentGreen,
+                  activeColor: AppTheme.isDark(context)
+                      ? const Color(0xFF34D399)
+                      : AppTheme.accentGreen,
                   onTap: () => onModeChanged(0),
                 ),
                 _TableModeChip(
                   label: '📤 Bảng Cột Xuất (${exportReceipts.length})',
                   isSelected: selectedMode == 1,
-                  activeColor: AppTheme.secondaryColor,
+                  activeColor: AppTheme.isDark(context)
+                      ? const Color(0xFFFBBF24)
+                      : AppTheme.secondaryColor,
                   onTap: () => onModeChanged(1),
                 ),
                 _TableModeChip(
                   label: '📋 Cả 2 Bảng',
                   isSelected: selectedMode == 2,
-                  activeColor: AppTheme.primaryColor,
+                  activeColor: AppTheme.isDark(context)
+                      ? const Color(0xFF38BDF8)
+                      : AppTheme.primaryColor,
                   onTap: () => onModeChanged(2),
                 ),
               ],
@@ -321,9 +332,12 @@ class _MonthlyDetailTableCard extends StatelessWidget {
               ),
             ],
             if (selectedMode == 2) ...[
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Divider(thickness: 1.5),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: Divider(
+                  thickness: 1.5,
+                  color: AppTheme.border(context),
+                ),
               ),
             ],
             if (selectedMode == 1 || selectedMode == 2) ...[
@@ -354,16 +368,19 @@ class _TableModeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor : const Color(0xFFF1F5F9),
+          color: isSelected
+              ? activeColor
+              : (isDark ? AppTheme.darkBackground : const Color(0xFFF1F5F9)),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? activeColor : AppTheme.borderColor,
+            color: isSelected ? activeColor : AppTheme.border(context),
           ),
         ),
         child: Text(
@@ -371,7 +388,11 @@ class _TableModeChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : AppTheme.textSecondary,
+            color: isSelected
+                ? (isDark && activeColor == const Color(0xFFFBBF24)
+                    ? const Color(0xFF0B1120)
+                    : Colors.white)
+                : AppTheme.textSecondaryColor(context),
           ),
         ),
       ),
@@ -392,13 +413,14 @@ class _MonthlyColumnBars extends StatelessWidget {
   Widget build(BuildContext context) {
     final showImport = selectedMode == 0 || selectedMode == 2;
     final showExport = selectedMode == 1 || selectedMode == 2;
+    final isDark = AppTheme.isDark(context);
 
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: isDark ? AppTheme.darkBackground : const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.borderColor),
+        border: Border.all(color: AppTheme.border(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -409,12 +431,12 @@ class _MonthlyColumnBars extends StatelessWidget {
             spacing: 8,
             runSpacing: 4,
             children: [
-              const Text(
+              Text(
                 'Biểu đồ cột tháng này (kg):',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textSecondary,
+                  color: AppTheme.textSecondaryColor(context),
                 ),
               ),
               Wrap(
@@ -422,13 +444,17 @@ class _MonthlyColumnBars extends StatelessWidget {
                 runSpacing: 2,
                 children: [
                   if (showImport)
-                    const _LegendItem(
-                      color: AppTheme.accentGreen,
+                    _LegendItem(
+                      color: isDark
+                          ? const Color(0xFF34D399)
+                          : AppTheme.accentGreen,
                       label: 'Cột Nhập',
                     ),
                   if (showExport)
-                    const _LegendItem(
-                      color: AppTheme.secondaryColor,
+                    _LegendItem(
+                      color: isDark
+                          ? const Color(0xFFFBBF24)
+                          : AppTheme.secondaryColor,
                       label: 'Cột Xuất',
                     ),
                 ],
@@ -470,6 +496,8 @@ class _ImportDataTable extends StatelessWidget {
     final totalAmount = receipts.fold(0.0, (s, r) => s + r.totalAmount);
     final sortedReceipts = List<ImportReceiptModel>.from(receipts)
       ..sort((a, b) => b.date.compareTo(a.date));
+    final isDark = AppTheme.isDark(context);
+    final importColor = isDark ? const Color(0xFF34D399) : AppTheme.accentGreen;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -484,23 +512,23 @@ class _ImportDataTable extends StatelessWidget {
                     width: 24,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: AppTheme.accentGreen.withValues(alpha: 0.12),
+                      color: importColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.download_rounded,
                       size: 15,
-                      color: AppTheme.accentGreen,
+                      color: importColor,
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Flexible(
+                  Flexible(
                     child: Text(
                       'Bảng Cột Nhập Tháng',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.textPrimaryColor(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -513,15 +541,15 @@ class _ImportDataTable extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppTheme.accentGreen.withValues(alpha: 0.1),
+                color: importColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 '${sortedReceipts.length} dòng dữ liệu',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.accentGreen,
+                  color: importColor,
                 ),
               ),
             ),
@@ -529,16 +557,19 @@ class _ImportDataTable extends StatelessWidget {
         ),
         if (isNarrow) ...[
           const SizedBox(height: 4),
-          const Text(
+          Text(
             '👉 Vuốt ngang để xem đầy đủ các cột dữ liệu',
-            style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+            style: TextStyle(
+              fontSize: 10,
+              color: AppTheme.textSecondaryColor(context),
+            ),
           ),
         ],
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.borderColor),
+            border: Border.all(color: AppTheme.border(context)),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -552,13 +583,15 @@ class _ImportDataTable extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 8),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1F5F9),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppTheme.darkCard
+                            : const Color(0xFFF1F5F9),
                         border: Border(
-                          bottom: BorderSide(color: AppTheme.borderColor),
+                          bottom: BorderSide(color: AppTheme.border(context)),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           SizedBox(
                             width: 50,
@@ -567,7 +600,7 @@ class _ImportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -579,7 +612,7 @@ class _ImportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -591,7 +624,7 @@ class _ImportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -603,7 +636,7 @@ class _ImportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.accentGreen,
+                                color: importColor,
                                 letterSpacing: 0.3,
                               ),
                               textAlign: TextAlign.right,
@@ -616,7 +649,7 @@ class _ImportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.textPrimaryColor(context),
                                 letterSpacing: 0.3,
                               ),
                               textAlign: TextAlign.right,
@@ -635,11 +668,18 @@ class _ImportDataTable extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 7),
                         decoration: BoxDecoration(
-                          color:
-                              isEven ? Colors.white : const Color(0xFFF8FAFC),
-                          border: const Border(
-                            bottom:
-                                BorderSide(color: Color(0xFFF1F5F9), width: 1),
+                          color: isEven
+                              ? AppTheme.cardBg(context)
+                              : (isDark
+                                  ? const Color(0xFF131D31)
+                                  : const Color(0xFFF8FAFC)),
+                          border: Border(
+                            bottom: BorderSide(
+                              color: isDark
+                                  ? AppTheme.darkBorder.withValues(alpha: 0.5)
+                                  : const Color(0xFFF1F5F9),
+                              width: 1,
+                            ),
                           ),
                         ),
                         child: Row(
@@ -648,10 +688,10 @@ class _ImportDataTable extends StatelessWidget {
                               width: 50,
                               child: Text(
                                 _formatDate(receipt.date),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: AppTheme.textSecondary,
+                                  color: AppTheme.textSecondaryColor(context),
                                 ),
                               ),
                             ),
@@ -663,16 +703,21 @@ class _ImportDataTable extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryLight
-                                        .withValues(alpha: 0.4),
+                                    color: isDark
+                                        ? AppTheme.primaryDark
+                                            .withValues(alpha: 0.35)
+                                        : AppTheme.primaryLight
+                                            .withValues(alpha: 0.4),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
                                     receipt.code,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
-                                      color: AppTheme.primaryDark,
+                                      color: isDark
+                                          ? const Color(0xFF34D399)
+                                          : AppTheme.primaryDark,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -683,10 +728,10 @@ class _ImportDataTable extends StatelessWidget {
                               width: 115,
                               child: Text(
                                 receipt.riceName,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: AppTheme.textPrimary,
+                                  color: AppTheme.textPrimaryColor(context),
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -695,11 +740,13 @@ class _ImportDataTable extends StatelessWidget {
                               width: 80,
                               child: Text(
                                 '+${NumberFormatter.quantity(receipt.quantity)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.accentGreen,
-                                  fontFeatures: [FontFeature.tabularFigures()],
+                                  color: importColor,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures()
+                                  ],
                                 ),
                                 textAlign: TextAlign.right,
                               ),
@@ -709,11 +756,13 @@ class _ImportDataTable extends StatelessWidget {
                               child: Text(
                                 CurrencyFormatter.formatVnd(
                                     receipt.totalAmount),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textPrimary,
-                                  fontFeatures: [FontFeature.tabularFigures()],
+                                  color: AppTheme.textPrimaryColor(context),
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures()
+                                  ],
                                 ),
                                 textAlign: TextAlign.right,
                               ),
@@ -727,21 +776,21 @@ class _ImportDataTable extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentGreen.withValues(alpha: 0.08),
-                        border: const Border(
-                          top: BorderSide(color: AppTheme.borderColor),
+                        color: importColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                        border: Border(
+                          top: BorderSide(color: AppTheme.border(context)),
                         ),
                       ),
                       child: Row(
                         children: [
-                          const SizedBox(
+                          SizedBox(
                             width: 265,
                             child: Text(
                               'Tổng Cột Nhập:',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.accentGreen,
+                                color: importColor,
                               ),
                             ),
                           ),
@@ -749,11 +798,13 @@ class _ImportDataTable extends StatelessWidget {
                             width: 80,
                             child: Text(
                               '+${NumberFormatter.quantity(totalQty)} kg',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.accentGreen,
-                                fontFeatures: [FontFeature.tabularFigures()],
+                                color: importColor,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures()
+                                ],
                               ),
                               textAlign: TextAlign.right,
                             ),
@@ -762,11 +813,13 @@ class _ImportDataTable extends StatelessWidget {
                             width: 95,
                             child: Text(
                               CurrencyFormatter.formatVnd(totalAmount),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.accentGreen,
-                                fontFeatures: [FontFeature.tabularFigures()],
+                                color: importColor,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures()
+                                ],
                               ),
                               textAlign: TextAlign.right,
                             ),
@@ -800,6 +853,8 @@ class _ExportDataTable extends StatelessWidget {
     final totalAmount = receipts.fold(0.0, (s, r) => s + r.totalAmount);
     final sortedReceipts = List<ExportReceiptModel>.from(receipts)
       ..sort((a, b) => b.date.compareTo(a.date));
+    final isDark = AppTheme.isDark(context);
+    final exportColor = isDark ? const Color(0xFFFBBF24) : AppTheme.secondaryColor;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -814,23 +869,23 @@ class _ExportDataTable extends StatelessWidget {
                     width: 24,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: AppTheme.secondaryColor.withValues(alpha: 0.12),
+                      color: exportColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.upload_rounded,
                       size: 15,
-                      color: AppTheme.secondaryColor,
+                      color: exportColor,
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Flexible(
+                  Flexible(
                     child: Text(
                       'Bảng Cột Xuất Tháng',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.textPrimaryColor(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -843,15 +898,15 @@ class _ExportDataTable extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppTheme.secondaryColor.withValues(alpha: 0.1),
+                color: exportColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
                 '${sortedReceipts.length} dòng dữ liệu',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.secondaryColor,
+                  color: exportColor,
                 ),
               ),
             ),
@@ -859,16 +914,19 @@ class _ExportDataTable extends StatelessWidget {
         ),
         if (isNarrow) ...[
           const SizedBox(height: 4),
-          const Text(
+          Text(
             '👉 Vuốt ngang để xem đầy đủ các cột dữ liệu',
-            style: TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+            style: TextStyle(
+              fontSize: 10,
+              color: AppTheme.textSecondaryColor(context),
+            ),
           ),
         ],
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.borderColor),
+            border: Border.all(color: AppTheme.border(context)),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -882,13 +940,15 @@ class _ExportDataTable extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 8),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1F5F9),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppTheme.darkCard
+                            : const Color(0xFFF1F5F9),
                         border: Border(
-                          bottom: BorderSide(color: AppTheme.borderColor),
+                          bottom: BorderSide(color: AppTheme.border(context)),
                         ),
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           SizedBox(
                             width: 50,
@@ -897,7 +957,7 @@ class _ExportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -909,7 +969,7 @@ class _ExportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -921,7 +981,7 @@ class _ExportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -933,7 +993,7 @@ class _ExportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.secondaryColor,
+                                color: exportColor,
                                 letterSpacing: 0.3,
                               ),
                               textAlign: TextAlign.right,
@@ -946,7 +1006,7 @@ class _ExportDataTable extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.textPrimaryColor(context),
                                 letterSpacing: 0.3,
                               ),
                               textAlign: TextAlign.right,
@@ -965,11 +1025,18 @@ class _ExportDataTable extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 7),
                         decoration: BoxDecoration(
-                          color:
-                              isEven ? Colors.white : const Color(0xFFF8FAFC),
-                          border: const Border(
-                            bottom:
-                                BorderSide(color: Color(0xFFF1F5F9), width: 1),
+                          color: isEven
+                              ? AppTheme.cardBg(context)
+                              : (isDark
+                                  ? const Color(0xFF131D31)
+                                  : const Color(0xFFF8FAFC)),
+                          border: Border(
+                            bottom: BorderSide(
+                              color: isDark
+                                  ? AppTheme.darkBorder.withValues(alpha: 0.5)
+                                  : const Color(0xFFF1F5F9),
+                              width: 1,
+                            ),
                           ),
                         ),
                         child: Row(
@@ -978,10 +1045,10 @@ class _ExportDataTable extends StatelessWidget {
                               width: 50,
                               child: Text(
                                 _formatDate(receipt.date),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: AppTheme.textSecondary,
+                                  color: AppTheme.textSecondaryColor(context),
                                 ),
                               ),
                             ),
@@ -993,16 +1060,18 @@ class _ExportDataTable extends StatelessWidget {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.secondaryColor
-                                        .withValues(alpha: 0.12),
+                                    color: isDark
+                                        ? exportColor.withValues(alpha: 0.2)
+                                        : AppTheme.secondaryColor
+                                            .withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
                                     receipt.code,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
-                                      color: AppTheme.secondaryColor,
+                                      color: exportColor,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -1013,10 +1082,10 @@ class _ExportDataTable extends StatelessWidget {
                               width: 115,
                               child: Text(
                                 '${receipt.customerName} (${receipt.riceName})',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: AppTheme.textPrimary,
+                                  color: AppTheme.textPrimaryColor(context),
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -1025,11 +1094,13 @@ class _ExportDataTable extends StatelessWidget {
                               width: 80,
                               child: Text(
                                 '-${NumberFormatter.quantity(receipt.quantity)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.secondaryColor,
-                                  fontFeatures: [FontFeature.tabularFigures()],
+                                  color: exportColor,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures()
+                                  ],
                                 ),
                                 textAlign: TextAlign.right,
                               ),
@@ -1039,11 +1110,13 @@ class _ExportDataTable extends StatelessWidget {
                               child: Text(
                                 CurrencyFormatter.formatVnd(
                                     receipt.totalAmount),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textPrimary,
-                                  fontFeatures: [FontFeature.tabularFigures()],
+                                  color: AppTheme.textPrimaryColor(context),
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures()
+                                  ],
                                 ),
                                 textAlign: TextAlign.right,
                               ),
@@ -1057,21 +1130,21 @@ class _ExportDataTable extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.secondaryColor.withValues(alpha: 0.08),
-                        border: const Border(
-                          top: BorderSide(color: AppTheme.borderColor),
+                        color: exportColor.withValues(alpha: isDark ? 0.15 : 0.08),
+                        border: Border(
+                          top: BorderSide(color: AppTheme.border(context)),
                         ),
                       ),
                       child: Row(
                         children: [
-                          const SizedBox(
+                          SizedBox(
                             width: 265,
                             child: Text(
                               'Tổng Cột Xuất:',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.secondaryColor,
+                                color: exportColor,
                               ),
                             ),
                           ),
@@ -1079,11 +1152,13 @@ class _ExportDataTable extends StatelessWidget {
                             width: 80,
                             child: Text(
                               '-${NumberFormatter.quantity(totalQty)} kg',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.secondaryColor,
-                                fontFeatures: [FontFeature.tabularFigures()],
+                                color: exportColor,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures()
+                                ],
                               ),
                               textAlign: TextAlign.right,
                             ),
@@ -1092,11 +1167,13 @@ class _ExportDataTable extends StatelessWidget {
                             width: 95,
                             child: Text(
                               CurrencyFormatter.formatVnd(totalAmount),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.secondaryColor,
-                                fontFeatures: [FontFeature.tabularFigures()],
+                                color: exportColor,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures()
+                                ],
                               ),
                               textAlign: TextAlign.right,
                             ),
@@ -1174,16 +1251,22 @@ class _TopExportedList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
 
     if (items.isEmpty) {
       return Card(
+        color: AppTheme.cardBg(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppTheme.border(context)),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Center(
             child: Text(
               'Chưa có dữ liệu xuất hàng',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
+                color: AppTheme.textSecondaryColor(context),
               ),
             ),
           ),
@@ -1194,13 +1277,19 @@ class _TopExportedList extends StatelessWidget {
     final maxQty = items.first.totalQuantity;
 
     return Card(
+      color: AppTheme.cardBg(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppTheme.border(context)),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Column(
           children: [
             for (var index = 0; index < items.length; index++) ...[
-              if (index > 0) const Divider(height: 16),
-              _buildRow(items[index], index + 1, maxQty, theme),
+              if (index > 0)
+                Divider(height: 16, color: AppTheme.border(context)),
+              _buildRow(items[index], index + 1, maxQty, theme, context, isDark),
             ],
           ],
         ),
@@ -1213,10 +1302,13 @@ class _TopExportedList extends StatelessWidget {
     int rank,
     double maxQty,
     ThemeData theme,
+    BuildContext context,
+    bool isDark,
   ) {
     final ratio =
         maxQty > 0 ? (item.totalQuantity / maxQty).clamp(0.05, 1.0) : 0.0;
     final isTop1 = rank == 1;
+    final topColor = isDark ? const Color(0xFFFBBF24) : AppTheme.secondaryColor;
 
     return Row(
       children: [
@@ -1224,9 +1316,9 @@ class _TopExportedList extends StatelessWidget {
           width: 26,
           height: 26,
           decoration: BoxDecoration(
-            color: isTop1 ? AppTheme.secondaryColor : AppTheme.backgroundColor,
+            color: isTop1 ? topColor : AppTheme.scaffoldBg(context),
             shape: BoxShape.circle,
-            border: isTop1 ? null : Border.all(color: AppTheme.borderColor),
+            border: isTop1 ? null : Border.all(color: AppTheme.border(context)),
           ),
           alignment: Alignment.center,
           child: Text(
@@ -1234,7 +1326,9 @@ class _TopExportedList extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: isTop1 ? Colors.white : AppTheme.textSecondary,
+              color: isTop1
+                  ? (isDark ? const Color(0xFF0B1120) : Colors.white)
+                  : AppTheme.textSecondaryColor(context),
             ),
           ),
         ),
@@ -1247,8 +1341,10 @@ class _TopExportedList extends StatelessWidget {
                 item.riceName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall?.copyWith(
+                style: TextStyle(
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimaryColor(context),
                 ),
               ),
               const SizedBox(height: 4),
@@ -1257,8 +1353,12 @@ class _TopExportedList extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: ratio,
                   minHeight: 5,
-                  backgroundColor: AppTheme.backgroundColor,
-                  color: AppTheme.primaryColor,
+                  backgroundColor: isDark
+                      ? const Color(0xFF131D31)
+                      : AppTheme.backgroundColor,
+                  color: isDark
+                      ? const Color(0xFF34D399)
+                      : AppTheme.primaryColor,
                 ),
               ),
             ],
@@ -1270,18 +1370,18 @@ class _TopExportedList extends StatelessWidget {
           children: [
             Text(
               '${NumberFormatter.quantity(item.totalQuantity)} ${item.unit}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 13,
-                color: AppTheme.textPrimary,
+                color: AppTheme.textPrimaryColor(context),
               ),
             ),
             const SizedBox(height: 2),
             Text(
               CurrencyFormatter.formatVnd(item.totalRevenue),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: AppTheme.textSecondary,
+                color: AppTheme.textSecondaryColor(context),
               ),
             ),
           ],
@@ -1298,8 +1398,7 @@ class _SevenDayChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = AppTheme.isDark(context);
     var maximum = 0.0;
     for (final activity in activities) {
       if (activity.importQuantity > maximum) {
@@ -1311,19 +1410,32 @@ class _SevenDayChart extends StatelessWidget {
     }
 
     return Card(
+      color: AppTheme.cardBg(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppTheme.border(context)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Wrap(
+            Wrap(
               spacing: 12,
               runSpacing: 8,
               children: [
                 _LegendItem(
-                    color: AppTheme.accentGreen, label: 'Cột Nhập kho (kg)'),
+                  color: isDark
+                      ? const Color(0xFF34D399)
+                      : AppTheme.accentGreen,
+                  label: 'Cột Nhập kho (kg)',
+                ),
                 _LegendItem(
-                    color: AppTheme.secondaryColor, label: 'Cột Xuất kho (kg)'),
+                  color: isDark
+                      ? const Color(0xFFFBBF24)
+                      : AppTheme.secondaryColor,
+                  label: 'Cột Xuất kho (kg)',
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -1334,8 +1446,8 @@ class _SevenDayChart extends StatelessWidget {
                   child: Text(
                     'Chưa có dữ liệu trong khoảng thời gian này',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                    style: TextStyle(
+                      color: AppTheme.textSecondaryColor(context),
                     ),
                   ),
                 ),
@@ -1356,11 +1468,13 @@ class _SevenDayChart extends StatelessWidget {
                   ],
                 ),
               ),
-            const Divider(height: 28),
+            Divider(height: 28, color: AppTheme.border(context)),
             Text(
               'Bảng đối soát 7 ngày gần đây:',
-              style: theme.textTheme.titleSmall?.copyWith(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: AppTheme.textPrimaryColor(context),
               ),
             ),
             const SizedBox(height: 8),
@@ -1381,16 +1495,20 @@ class _SevenDayTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final reversed = activities.reversed.toList();
     final today = DateTime.now();
+    final isDark = AppTheme.isDark(context);
+    final importColor = isDark ? const Color(0xFF34D399) : AppTheme.accentGreen;
+    final exportColor = isDark ? const Color(0xFFFBBF24) : AppTheme.secondaryColor;
 
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
+            color: isDark ? AppTheme.darkBackground : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: AppTheme.border(context)),
           ),
-          child: const Row(
+          child: Row(
             children: [
               Expanded(
                 flex: 3,
@@ -1399,7 +1517,7 @@ class _SevenDayTable extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.textSecondaryColor(context),
                   ),
                 ),
               ),
@@ -1410,7 +1528,7 @@ class _SevenDayTable extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.accentGreen,
+                    color: importColor,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -1422,7 +1540,7 @@ class _SevenDayTable extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.secondaryColor,
+                    color: exportColor,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -1434,7 +1552,7 @@ class _SevenDayTable extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.textPrimaryColor(context),
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -1464,8 +1582,8 @@ class _SevenDayTable extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
                       color: isToday
-                          ? AppTheme.primaryColor
-                          : AppTheme.textPrimary,
+                          ? (isDark ? const Color(0xFF34D399) : AppTheme.primaryColor)
+                          : AppTheme.textPrimaryColor(context),
                     ),
                   ),
                 ),
@@ -1479,8 +1597,8 @@ class _SevenDayTable extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: act.importQuantity > 0
-                          ? AppTheme.accentGreen
-                          : AppTheme.textSecondary,
+                          ? importColor
+                          : AppTheme.textSecondaryColor(context),
                     ),
                     textAlign: TextAlign.right,
                   ),
@@ -1495,8 +1613,8 @@ class _SevenDayTable extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: act.exportQuantity > 0
-                          ? AppTheme.secondaryColor
-                          : AppTheme.textSecondary,
+                          ? exportColor
+                          : AppTheme.textSecondaryColor(context),
                     ),
                     textAlign: TextAlign.right,
                   ),
@@ -1511,10 +1629,10 @@ class _SevenDayTable extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: net > 0
-                          ? AppTheme.accentGreen
+                          ? importColor
                           : (net < 0
-                              ? AppTheme.secondaryColor
-                              : AppTheme.textSecondary),
+                              ? exportColor
+                              : AppTheme.textSecondaryColor(context)),
                     ),
                     textAlign: TextAlign.right,
                   ),
@@ -1538,6 +1656,9 @@ class _DailyBars extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasImport = activity.importQuantity > 0;
     final hasExport = activity.exportQuantity > 0;
+    final isDark = AppTheme.isDark(context);
+    final importColor = isDark ? const Color(0xFF34D399) : AppTheme.accentGreen;
+    final exportColor = isDark ? const Color(0xFFFBBF24) : AppTheme.secondaryColor;
 
     return Column(
       children: [
@@ -1551,20 +1672,20 @@ class _DailyBars extends StatelessWidget {
                 if (hasImport)
                   Text(
                     '${activity.importQuantity.toInt()}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.accentGreen,
+                      color: importColor,
                     ),
                   ),
                 if (hasImport && hasExport) const SizedBox(width: 2),
                 if (hasExport)
                   Text(
                     '${activity.exportQuantity.toInt()}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.secondaryColor,
+                      color: exportColor,
                     ),
                   ),
               ],
@@ -1587,7 +1708,9 @@ class _DailyBars extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 1.5),
                 padding: const EdgeInsets.symmetric(horizontal: 1.5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: isDark
+                      ? AppTheme.darkBackground
+                      : const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Row(
@@ -1597,16 +1720,20 @@ class _DailyBars extends StatelessWidget {
                     _ActivityBar(
                       height: importH,
                       color: hasImport
-                          ? AppTheme.accentGreen
-                          : const Color(0xFFE2E8F0),
+                          ? importColor
+                          : (isDark
+                              ? AppTheme.darkBorder
+                              : const Color(0xFFE2E8F0)),
                       width: 11,
                     ),
                     const SizedBox(width: 3),
                     _ActivityBar(
                       height: exportH,
                       color: hasExport
-                          ? AppTheme.secondaryColor
-                          : const Color(0xFFE2E8F0),
+                          ? exportColor
+                          : (isDark
+                              ? AppTheme.darkBorder
+                              : const Color(0xFFE2E8F0)),
                       width: 11,
                     ),
                   ],
@@ -1620,7 +1747,7 @@ class _DailyBars extends StatelessWidget {
           '${activity.date.day}/${activity.date.month}',
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary,
+                color: AppTheme.textSecondaryColor(context),
                 fontSize: 10,
               ),
         ),
@@ -1678,6 +1805,13 @@ class _MonthlyMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final effectiveAccent = isDark
+        ? (accentColor == AppTheme.secondaryColor
+            ? const Color(0xFFFBBF24)
+            : const Color(0xFF34D399))
+        : accentColor;
+
     return PressableScale(
       onTap: onTap,
       scaleFactor: 0.97,
@@ -1685,20 +1819,22 @@ class _MonthlyMetricCard extends StatelessWidget {
       child: Card(
         clipBehavior: Clip.antiAlias,
         elevation: isSelected ? 2.5 : 1,
+        color: AppTheme.cardBg(context),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color: isSelected ? accentColor : AppTheme.borderColor,
+            color: isSelected ? effectiveAccent : AppTheme.border(context),
             width: isSelected ? 2 : 1,
           ),
         ),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
-            color:
-                isSelected ? accentColor.withValues(alpha: 0.04) : Colors.white,
+            color: isSelected
+                ? effectiveAccent.withValues(alpha: isDark ? 0.15 : 0.04)
+                : AppTheme.cardBg(context),
             border: Border(
-              left: BorderSide(color: accentColor, width: 4),
+              left: BorderSide(color: effectiveAccent, width: 4),
             ),
           ),
           child: Column(
@@ -1714,14 +1850,15 @@ class _MonthlyMetricCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color:
-                            isSelected ? accentColor : AppTheme.textSecondary,
+                        color: isSelected
+                            ? effectiveAccent
+                            : AppTheme.textSecondaryColor(context),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Icon(icon, size: 16, color: accentColor),
+                  Icon(icon, size: 16, color: effectiveAccent),
                 ],
               ),
               const SizedBox(height: 2),
@@ -1730,7 +1867,7 @@ class _MonthlyMetricCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w800,
-                  color: accentColor,
+                  color: effectiveAccent,
                   letterSpacing: -0.3,
                 ),
                 maxLines: 1,
@@ -1741,7 +1878,7 @@ class _MonthlyMetricCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
+                  color: effectiveAccent.withValues(alpha: isDark ? 0.2 : 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -1749,7 +1886,7 @@ class _MonthlyMetricCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
-                    color: accentColor,
+                    color: effectiveAccent,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1761,7 +1898,9 @@ class _MonthlyMetricCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? accentColor : AppTheme.textSecondary,
+                  color: isSelected
+                      ? effectiveAccent
+                      : AppTheme.textSecondaryColor(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -2031,12 +2170,13 @@ class _ReportsHeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
-        gradient: AppTheme.heroEmeraldGradient,
+        gradient: AppTheme.heroGradient(context),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppTheme.modernElevation,
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.modernElevation,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2101,15 +2241,22 @@ class _ReportsHeroBanner extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? AppTheme.darkCard : Colors.white,
                 borderRadius: BorderRadius.circular(12),
+                border: isDark ? Border.all(color: AppTheme.darkBorder) : null,
               ),
               padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.insights_rounded, size: 16, color: AppTheme.primaryDark),
-                  SizedBox(width: 6),
+                  Icon(
+                    Icons.insights_rounded,
+                    size: 16,
+                    color: isDark
+                        ? const Color(0xFF34D399)
+                        : AppTheme.primaryDark,
+                  ),
+                  const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       'Xem Dự Báo Tiêu Thụ',
@@ -2118,7 +2265,9 @@ class _ReportsHeroBanner extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.primaryDark,
+                        color: isDark
+                            ? const Color(0xFF34D399)
+                            : AppTheme.primaryDark,
                       ),
                     ),
                   ),

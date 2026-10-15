@@ -1,23 +1,56 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
+import 'package:smart_rice_warehouse/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/repositories/contracts/crud_repository.dart';
 
 class WarehouseProvider extends ChangeNotifier {
   WarehouseProvider({
     List<WarehouseLocationModel>? initial,
     this.onPersist,
+    this.repository,
   }) {
     _locations = List<WarehouseLocationModel>.from(
       initial ?? MockData.warehouseLocations,
     );
+    if (repository != null) {
+      _subscribeToFirestore();
+    }
   }
 
   late List<WarehouseLocationModel> _locations;
   final ValueChanged<List<WarehouseLocationModel>>? onPersist;
+  final CrudRepository<WarehouseLocationModel>? repository;
+  StreamSubscription<List<WarehouseLocationModel>>? _subscription;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   List<WarehouseLocationModel> get locations =>
       List<WarehouseLocationModel>.unmodifiable(_locations);
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  bool get usesFirestore => repository != null;
+
+  void _subscribeToFirestore() {
+    _isLoading = true;
+    _subscription = repository!.watchAll().listen(
+      (remoteLocations) {
+        _locations
+          ..clear()
+          ..addAll(remoteLocations);
+        _isLoading = false;
+        _errorMessage = null;
+        _persist();
+        notifyListeners();
+      },
+      onError: (Object error) {
+        _isLoading = false;
+        _errorMessage = 'Không thể đồng bộ vị trí kho: $error';
+        notifyListeners();
+      },
+    );
+  }
 
   List<String> get zones {
     final set = _locations.map((e) => e.zone).toSet();
@@ -61,11 +94,35 @@ class WarehouseProvider extends ChangeNotifier {
     }).toList();
   }
 
+  Future<bool> addLocationOnline(WarehouseLocationModel location) async {
+    if (repository == null) {
+      return addLocation(location);
+    }
+    if (!location.capacity.isFinite ||
+        location.capacity <= 0 ||
+        findByCode(location.code) != null) {
+      return false;
+    }
+    try {
+      await repository!.create(location.id, location);
+      _errorMessage = null;
+      return true;
+    } catch (error) {
+      _errorMessage = 'Không thể thêm vị trí kho: $error';
+      notifyListeners();
+      return false;
+    }
+  }
+
   bool addLocation(WarehouseLocationModel location) {
     if (!location.capacity.isFinite ||
         location.capacity <= 0 ||
         findByCode(location.code) != null) {
       return false;
+    }
+    if (repository != null) {
+      unawaited(addLocationOnline(location));
+      return true;
     }
     _locations.add(location);
     _persist();
@@ -116,4 +173,10 @@ class WarehouseProvider extends ChangeNotifier {
   }
 
   void _persist() => onPersist?.call(locations);
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
 }

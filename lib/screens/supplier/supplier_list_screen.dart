@@ -58,12 +58,14 @@ class _SupplierListScreenState extends State<SupplierListScreen> {
     }
 
     final batchProvider = context.read<BatchProvider>();
-    if (context.read<SupplierProvider>().deleteSupplier(
+    final deleted = await context.read<SupplierProvider>().deleteSupplierOnline(
           supplier.id,
           isReferenced: (id) => batchProvider.batches.any(
             (batch) => batch.supplierId == id,
           ),
-        )) {
+        );
+    if (!mounted) return;
+    if (deleted) {
       _showMessage('Đã xóa nhà cung cấp');
     } else {
       _showMessage('Không thể xóa: nhà cung cấp đang có lô hàng liên quan.');

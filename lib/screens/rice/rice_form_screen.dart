@@ -210,6 +210,7 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
 
     setState(() => _isSaving = true);
     String? permanentImagePath = _imagePath;
+    String? oldImageToDelete;
 
     // Lưu ảnh vĩnh viễn và dọn dẹp ảnh cũ
     if (_imagePath != _originalRice?.imagePath) {
@@ -217,10 +218,10 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
         permanentImagePath = await ImageStorageService.saveImagePermanently(
           _imagePath,
           subDirectory: 'rice_images',
-          oldPathToDelete: _originalRice?.imagePath,
         );
+        oldImageToDelete = _originalRice?.imagePath;
       } else if (_originalRice?.imagePath != null) {
-        await ImageStorageService.deleteImageIfExists(_originalRice!.imagePath);
+        oldImageToDelete = _originalRice!.imagePath;
         permanentImagePath = null;
       }
     }
@@ -245,16 +246,27 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
     );
 
     final saved = widget.isEditing
-        ? riceProvider.updateRice(rice)
-        : riceProvider.addRice(rice);
+        ? await riceProvider.updateRiceOnline(rice)
+        : await riceProvider.addRiceOnline(rice);
 
     if (!mounted) return;
     setState(() => _isSaving = false);
 
     if (!saved) {
+      if (permanentImagePath != null &&
+          permanentImagePath != _originalRice?.imagePath) {
+        await ImageStorageService.deleteImageIfExists(permanentImagePath);
+      }
+      if (!mounted) return;
       AppToast.error(context, 'Không thể lưu. Vui lòng kiểm tra mã gạo.');
       return;
     }
+
+    if (oldImageToDelete != null &&
+        oldImageToDelete != permanentImagePath) {
+      await ImageStorageService.deleteImageIfExists(oldImageToDelete);
+    }
+    if (!mounted) return;
 
     Navigator.of(context).pop(
       widget.isEditing ? 'Cập nhật gạo thành công' : 'Thêm gạo thành công',

@@ -5,6 +5,8 @@ class RiceCharacteristicModel {
     this.description = '',
     required this.colorValue,
     this.isDefault = false,
+    this.createdAt,
+    this.updatedAt,
   });
 
   final String id;
@@ -12,6 +14,8 @@ class RiceCharacteristicModel {
   final String description;
   final int colorValue;
   final bool isDefault;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   RiceCharacteristicModel copyWith({
     String? id,
@@ -19,6 +23,8 @@ class RiceCharacteristicModel {
     String? description,
     int? colorValue,
     bool? isDefault,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return RiceCharacteristicModel(
       id: id ?? this.id,
@@ -26,6 +32,8 @@ class RiceCharacteristicModel {
       description: description ?? this.description,
       colorValue: colorValue ?? this.colorValue,
       isDefault: isDefault ?? this.isDefault,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -35,6 +43,8 @@ class RiceCharacteristicModel {
         'description': description,
         'colorValue': colorValue,
         'isDefault': isDefault,
+        'createdAt': createdAt?.toIso8601String(),
+        'updatedAt': updatedAt?.toIso8601String(),
       };
 
   factory RiceCharacteristicModel.fromJson(Map<String, dynamic> json) =>
@@ -44,5 +54,7 @@ class RiceCharacteristicModel {
         description: json['description'] as String? ?? '',
         colorValue: (json['colorValue'] as num?)?.toInt() ?? 0xFF0D9488,
         isDefault: json['isDefault'] as bool? ?? false,
+        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
       );
 }

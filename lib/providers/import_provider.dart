@@ -1,24 +1,61 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:smart_rice_warehouse/models/batch_model.dart';
 import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
 import 'package:smart_rice_warehouse/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/repositories/contracts/crud_repository.dart';
+import 'package:smart_rice_warehouse/repositories/firestore/inventory_transaction_repository.dart';
 
 class ImportProvider extends ChangeNotifier {
   ImportProvider(
     this._batchProvider, {
     List<ImportReceiptModel>? initial,
     this.onPersist,
+    this.repository,
+    this.transactionRepository,
   }) : _receipts = List<ImportReceiptModel>.from(
           initial ?? MockData.importReceipts,
-        );
+        ) {
+    if (repository != null) {
+      _subscribeToFirestore();
+    }
+  }
 
   final List<ImportReceiptModel> _receipts;
   final BatchProvider _batchProvider;
   final ValueChanged<List<ImportReceiptModel>>? onPersist;
+  final CrudRepository<ImportReceiptModel>? repository;
+  final InventoryTransactionRepository? transactionRepository;
+  StreamSubscription<List<ImportReceiptModel>>? _subscription;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   List<ImportReceiptModel> get receipts =>
       List<ImportReceiptModel>.unmodifiable(_receipts);
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  bool get usesFirestore => repository != null;
+
+  void _subscribeToFirestore() {
+    _isLoading = true;
+    _subscription = repository!.watchAll().listen(
+      (remoteReceipts) {
+        _receipts
+          ..clear()
+          ..addAll(remoteReceipts);
+        _isLoading = false;
+        _errorMessage = null;
+        onPersist?.call(receipts);
+        notifyListeners();
+      },
+      onError: (Object error) {
+        _isLoading = false;
+        _errorMessage = 'Không thể đồng bộ phiếu nhập: $error';
+        notifyListeners();
+      },
+    );
+  }
 
   int receiptCountOn(DateTime date) {
     return _receipts.where((receipt) => _isSameDate(receipt.date, date)).length;
@@ -44,6 +81,29 @@ class ImportProvider extends ChangeNotifier {
     return 'PN${(_maxCodeNumber() + 1).toString().padLeft(3, '0')}';
   }
 
+  Future<bool> createImportReceiptOnline({
+    required ImportReceiptModel receipt,
+    required BatchModel batch,
+    String performedBy = 'system',
+  }) async {
+    if (transactionRepository == null) {
+      return createImportReceipt(receipt: receipt, batch: batch);
+    }
+    try {
+      await transactionRepository!.confirmImportReceipt(
+        receipt: receipt,
+        batchToCreateOrUpdate: batch,
+        performedBy: performedBy,
+      );
+      _errorMessage = null;
+      return true;
+    } catch (error) {
+      _errorMessage = 'Không thể tạo phiếu nhập: $error';
+      notifyListeners();
+      return false;
+    }
+  }
+
   bool createImportReceipt({
     required ImportReceiptModel receipt,
     required BatchModel batch,
@@ -57,6 +117,12 @@ class ImportProvider extends ChangeNotifier {
                 receipt.code.trim().toLowerCase())) {
       return false;
     }
+
+    if (transactionRepository != null) {
+      unawaited(createImportReceiptOnline(receipt: receipt, batch: batch));
+      return true;
+    }
+
     if (_batchProvider.isBatchCodeExists(batch.code)) {
       final existingIndex = _batchProvider.batches.indexWhere(
         (item) =>
@@ -107,5 +173,11 @@ class ImportProvider extends ChangeNotifier {
     return first.year == second.year &&
         first.month == second.month &&
         first.day == second.day;
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }

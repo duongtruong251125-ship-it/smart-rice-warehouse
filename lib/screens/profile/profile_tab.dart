@@ -18,188 +18,14 @@ class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
 
   void _showPasswordModal(BuildContext context) {
-    final rootContext = context;
-    final currentPasswordController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    final confirmPasswordController = TextEditingController();
-    bool obscureCurrent = true;
-    bool obscureNew = true;
-    bool obscureConfirm = true;
-    String? errorMessage;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (bottomSheetContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom,
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Đổi mật khẩu',
-                      textAlign: TextAlign.center,
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 20),
-                    if (errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.dangerLight,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppTheme.dangerBorder),
-                        ),
-                        child: Text(
-                          errorMessage!,
-                          style: const TextStyle(
-                              color: AppTheme.dangerText, fontSize: 13),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-                    TextField(
-                      controller: currentPasswordController,
-                      obscureText: obscureCurrent,
-                      decoration: InputDecoration(
-                        labelText: 'Mật khẩu hiện tại',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureCurrent
-                              ? Icons.visibility_off
-                              : Icons.visibility),
-                          onPressed: () =>
-                              setState(() => obscureCurrent = !obscureCurrent),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: newPasswordController,
-                      obscureText: obscureNew,
-                      decoration: InputDecoration(
-                        labelText: 'Mật khẩu mới',
-                        prefixIcon: const Icon(Icons.vpn_key_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureNew
-                              ? Icons.visibility_off
-                              : Icons.visibility),
-                          onPressed: () =>
-                              setState(() => obscureNew = !obscureNew),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: confirmPasswordController,
-                      obscureText: obscureConfirm,
-                      decoration: InputDecoration(
-                        labelText: 'Xác nhận mật khẩu mới',
-                        prefixIcon: const Icon(Icons.check_circle_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureConfirm
-                              ? Icons.visibility_off
-                              : Icons.visibility),
-                          onPressed: () =>
-                              setState(() => obscureConfirm = !obscureConfirm),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: () {
-                        final current = currentPasswordController.text.trim();
-                        final newPass = newPasswordController.text.trim();
-                        final confirm = confirmPasswordController.text.trim();
-
-                        if (current.isEmpty ||
-                            newPass.isEmpty ||
-                            confirm.isEmpty) {
-                          setState(() {
-                            errorMessage =
-                                'Vui lòng nhập đầy đủ các trường mật khẩu';
-                          });
-                          return;
-                        }
-                        if (newPass.length < 6) {
-                          setState(() {
-                            errorMessage =
-                                'Mật khẩu mới phải có ít nhất 6 ký tự';
-                          });
-                          return;
-                        }
-                        if (newPass != confirm) {
-                          setState(() {
-                            errorMessage = 'Mật khẩu xác nhận không khớp';
-                          });
-                          return;
-                        }
-
-                        final changed = bottomSheetContext
-                            .read<AuthProvider>()
-                            .changePassword(
-                              current: current,
-                              replacement: newPass,
-                            );
-                        if (!changed) {
-                          setState(() {
-                            errorMessage = 'Mật khẩu hiện tại không chính xác';
-                          });
-                          return;
-                        }
-                        Navigator.pop(bottomSheetContext);
-                        AppToast.success(
-                          rootContext,
-                          'Đổi mật khẩu thành công!',
-                        );
-                      },
-                      child: const Text(
-                        'Xác nhận đổi',
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    ).whenComplete(() {
-      currentPasswordController.dispose();
-      newPasswordController.dispose();
-      confirmPasswordController.dispose();
-    });
+      builder: (_) => const _ChangePasswordSheet(),
+    );
   }
 
   void _showSettingsModal(BuildContext context) {
@@ -349,7 +175,8 @@ class ProfileTab extends StatelessWidget {
       return;
     }
 
-    context.read<AuthProvider>().logout();
+    await context.read<AuthProvider>().logoutWithFirebase();
+    if (!context.mounted) return;
     Navigator.of(context).pushNamedAndRemoveUntil(
       AppRoutes.login,
       (route) => false,
@@ -357,165 +184,14 @@ class ProfileTab extends StatelessWidget {
   }
 
   void _showPersonalInformation(BuildContext context, UserModel? user) {
-    final rootContext = context;
-    File? selectedImage;
-    final picker = ImagePicker();
-    final nameController =
-        TextEditingController(text: user?.name ?? 'Admin Quản Lý');
-    final roleController = TextEditingController(text: _roleLabel(user?.role));
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (bottomSheetContext) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom,
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Cập nhật Hồ sơ',
-                      textAlign: TextAlign.center,
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 20),
-                    Center(
-                      child: GestureDetector(
-                        onTap: () async {
-                          final pickedFile = await picker.pickImage(
-                              source: ImageSource.gallery);
-                          if (pickedFile != null) {
-                            setState(() {
-                              selectedImage = File(pickedFile.path);
-                            });
-                          }
-                        },
-                        child: Stack(
-                          alignment: Alignment.bottomRight,
-                          children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundColor: AppTheme.primaryLight,
-                              backgroundImage: selectedImage != null
-                                  ? FileImage(selectedImage!)
-                                  : null,
-                              child: selectedImage == null
-                                  ? const Icon(Icons.person,
-                                      size: 40, color: AppTheme.primaryColor)
-                                  : null,
-                            ),
-                            Container(
-                              decoration: const BoxDecoration(
-                                color: AppTheme.secondaryColor,
-                                shape: BoxShape.circle,
-                              ),
-                              padding: const EdgeInsets.all(8),
-                              child: const Icon(Icons.camera_alt,
-                                  color: Colors.white, size: 16),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Họ và tên',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: roleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Chức vụ',
-                        prefixIcon: Icon(Icons.badge_outlined),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      onPressed: () async {
-                        String? permanentAvatarPath = user?.avatarPath;
-                        if (selectedImage != null) {
-                          permanentAvatarPath =
-                              await ImageStorageService.saveImagePermanently(
-                            selectedImage!.path,
-                            subDirectory: 'avatars',
-                            oldPathToDelete: user?.avatarPath,
-                          );
-                        }
-                        if (!rootContext.mounted) return;
-                        final updated =
-                            rootContext.read<AuthProvider>().updateProfile(
-                                  name: nameController.text,
-                                  role: roleController.text,
-                                  avatarPath: permanentAvatarPath,
-                                );
-                        if (!updated) {
-                          if (rootContext.mounted) {
-                            AppToast.error(
-                              rootContext,
-                              'Họ tên và chức vụ không được để trống',
-                            );
-                          }
-                          return;
-                        }
-                        if (bottomSheetContext.mounted) {
-                          Navigator.pop(bottomSheetContext);
-                        }
-                        if (rootContext.mounted) {
-                          AppToast.success(
-                            rootContext,
-                            'Đã cập nhật hồ sơ và ảnh đại diện!',
-                          );
-                        }
-                      },
-                      child: const Text(
-                        'Lưu thông tin',
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    ).whenComplete(() {
-      nameController.dispose();
-      roleController.dispose();
-    });
+      builder: (_) => _PersonalInformationSheet(user: user),
+    );
   }
 
   @override
@@ -595,7 +271,8 @@ class ProfileTab extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -805,4 +482,397 @@ class _ProfileOptionTile extends StatelessWidget {
 
 String _roleLabel(String? role) {
   return role == 'admin' ? 'Quản trị viên kho' : (role ?? 'Nhân viên vận hành');
+}
+
+class _PersonalInformationSheet extends StatefulWidget {
+  const _PersonalInformationSheet({
+    required this.user,
+  });
+
+  final UserModel? user;
+
+  @override
+  State<_PersonalInformationSheet> createState() =>
+      _PersonalInformationSheetState();
+}
+
+class _PersonalInformationSheetState extends State<_PersonalInformationSheet> {
+  late final TextEditingController _nameController;
+  File? _selectedImage;
+  final _picker = ImagePicker();
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController =
+        TextEditingController(text: widget.user?.name ?? 'Admin Quản Lý');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null && mounted) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _handleSave() async {
+    final updatedName = _nameController.text.trim();
+    if (updatedName.isEmpty) {
+      AppToast.error(context, 'Họ và tên không được để trống.');
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      String? permanentAvatarPath = widget.user?.avatarPath;
+      if (_selectedImage != null) {
+        permanentAvatarPath =
+            await ImageStorageService.saveImagePermanently(
+          _selectedImage!.path,
+          subDirectory: 'avatars',
+          oldPathToDelete: widget.user?.avatarPath,
+        );
+      }
+
+      if (!mounted) return;
+      final auth = context.read<AuthProvider>();
+      final result = await auth.updateProfileWithFirebase(
+        name: updatedName,
+        avatarPath: permanentAvatarPath,
+      );
+
+      if (!mounted) return;
+      if (!result.success) {
+        AppToast.error(
+          context,
+          result.message ?? 'Không thể cập nhật hồ sơ',
+        );
+        return;
+      }
+
+      Navigator.of(context).pop();
+      AppToast.success(
+        context,
+        'Đã cập nhật hồ sơ và ảnh đại diện!',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Cập nhật Hồ sơ',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Center(
+              child: GestureDetector(
+                onTap: _pickImage,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: AppTheme.primaryLight,
+                      backgroundImage: _selectedImage != null
+                          ? FileImage(_selectedImage!)
+                          : null,
+                      child: _selectedImage == null
+                          ? const Icon(Icons.person,
+                              size: 40, color: AppTheme.primaryColor)
+                          : null,
+                    ),
+                    Container(
+                      decoration: const BoxDecoration(
+                        color: AppTheme.secondaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: const Icon(Icons.camera_alt,
+                          color: Colors.white, size: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Họ và tên',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: _isSaving ? null : _handleSave,
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Lưu thông tin',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChangePasswordSheet extends StatefulWidget {
+  const _ChangePasswordSheet();
+
+  @override
+  State<_ChangePasswordSheet> createState() => _ChangePasswordSheetState();
+}
+
+class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
+  late final TextEditingController _currentPasswordController;
+  late final TextEditingController _newPasswordController;
+  late final TextEditingController _confirmPasswordController;
+
+  bool _obscureCurrent = true;
+  bool _obscureNew = true;
+  bool _obscureConfirm = true;
+  String? _errorMessage;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentPasswordController = TextEditingController();
+    _newPasswordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _currentPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSubmit() async {
+    final current = _currentPasswordController.text.trim();
+    final newPass = _newPasswordController.text.trim();
+    final confirm = _confirmPasswordController.text.trim();
+
+    if (current.isEmpty || newPass.isEmpty || confirm.isEmpty) {
+      setState(() {
+        _errorMessage = 'Vui lòng nhập đầy đủ các trường mật khẩu';
+      });
+      return;
+    }
+    if (newPass.length < 6) {
+      setState(() {
+        _errorMessage = 'Mật khẩu mới phải có ít nhất 6 ký tự';
+      });
+      return;
+    }
+    if (newPass != confirm) {
+      setState(() {
+        _errorMessage = 'Mật khẩu xác nhận không khớp';
+      });
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    try {
+      final auth = context.read<AuthProvider>();
+      final result = await auth.changePasswordWithFirebase(
+        current: current,
+        replacement: newPass,
+      );
+
+      if (!mounted) return;
+      if (!result.success) {
+        setState(() {
+          _errorMessage = result.message ?? 'Mật khẩu hiện tại không chính xác';
+        });
+        return;
+      }
+
+      Navigator.of(context).pop();
+      AppToast.success(context, 'Đổi mật khẩu thành công!');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Đổi mật khẩu',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            if (_errorMessage != null) ...[
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppTheme.dangerLight,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.dangerBorder),
+                ),
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(
+                      color: AppTheme.dangerText, fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+            TextField(
+              controller: _currentPasswordController,
+              obscureText: _obscureCurrent,
+              decoration: InputDecoration(
+                labelText: 'Mật khẩu hiện tại',
+                prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureCurrent
+                      ? Icons.visibility_off
+                      : Icons.visibility),
+                  onPressed: () =>
+                      setState(() => _obscureCurrent = !_obscureCurrent),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _newPasswordController,
+              obscureText: _obscureNew,
+              decoration: InputDecoration(
+                labelText: 'Mật khẩu mới',
+                prefixIcon: const Icon(Icons.vpn_key_outlined),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureNew
+                      ? Icons.visibility_off
+                      : Icons.visibility),
+                  onPressed: () =>
+                      setState(() => _obscureNew = !_obscureNew),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _confirmPasswordController,
+              obscureText: _obscureConfirm,
+              decoration: InputDecoration(
+                labelText: 'Xác nhận mật khẩu mới',
+                prefixIcon: const Icon(Icons.check_circle_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureConfirm
+                      ? Icons.visibility_off
+                      : Icons.visibility),
+                  onPressed: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: _isSubmitting ? null : _handleSubmit,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Xác nhận đổi',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

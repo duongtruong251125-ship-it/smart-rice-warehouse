@@ -62,12 +62,13 @@ class _RiceListScreenState extends State<RiceListScreen> {
     }
 
     final batchProvider = context.read<BatchProvider>();
-    final deleted = context.read<RiceProvider>().deleteRice(
+    final deleted = await context.read<RiceProvider>().deleteRiceOnline(
           rice.id,
           isReferenced: (id) => batchProvider.batches.any(
             (batch) => batch.riceId == id,
           ),
         );
+    if (!mounted) return;
     if (deleted) {
       _showMessage('Đã xóa gạo');
     } else {

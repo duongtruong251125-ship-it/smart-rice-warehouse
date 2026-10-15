@@ -11,6 +11,7 @@ import 'package:smart_rice_warehouse/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/screens/profile/profile_tab.dart';
+import 'package:toastification/toastification.dart';
 
 void main() {
   test('report totals and inventory value react to import and export', () {
@@ -124,4 +125,61 @@ void main() {
     final loginContext = tester.element(find.text('LOGIN_SCREEN'));
     expect(Navigator.of(loginContext).canPop(), isFalse);
   });
+
+  testWidgets(
+    'saving personal information updates name safely without altering locked role and without overlay exceptions',
+    (tester) async {
+      final authProvider = AuthProvider();
+      authProvider.login(email: 'admin@gmail.com', password: '123456');
+
+      await tester.pumpWidget(
+        ToastificationWrapper(
+          child: ChangeNotifierProvider<AuthProvider>.value(
+            value: authProvider,
+            child: MaterialApp(
+              navigatorKey: AppRoutes.navigatorKey,
+              home: const Scaffold(body: ProfileTab()),
+            ),
+          ),
+        ),
+      );
+
+      // Mở modal Thông tin cá nhân
+      await tester.tap(find.text('Thông tin cá nhân'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cập nhật Hồ sơ'), findsOneWidget);
+
+      // Đảm bảo không còn ô Chức vụ trong hộp thoại chỉnh sửa hồ sơ
+      final roleFinder = find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField && widget.decoration?.labelText == 'Chức vụ',
+      );
+      expect(roleFinder, findsNothing);
+      expect(find.text('Chức vụ'), findsNothing);
+
+      // Sửa họ tên
+      final nameFinder = find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField && widget.decoration?.labelText == 'Họ và tên',
+      );
+      await tester.enterText(nameFinder, 'Nguyễn Văn Quản Trị');
+      await tester.pump();
+
+      // Nhấn Lưu thông tin
+      await tester.tap(find.text('Lưu thông tin'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      // Kiểm tra không có exception nào bị ném ra
+      expect(tester.takeException(), isNull);
+
+      // Kiểm tra tên đã được cập nhật, vai trò admin giữ nguyên
+      expect(authProvider.currentUser?.name, 'Nguyễn Văn Quản Trị');
+      expect(authProvider.currentUser?.role, 'admin');
+
+      // Chờ toast hoàn tất để không còn timer treo
+      await tester.pump(const Duration(seconds: 4));
+    },
+  );
 }

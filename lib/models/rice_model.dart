@@ -12,6 +12,8 @@ class RiceModel {
     required this.isActive,
     this.imagePath,
     this.characteristicIds = const [],
+    this.createdAt,
+    this.updatedAt,
   });
 
   final String id;
@@ -26,6 +28,8 @@ class RiceModel {
   final bool isActive;
   final String? imagePath;
   final List<String> characteristicIds;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   RiceModel copyWith({
     String? id,
@@ -40,6 +44,8 @@ class RiceModel {
     bool? isActive,
     String? imagePath,
     List<String>? characteristicIds,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return RiceModel(
       id: id ?? this.id,
@@ -54,6 +60,8 @@ class RiceModel {
       isActive: isActive ?? this.isActive,
       imagePath: imagePath ?? this.imagePath,
       characteristicIds: characteristicIds ?? this.characteristicIds,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -70,6 +78,8 @@ class RiceModel {
         'isActive': isActive,
         'imagePath': imagePath,
         'characteristicIds': characteristicIds,
+        'createdAt': createdAt?.toIso8601String(),
+        'updatedAt': updatedAt?.toIso8601String(),
       };
 
   factory RiceModel.fromJson(Map<String, dynamic> json) => RiceModel(
@@ -88,5 +98,7 @@ class RiceModel {
                 ?.map((e) => e as String)
                 .toList() ??
             const [],
+        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+        updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
       );
 }

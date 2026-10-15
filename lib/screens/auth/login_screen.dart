@@ -74,13 +74,15 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Tài khoản gần nhất vẫn có thể đăng nhập khi thiết bị mất mạng.
-      final localSuccess = authProvider.login(
-        email: email,
-        password: password,
-        remember: _rememberLogin,
-      );
-      if (localSuccess) {
+      // Local mode exists only for widget tests and installations where
+      // Firebase could not be initialized. Cloud mode never falls back to a
+      // password stored in SQLite.
+      if (!authProvider.isCloudAuthEnabled &&
+          authProvider.login(
+            email: email,
+            password: password,
+            remember: _rememberLogin,
+          )) {
         AppToast.success(context, 'Đăng nhập thành công!');
         _openHome();
         return;
@@ -104,12 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (registeredEmail != null && mounted) {
       _emailController.text = registeredEmail;
-      AppToast.success(context, 'Tạo tài khoản thành công!');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _openHome();
-        }
-      });
+      AppToast.success(
+        context,
+        'Đã tạo tài khoản. Vui lòng chờ quản trị viên kích hoạt.',
+      );
     }
   }
 
@@ -133,9 +133,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppTheme.scaffoldBg(context),
       body: SafeArea(
         child: Stack(
           children: [
@@ -148,7 +149,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 240,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                  color: isDark
+                      ? const Color(0xFF10B981).withValues(alpha: 0.12)
+                      : AppTheme.primaryColor.withValues(alpha: 0.08),
                 ),
               ),
             ),
@@ -160,7 +163,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.accentTeal.withValues(alpha: 0.06),
+                  color: isDark
+                      ? const Color(0xFF0F766E).withValues(alpha: 0.15)
+                      : AppTheme.accentTeal.withValues(alpha: 0.06),
                 ),
               ),
             ),
@@ -168,10 +173,12 @@ class _LoginScreenState extends State<LoginScreen> {
             // Form nội dung chính
             LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: (constraints.maxHeight - 48).clamp(0.0, double.infinity),
+                    minHeight: (constraints.maxHeight - 48)
+                        .clamp(0.0, double.infinity),
                   ),
                   child: Center(
                     child: ConstrainedBox(
@@ -188,7 +195,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: 80,
                                 height: 80,
                                 decoration: BoxDecoration(
-                                  gradient: AppTheme.primaryGradient,
+                                  gradient: isDark
+                                      ? AppTheme.darkHeroGradient
+                                      : AppTheme.primaryGradient,
                                   borderRadius: BorderRadius.circular(22),
                                   boxShadow: AppTheme.modernElevation,
                                 ),
@@ -207,7 +216,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                         padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
                                           color: AppTheme.secondaryColor,
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
                                           boxShadow: const [
                                             BoxShadow(
                                               color: Color(0x33000000),
@@ -241,10 +251,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryLight,
+                                  color: AppTheme.safeBgColor(context),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: const Color(0xFFC3E8D3),
+                                    color: AppTheme.safeBorderColor(context),
                                     width: 1,
                                   ),
                                 ),
@@ -252,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   'Quản lý kho gạo thông minh',
                                   textAlign: TextAlign.center,
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: AppTheme.primaryDark,
+                                    color: AppTheme.safeTextColor(context),
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 0.8,
                                   ),
@@ -263,16 +273,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(height: 12),
 
                             // App Title
-                            const Text(
+                            Text(
                               'Smart Rice Warehouse',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 25,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: -0.5,
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.textPrimaryColor(context),
                               ),
-                            ).animate().fade(delay: 150.ms, duration: 400.ms).slideY(
+                            )
+                                .animate()
+                                .fade(delay: 150.ms, duration: 400.ms)
+                                .slideY(
                                   begin: 0.1,
                                   end: 0,
                                 ),
@@ -280,11 +293,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(height: 6),
 
                             // Subtitle
-                            const Text(
+                            Text(
                               'Đăng nhập để tiếp tục quản lý kho',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                                 fontSize: 13.5,
                               ),
                             ).animate().fade(delay: 200.ms, duration: 400.ms),
@@ -294,19 +307,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             // Card Form
                             Container(
                               decoration: BoxDecoration(
-                                color: AppTheme.cardColor,
+                                color: AppTheme.cardBg(context),
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                  color: AppTheme.borderColor.withValues(alpha: 0.8),
+                                  color: AppTheme.border(context),
                                   width: 1,
                                 ),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x0C17251F),
-                                    blurRadius: 28,
-                                    offset: Offset(0, 10),
-                                  ),
-                                ],
+                                boxShadow: isDark
+                                    ? AppTheme.darkCardShadow
+                                    : const [
+                                        BoxShadow(
+                                          color: Color(0x0C17251F),
+                                          blurRadius: 28,
+                                          offset: Offset(0, 10),
+                                        ),
+                                      ],
                               ),
                               clipBehavior: Clip.antiAlias,
                               child: Column(
@@ -347,7 +362,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                               color: AppTheme.primaryColor,
                                             ),
                                             filled: true,
-                                            fillColor: const Color(0xFFFAFBFB),
+                                            fillColor: isDark
+                                                ? const Color(0xFF131D31)
+                                                : const Color(0xFFFAFBFB),
                                             contentPadding:
                                                 const EdgeInsets.symmetric(
                                               horizontal: 16,
@@ -356,15 +373,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                             border: OutlineInputBorder(
                                               borderRadius:
                                                   BorderRadius.circular(14),
-                                              borderSide: const BorderSide(
-                                                color: AppTheme.borderColor,
+                                              borderSide: BorderSide(
+                                                color: AppTheme.border(context),
                                               ),
                                             ),
                                             enabledBorder: OutlineInputBorder(
                                               borderRadius:
                                                   BorderRadius.circular(14),
-                                              borderSide: const BorderSide(
-                                                color: AppTheme.borderColor,
+                                              borderSide: BorderSide(
+                                                color: AppTheme.border(context),
                                               ),
                                             ),
                                             focusedBorder: OutlineInputBorder(
@@ -398,7 +415,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                               color: AppTheme.primaryColor,
                                             ),
                                             filled: true,
-                                            fillColor: const Color(0xFFFAFBFB),
+                                            fillColor: isDark
+                                                ? const Color(0xFF131D31)
+                                                : const Color(0xFFFAFBFB),
                                             contentPadding:
                                                 const EdgeInsets.symmetric(
                                               horizontal: 16,
@@ -407,15 +426,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                             border: OutlineInputBorder(
                                               borderRadius:
                                                   BorderRadius.circular(14),
-                                              borderSide: const BorderSide(
-                                                color: AppTheme.borderColor,
+                                              borderSide: BorderSide(
+                                                color: AppTheme.border(context),
                                               ),
                                             ),
                                             enabledBorder: OutlineInputBorder(
                                               borderRadius:
                                                   BorderRadius.circular(14),
-                                              borderSide: const BorderSide(
-                                                color: AppTheme.borderColor,
+                                              borderSide: BorderSide(
+                                                color: AppTheme.border(context),
                                               ),
                                             ),
                                             focusedBorder: OutlineInputBorder(
@@ -436,9 +455,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                               ),
                                               icon: Icon(
                                                 _isPasswordVisible
-                                                    ? Icons.visibility_off_outlined
+                                                    ? Icons
+                                                        .visibility_off_outlined
                                                     : Icons.visibility_outlined,
-                                                color: AppTheme.textSecondary,
+                                                color: AppTheme.textSecondaryColor(context),
                                               ),
                                             ),
                                           ),
@@ -464,8 +484,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                                       height: 24,
                                                       child: Checkbox(
                                                         value: _rememberLogin,
-                                                        activeColor:
-                                                            AppTheme.primaryColor,
+                                                        activeColor: AppTheme
+                                                            .primaryColor,
                                                         shape:
                                                             RoundedRectangleBorder(
                                                           borderRadius:
@@ -480,13 +500,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                                       ),
                                                     ),
                                                     const SizedBox(width: 8),
-                                                    const Flexible(
+                                                    Flexible(
                                                       child: Text(
                                                         'Ghi nhớ đăng nhập',
                                                         style: TextStyle(
                                                           fontSize: 13,
                                                           color: AppTheme
-                                                              .textSecondary,
+                                                              .textSecondaryColor(context),
                                                         ),
                                                         overflow: TextOverflow
                                                             .ellipsis,
@@ -511,10 +531,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                                     MaterialTapTargetSize
                                                         .shrinkWrap,
                                               ),
-                                              child: const Text(
+                                              child: Text(
                                                 'Quên mật khẩu?',
                                                 style: TextStyle(
-                                                  color: AppTheme.primaryDark,
+                                                  color: isDark
+                                                      ? AppTheme.darkSafeText
+                                                      : AppTheme.primaryDark,
                                                   fontWeight: FontWeight.w700,
                                                   fontSize: 13,
                                                 ),
@@ -527,7 +549,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                         // Nút Đăng nhập
                                         FilledButton(
-                                          onPressed: _isLoading ? null : _submit,
+                                          onPressed:
+                                              _isLoading ? null : _submit,
                                           style: FilledButton.styleFrom(
                                             backgroundColor:
                                                 AppTheme.primaryColor,
@@ -565,22 +588,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                         const SizedBox(height: 18),
 
                                         // Hoặc phân cách
-                                        const Row(
+                                        Row(
                                           children: [
                                             Expanded(
                                               child: Divider(
-                                                color: AppTheme.borderColor,
+                                                color: AppTheme.border(context),
                                                 thickness: 1,
                                               ),
                                             ),
                                             Padding(
-                                              padding: EdgeInsets.symmetric(
+                                              padding: const EdgeInsets.symmetric(
                                                 horizontal: 12,
                                               ),
                                               child: Text(
                                                 'HOẶC',
                                                 style: TextStyle(
-                                                  color: AppTheme.textMuted,
+                                                  color: isDark
+                                                      ? AppTheme.darkTextMuted
+                                                      : AppTheme.textMuted,
                                                   fontSize: 11,
                                                   fontWeight: FontWeight.w700,
                                                   letterSpacing: 0.8,
@@ -589,7 +614,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                             Expanded(
                                               child: Divider(
-                                                color: AppTheme.borderColor,
+                                                color: AppTheme.border(context),
                                                 thickness: 1,
                                               ),
                                             ),
@@ -616,14 +641,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                           ),
                                           style: OutlinedButton.styleFrom(
-                                            foregroundColor:
-                                                AppTheme.primaryDark,
-                                            side: const BorderSide(
-                                              color: Color(0xFFC3E8D3),
+                                            foregroundColor: isDark
+                                                ? AppTheme.darkSafeText
+                                                : AppTheme.primaryDark,
+                                            side: BorderSide(
+                                              color: isDark
+                                                  ? AppTheme.darkSafeBorder
+                                                  : const Color(0xFFC3E8D3),
                                               width: 1.3,
                                             ),
-                                            backgroundColor:
-                                                AppTheme.primaryLight
+                                            backgroundColor: isDark
+                                                ? AppTheme.darkSafeBg
+                                                : AppTheme.primaryLight
                                                     .withValues(alpha: 0.4),
                                             padding: const EdgeInsets.symmetric(
                                               vertical: 13,
@@ -639,7 +668,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ],
                               ),
-                            ).animate().fade(delay: 250.ms, duration: 400.ms).slideY(
+                            )
+                                .animate()
+                                .fade(delay: 250.ms, duration: 400.ms)
+                                .slideY(
                                   begin: 0.08,
                                   end: 0,
                                 ),
@@ -684,7 +716,7 @@ class _RegisterDialogState extends State<_RegisterDialog> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  String _selectedRole = 'Thủ kho chính';
+  final String _selectedRole = 'staff';
   bool _submitting = false;
   bool _passwordVisible = false;
 
@@ -788,33 +820,14 @@ class _RegisterDialogState extends State<_RegisterDialog> {
                 },
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedRole,
+              TextFormField(
+                initialValue: 'Nhân viên (chờ quản trị viên kích hoạt)',
+                readOnly: true,
                 decoration: const InputDecoration(
                   labelText: 'Vai trò',
-                  prefixIcon: Icon(Icons.admin_panel_settings_outlined),
+                  helperText: 'Vai trò được quản trị viên cấp sau khi đăng ký',
+                  prefixIcon: Icon(Icons.lock_person_outlined),
                 ),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Thủ kho chính',
-                    child: Text('Thủ kho chính'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Nhân viên giao nhận',
-                    child: Text('Nhân viên giao nhận'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'Kế toán kho',
-                    child: Text('Kế toán kho'),
-                  ),
-                ],
-                onChanged: _submitting
-                    ? null
-                    : (value) {
-                        if (value != null) {
-                          setState(() => _selectedRole = value);
-                        }
-                      },
               ),
             ],
           ),
@@ -922,7 +935,8 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
+          onPressed:
+              _submitting ? null : () => Navigator.of(context).pop(false),
           child: const Text('Hủy'),
         ),
         FilledButton(
@@ -964,4 +978,3 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
     Navigator.of(context).pop(true);
   }
 }
-

@@ -80,10 +80,10 @@ class ReportFlowBarChart extends StatelessWidget {
             show: true,
             drawVerticalLine: false,
             horizontalInterval: chartMaximum / 4,
-            getDrawingHorizontalLine: (_) => const FlLine(
-              color: AppTheme.borderColor,
+            getDrawingHorizontalLine: (_) => FlLine(
+              color: AppTheme.border(context),
               strokeWidth: 1,
-              dashArray: [4, 4],
+              dashArray: const [4, 4],
             ),
           ),
           borderData: FlBorderData(show: false),
@@ -103,9 +103,9 @@ class ReportFlowBarChart extends StatelessWidget {
                   meta: meta,
                   child: Text(
                     _compactQuantity(value),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 9,
-                      color: AppTheme.textSecondary,
+                      color: AppTheme.textSecondaryColor(context),
                     ),
                   ),
                 ),
@@ -126,10 +126,10 @@ class ReportFlowBarChart extends StatelessWidget {
                     child: Text(
                       points[index].label,
                       maxLines: 1,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary,
+                        color: AppTheme.textSecondaryColor(context),
                       ),
                     ),
                   );
@@ -140,7 +140,9 @@ class ReportFlowBarChart extends StatelessWidget {
           barTouchData: BarTouchData(
             enabled: true,
             touchTooltipData: BarTouchTooltipData(
-              getTooltipColor: (_) => AppTheme.textPrimary,
+              getTooltipColor: (_) => AppTheme.isDark(context)
+                  ? AppTheme.darkCard
+                  : AppTheme.textPrimary,
               tooltipBorderRadius: BorderRadius.circular(8),
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 final point = points[group.x];
@@ -158,6 +160,7 @@ class ReportFlowBarChart extends StatelessWidget {
           ),
           barGroups: List.generate(points.length, (index) {
             final point = points[index];
+            final isDark = AppTheme.isDark(context);
             return BarChartGroupData(
               x: index,
               barsSpace: 4,
@@ -166,7 +169,9 @@ class ReportFlowBarChart extends StatelessWidget {
                   BarChartRodData(
                     toY: point.importQuantity,
                     width: 11,
-                    color: AppTheme.accentGreen,
+                    color: isDark
+                        ? const Color(0xFF34D399)
+                        : AppTheme.accentGreen,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(4),
                     ),
@@ -175,7 +180,9 @@ class ReportFlowBarChart extends StatelessWidget {
                   BarChartRodData(
                     toY: point.exportQuantity,
                     width: 11,
-                    color: AppTheme.secondaryColor,
+                    color: isDark
+                        ? const Color(0xFFFBBF24)
+                        : AppTheme.secondaryColor,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(4),
                     ),
@@ -252,14 +259,14 @@ class InventoryCompositionChart extends StatelessWidget {
                             style: AppTheme.tabularFigures(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: AppTheme.textPrimaryColor(context),
                             ),
                           ),
                           Text(
                             'kg tồn kho',
                             style: TextStyle(
                               fontSize: 10,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: AppTheme.textSecondaryColor(context),
                             ),
                           ),
                         ],
@@ -302,6 +309,8 @@ class InventoryValueTrendChart extends StatelessWidget {
         : (maximum - minimum) * 0.18;
     final minY = math.max(0.0, minimum - padding);
     final maxY = math.max(maximum + padding, minY + 1);
+    final isDark = AppTheme.isDark(context);
+    final trendColor = isDark ? const Color(0xFF38BDF8) : AppTheme.infoColor;
 
     return _ReportChartCard(
       title: 'Biến động giá trị tồn',
@@ -320,7 +329,7 @@ class InventoryValueTrendChart extends StatelessWidget {
                   style: AppTheme.tabularFigures(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.infoColor,
+                    color: trendColor,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -337,10 +346,10 @@ class InventoryValueTrendChart extends StatelessWidget {
                         show: true,
                         drawVerticalLine: false,
                         horizontalInterval: (maxY - minY) / 3,
-                        getDrawingHorizontalLine: (_) => const FlLine(
-                          color: AppTheme.borderColor,
+                        getDrawingHorizontalLine: (_) => FlLine(
+                          color: AppTheme.border(context),
                           strokeWidth: 1,
-                          dashArray: [4, 4],
+                          dashArray: const [4, 4],
                         ),
                       ),
                       titlesData: FlTitlesData(
@@ -359,9 +368,9 @@ class InventoryValueTrendChart extends StatelessWidget {
                               meta: meta,
                               child: Text(
                                 _compactCurrency(value),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 9,
-                                  color: AppTheme.textSecondary,
+                                  color: AppTheme.textSecondaryColor(context),
                                 ),
                               ),
                             ),
@@ -383,10 +392,10 @@ class InventoryValueTrendChart extends StatelessWidget {
                                 space: 7,
                                 child: Text(
                                   '${date.day}/${date.month}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.textSecondary,
+                                    color: AppTheme.textSecondaryColor(context),
                                   ),
                                 ),
                               );
@@ -396,7 +405,9 @@ class InventoryValueTrendChart extends StatelessWidget {
                       ),
                       lineTouchData: LineTouchData(
                         touchTooltipData: LineTouchTooltipData(
-                          getTooltipColor: (_) => AppTheme.textPrimary,
+                          getTooltipColor: (_) => isDark
+                              ? AppTheme.darkCard
+                              : AppTheme.textPrimary,
                           getTooltipItems: (spots) => spots
                               .map(
                                 (spot) => LineTooltipItem(
@@ -422,7 +433,7 @@ class InventoryValueTrendChart extends StatelessWidget {
                           ),
                           isCurved: true,
                           curveSmoothness: 0.22,
-                          color: AppTheme.infoColor,
+                          color: trendColor,
                           barWidth: 3,
                           isStrokeCapRound: true,
                           dotData: const FlDotData(show: false),
@@ -432,8 +443,8 @@ class InventoryValueTrendChart extends StatelessWidget {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                AppTheme.infoColor.withValues(alpha: 0.22),
-                                AppTheme.infoColor.withValues(alpha: 0.02),
+                                trendColor.withValues(alpha: isDark ? 0.35 : 0.22),
+                                trendColor.withValues(alpha: 0.01),
                               ],
                             ),
                           ),
@@ -465,7 +476,13 @@ class _ReportChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     return Card(
+      color: AppTheme.cardBg(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppTheme.border(context)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -477,10 +494,18 @@ class _ReportChartCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryLight,
+                    color: isDark
+                        ? AppTheme.primaryDark.withValues(alpha: 0.25)
+                        : AppTheme.primaryLight,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(icon, size: 20, color: AppTheme.primaryDark),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: isDark
+                        ? const Color(0xFF34D399)
+                        : AppTheme.primaryDark,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -492,7 +517,7 @@ class _ReportChartCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: AppTheme.textPrimaryColor(context),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -500,7 +525,7 @@ class _ReportChartCard extends StatelessWidget {
                         subtitle,
                         style: TextStyle(
                           fontSize: 10.5,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: AppTheme.textSecondaryColor(context),
                         ),
                       ),
                     ],
@@ -536,10 +561,10 @@ class _ChartLegend extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w600,
-            color: AppTheme.textSecondary,
+            color: AppTheme.textSecondaryColor(context),
           ),
         ),
       ],
@@ -554,22 +579,25 @@ class _ChartEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.query_stats_rounded,
-            color: AppTheme.textMuted,
+            color: isDark
+                ? AppTheme.darkTextSecondary.withValues(alpha: 0.5)
+                : AppTheme.textMuted,
             size: 30,
           ),
           const SizedBox(height: 8),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: AppTheme.textSecondary,
+              color: AppTheme.textSecondaryColor(context),
             ),
           ),
         ],

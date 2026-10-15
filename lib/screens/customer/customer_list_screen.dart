@@ -58,12 +58,14 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     }
 
     final exportProvider = context.read<ExportProvider>();
-    if (context.read<CustomerProvider>().deleteCustomer(
+    final deleted = await context.read<CustomerProvider>().deleteCustomerOnline(
           customer.id,
           isReferenced: (id) => exportProvider.receipts.any(
             (receipt) => receipt.customerId == id,
           ),
-        )) {
+        );
+    if (!mounted) return;
+    if (deleted) {
       _showMessage('Đã xóa khách hàng');
     } else {
       _showMessage('Không thể xóa: khách hàng đã có phiếu xuất liên quan.');

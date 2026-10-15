@@ -185,21 +185,23 @@ class RiceCharacteristicsScreen extends StatelessWidget {
                   child: const Text('Hủy'),
                 ),
                 FilledButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (!(formKey.currentState?.validate() ?? false)) {
                       return;
                     }
                     final provider =
                         context.read<RiceCharacteristicProvider>();
+                    final bool saved;
+                    String successMessage;
                     if (isEditing) {
                       final updated = characteristic.copyWith(
                         name: nameController.text.trim(),
                         description: descController.text.trim(),
                         colorValue: selectedColor,
                       );
-                      provider.updateCharacteristic(updated);
-                      AppToast.success(
-                          context, 'Đã cập nhật đặc tính "${updated.name}"');
+                      saved = await provider.updateCharacteristicOnline(updated);
+                      successMessage =
+                          'Đã cập nhật đặc tính "${updated.name}"';
                     } else {
                       final newChar = RiceCharacteristicModel(
                         id: 'char-${const Uuid().v4().substring(0, 8)}',
@@ -208,10 +210,19 @@ class RiceCharacteristicsScreen extends StatelessWidget {
                         colorValue: selectedColor,
                         isDefault: false,
                       );
-                      provider.addCharacteristic(newChar);
-                      AppToast.success(
-                          context, 'Đã thêm đặc tính "${newChar.name}"');
+                      saved = await provider.addCharacteristicOnline(newChar);
+                      successMessage = 'Đã thêm đặc tính "${newChar.name}"';
                     }
+                    if (!context.mounted || !dialogCtx.mounted) return;
+                    if (!saved) {
+                      AppToast.error(
+                        context,
+                        provider.errorMessage ??
+                            'Không thể lưu. Vui lòng kiểm tra tên đặc tính.',
+                      );
+                      return;
+                    }
+                    AppToast.success(context, successMessage);
                     Navigator.of(dialogCtx).pop();
                   },
                   child: const Text('Lưu'),
@@ -250,12 +261,29 @@ class RiceCharacteristicsScreen extends StatelessWidget {
 
     if (confirmed && context.mounted) {
       final charProvider = context.read<RiceCharacteristicProvider>();
-      charProvider.deleteCharacteristic(
+      final detached = await riceProvider.removeCharacteristicFromAllOnline(
         characteristic.id,
-        onDeleted: (deletedId) {
-          riceProvider.removeCharacteristicFromAll(deletedId);
-        },
       );
+      if (!detached || !context.mounted) {
+        if (context.mounted) {
+          AppToast.error(
+            context,
+            riceProvider.errorMessage ?? 'Không thể gỡ đặc tính khỏi sản phẩm.',
+          );
+        }
+        return;
+      }
+      final deleted =
+          await charProvider.deleteCharacteristicOnline(characteristic.id);
+      if (!deleted || !context.mounted) {
+        if (context.mounted) {
+          AppToast.error(
+            context,
+            charProvider.errorMessage ?? 'Không thể xóa đặc tính.',
+          );
+        }
+        return;
+      }
       if (context.mounted) {
         AppToast.success(context, 'Đã xóa đặc tính "${characteristic.name}"');
       }

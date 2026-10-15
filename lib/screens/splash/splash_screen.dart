@@ -45,14 +45,15 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  void _openNextScreen() {
+  Future<void> _openNextScreen() async {
     if (!mounted) {
       return;
     }
 
-    final route = context.read<AuthProvider>().isLoggedIn
-        ? AppRoutes.home
-        : AppRoutes.login;
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.waitUntilReady();
+    if (!mounted) return;
+    final route = authProvider.isLoggedIn ? AppRoutes.home : AppRoutes.login;
     Navigator.of(context).pushReplacementNamed(route);
   }
 
@@ -219,7 +220,8 @@ class _SplashScreenState extends State<SplashScreen>
                         child: Column(
                           children: [
                             const ClipRRect(
-                              borderRadius: BorderRadius.all(Radius.circular(6)),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(6)),
                               child: LinearProgressIndicator(
                                 minHeight: 4,
                                 color: AppTheme.primaryColor,

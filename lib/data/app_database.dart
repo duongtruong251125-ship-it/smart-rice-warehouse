@@ -72,10 +72,11 @@ class AppDatabase {
     return AppDatabase._(database);
   }
 
-  Future<AppSnapshot> loadSnapshot() async {
+  Future<AppSnapshot> loadSnapshot({String? authUid}) async {
     return AppSnapshot(
       rices: await _load('rices', RiceModel.fromJson),
-      characteristics: await _load('characteristics', RiceCharacteristicModel.fromJson),
+      characteristics:
+          await _load('characteristics', RiceCharacteristicModel.fromJson),
       suppliers: await _load('suppliers', SupplierModel.fromJson),
       customers: await _load('customers', CustomerModel.fromJson),
       batches: await _load('batches', BatchModel.fromJson),
@@ -96,7 +97,7 @@ class AppDatabase {
       passwordHash: await _loadValue<String>('password_hash'),
       userName: await _loadValue<String>('user_name'),
       userRole: await _loadValue<String>('user_role'),
-      avatarPath: await _loadValue<String>('avatar_path'),
+      avatarPath: await _loadAvatarForSnapshot(authUid),
       rememberedSession: await _loadValue<bool>('remembered_session') ?? false,
     );
   }
@@ -176,6 +177,40 @@ class AppDatabase {
     if (avatarPath != null) _saveValue('avatar_path', avatarPath);
   }
 
+  Future<String?> loadAvatarPath(String uid) {
+    return _loadValue<String>(_avatarKey(uid));
+  }
+
+  Future<String?> _loadAvatarForSnapshot(String? uid) async {
+    final legacyPath = await _loadValue<String>('avatar_path');
+    if (uid == null) return legacyPath;
+    final userPath = await loadAvatarPath(uid);
+    if (userPath != null || legacyPath == null) return userPath;
+
+    // One-time compatibility bridge: attach the old single-device avatar to
+    // the authenticated Firebase uid without uploading the path to Firestore.
+    await _database.insert(
+      'app_state',
+      {
+        'state_key': _avatarKey(uid),
+        'payload': jsonEncode(legacyPath),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    return legacyPath;
+  }
+
+  void saveAvatarPath(String uid, String? avatarPath) {
+    final key = _avatarKey(uid);
+    if (avatarPath == null || avatarPath.trim().isEmpty) {
+      _deleteValue(key);
+      return;
+    }
+    _saveValue(key, avatarPath);
+  }
+
+  String _avatarKey(String uid) => 'avatar_path_${uid.trim()}';
+
   void _saveValue(String key, Object value) {
     final payload = jsonEncode(value);
     _writeQueue = _writeQueue.then((_) async {
@@ -194,6 +229,16 @@ class AppDatabase {
         'app_state',
         {'state_key': key, 'payload': payload},
         conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
+  }
+
+  void _deleteValue(String key) {
+    _writeQueue = _writeQueue.then((_) async {
+      await _database.delete(
+        'app_state',
+        where: 'state_key = ?',
+        whereArgs: [key],
       );
     });
   }

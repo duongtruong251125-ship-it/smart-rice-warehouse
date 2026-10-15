@@ -67,7 +67,7 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 20),
 
         // --- TẦNG 3: NHÓM CHỨC NĂNG VẬN HÀNH HIỆN TRƯỜNG ---
-        _buildSectionHeader('Vận hành Hiện trường & Kiểm soát'),
+        _buildSectionHeader('Vận hành Hiện trường & Kiểm soát', context),
         const SizedBox(height: 10),
         _HubItemCard(
           title: 'Sơ đồ vị trí Silo & Kệ',
@@ -94,7 +94,7 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 20),
 
         // --- TẦNG 4: QUẢN TRỊ DANH MỤC & LÔ HÀNG ---
-        _buildSectionHeader('Quản trị Danh mục & Lô hàng'),
+        _buildSectionHeader('Quản trị Danh mục & Lô hàng', context),
         const SizedBox(height: 10),
         _HubItemCard(
           title: 'Tồn kho khả dụng',
@@ -132,7 +132,7 @@ class WarehouseHub extends StatelessWidget {
         const SizedBox(height: 20),
 
         // --- TẦNG 5: ĐỐI TÁC CHUỖI CUNG ỨNG ---
-        _buildSectionHeader('Đối tác Chuỗi cung ứng'),
+        _buildSectionHeader('Đối tác Chuỗi cung ứng', context),
         const SizedBox(height: 10),
         _HubItemCard(
           title: 'Nhà cung cấp lúa gạo',
@@ -159,13 +159,13 @@ class WarehouseHub extends StatelessWidget {
     );
   }
 
-  static Widget _buildSectionHeader(String title) {
+  static Widget _buildSectionHeader(String title, BuildContext context) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 15,
         fontWeight: FontWeight.w800,
-        color: AppTheme.textPrimary,
+        color: AppTheme.textPrimaryColor(context),
         letterSpacing: -0.2,
       ),
     );
@@ -192,12 +192,13 @@ class _WarehouseHeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
       decoration: BoxDecoration(
-        gradient: AppTheme.heroEmeraldGradient,
+        gradient: AppTheme.heroGradient(context),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppTheme.modernElevation,
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.modernElevation,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,30 +315,38 @@ class _BannerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     return PressableScale(
       onTap: onTap,
       scaleFactor: 0.95,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? AppTheme.darkCard : Colors.white,
           borderRadius: BorderRadius.circular(12),
+          border: isDark ? Border.all(color: AppTheme.darkBorder) : null,
         ),
         padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 16, color: AppTheme.primaryDark),
+            Icon(
+              icon,
+              size: 16,
+              color: isDark ? const Color(0xFF34D399) : AppTheme.primaryDark,
+            ),
             const SizedBox(width: 6),
             Flexible(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.primaryDark,
+                    color: isDark
+                        ? const Color(0xFF34D399)
+                        : AppTheme.primaryDark,
                   ),
                 ),
               ),
@@ -369,25 +378,25 @@ class _WarehouseCapacityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = AppTheme.isDark(context);
+    final primaryAccent = isDark ? const Color(0xFF34D399) : AppTheme.primaryColor;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: AppTheme.cardBg(context),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          color: AppTheme.border(context),
         ),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.warehouse_rounded, size: 18, color: AppTheme.primaryColor),
+              Icon(Icons.warehouse_rounded, size: 18, color: primaryAccent),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -397,15 +406,15 @@ class _WarehouseCapacityCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w800,
-                    color: colorScheme.onSurface,
+                    color: AppTheme.textPrimaryColor(context),
                   ),
                 ),
               ),
               InkWell(
                 onTap: onViewLocations,
                 borderRadius: BorderRadius.circular(8),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -414,10 +423,10 @@ class _WarehouseCapacityCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
-                          color: AppTheme.primaryColor,
+                          color: primaryAccent,
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded, size: 16, color: AppTheme.primaryColor),
+                      Icon(Icons.chevron_right_rounded, size: 16, color: primaryAccent),
                     ],
                   ),
                 ),
@@ -441,7 +450,7 @@ class _WarehouseCapacityCard extends StatelessWidget {
                           style: AppTheme.tabularFigures(
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
-                            color: colorScheme.onSurface,
+                            color: AppTheme.textPrimaryColor(context),
                           ),
                         ),
                       ),
@@ -452,7 +461,7 @@ class _WarehouseCapacityCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurfaceVariant,
+                        color: AppTheme.textSecondaryColor(context),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -461,7 +470,7 @@ class _WarehouseCapacityCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: colorScheme.onSurfaceVariant,
+                        color: AppTheme.textSecondaryColor(context),
                       ),
                     ),
                   ],
@@ -471,15 +480,16 @@ class _WarehouseCapacityCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
+                  color: isDark ? AppTheme.darkBackground : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.border(context)),
                 ),
                 child: Text(
                   'Lấp đầy: ${(capacityPercent * 100).toInt()}%',
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
-                    color: colorScheme.onSurfaceVariant,
+                    color: AppTheme.textSecondaryColor(context),
                   ),
                 ),
               ),
@@ -491,9 +501,11 @@ class _WarehouseCapacityCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: capacityPercent,
               minHeight: 7,
-              backgroundColor: const Color(0xFFE2E8F0),
+              backgroundColor: isDark ? const Color(0xFF131D31) : const Color(0xFFE2E8F0),
               valueColor: AlwaysStoppedAnimation<Color>(
-                capacityPercent > 0.85 ? AppTheme.dangerColor : AppTheme.primaryColor,
+                capacityPercent > 0.85
+                    ? (isDark ? const Color(0xFFF87171) : AppTheme.dangerColor)
+                    : primaryAccent,
               ),
             ),
           ),
@@ -529,8 +541,7 @@ class _HubItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = AppTheme.isDark(context);
 
     return PressableScale(
       onTap: () => Navigator.of(context).pushNamed(route),
@@ -539,12 +550,12 @@ class _HubItemCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
-          color: theme.cardColor,
+          color: AppTheme.cardBg(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            color: AppTheme.border(context),
           ),
-          boxShadow: AppTheme.softShadow,
+          boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.softShadow,
         ),
         child: Row(
           children: [
@@ -552,7 +563,7 @@ class _HubItemCard extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: iconBgColor,
+                color: isDark ? iconColor.withValues(alpha: 0.18) : iconBgColor,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: iconColor, size: 20),
@@ -572,7 +583,7 @@ class _HubItemCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
-                            color: colorScheme.onSurface,
+                            color: AppTheme.textPrimaryColor(context),
                           ),
                         ),
                       ),
@@ -580,7 +591,7 @@ class _HubItemCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.12),
+                          color: badgeColor.withValues(alpha: isDark ? 0.2 : 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -604,7 +615,7 @@ class _HubItemCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: colorScheme.onSurfaceVariant,
+                      color: AppTheme.textSecondaryColor(context),
                     ),
                   ),
                 ],
@@ -614,7 +625,7 @@ class _HubItemCard extends StatelessWidget {
             Icon(
               Icons.chevron_right_rounded,
               size: 18,
-              color: colorScheme.onSurfaceVariant,
+              color: AppTheme.textSecondaryColor(context),
             ),
           ],
         ),

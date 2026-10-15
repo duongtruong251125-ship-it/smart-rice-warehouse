@@ -91,7 +91,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         children: [
           // 1. Thanh công cụ tìm kiếm thông minh + Hàng Filter Chips ngang
           Container(
-            color: AppTheme.cardColor,
+            color: AppTheme.cardBg(context),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,10 +131,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 // Thống kê tóm tắt theo bộ lọc
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.inventory_2_outlined,
                       size: 15,
-                      color: AppTheme.primaryColor,
+                      color: AppTheme.isDark(context)
+                          ? const Color(0xFF34D399)
+                          : AppTheme.primaryColor,
                     ),
                     const SizedBox(width: 6),
                     Expanded(
@@ -142,8 +144,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         'Hiển thị: ${filteredRices.length} loại gạo • '
                         'Tổng: ${totalKg >= 1000 ? '${totalTons.toStringAsFixed(2).replaceAll('.', ',')} Tấn' : '${NumberFormatter.quantity(totalKg)} kg'} '
                         '(~ $totalBags bao)',
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryColor(context),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -154,7 +156,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: AppTheme.border(context)),
 
           // 2. Danh sách Modern Data Cards
           Expanded(
@@ -216,16 +218,19 @@ class _ModernInventoryCard extends StatelessWidget {
     final bagsCount = (totalStock / 50.0).round();
     final tons = totalStock / 1000.0;
 
-    final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: AppTheme.cardBg(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isLowStock ? AppTheme.warningBorder : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          color: isLowStock
+              ? (isDark ? AppTheme.darkWarningBorder : AppTheme.warningBorder)
+              : AppTheme.border(context),
           width: 1,
         ),
-        boxShadow: AppTheme.softShadow,
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.softShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -254,10 +259,10 @@ class _ModernInventoryCard extends StatelessWidget {
                           rice.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.textPrimaryColor(context),
                             letterSpacing: -0.2,
                           ),
                         ),
@@ -268,15 +273,17 @@ class _ModernInventoryCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 1.5),
                               decoration: BoxDecoration(
-                                color: AppTheme.surfaceMuted,
+                                color: isDark
+                                    ? const Color(0xFF131D31)
+                                    : AppTheme.surfaceMuted,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 rice.code,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w700,
-                                  color: AppTheme.textSecondary,
+                                  color: AppTheme.textSecondaryColor(context),
                                 ),
                               ),
                             ),
@@ -286,9 +293,9 @@ class _ModernInventoryCard extends StatelessWidget {
                                 rice.category,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11.5,
-                                  color: AppTheme.textSecondary,
+                                  color: AppTheme.textSecondaryColor(context),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -318,10 +325,10 @@ class _ModernInventoryCard extends StatelessWidget {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.1),
+                            color: color.withValues(alpha: isDark ? 0.2 : 0.1),
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
-                              color: color.withValues(alpha: 0.3),
+                              color: color.withValues(alpha: isDark ? 0.45 : 0.3),
                               width: 0.8,
                             ),
                           ),
@@ -345,9 +352,11 @@ class _ModernInventoryCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: isDark
+                      ? AppTheme.darkBackground
+                      : const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.borderColor),
+                  border: Border.all(color: AppTheme.border(context)),
                 ),
                 child: Column(
                   children: [
@@ -357,12 +366,12 @@ class _ModernInventoryCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
-                        const Text(
+                        Text(
                           'Số lượng tồn thực tế:',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.textSecondary,
+                            color: AppTheme.textSecondaryColor(context),
                           ),
                         ),
                         Row(
@@ -375,8 +384,12 @@ class _ModernInventoryCard extends StatelessWidget {
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
                                 color: isLowStock
-                                    ? AppTheme.warningText
-                                    : AppTheme.primaryDark,
+                                    ? (isDark
+                                        ? const Color(0xFFFBBF24)
+                                        : AppTheme.warningText)
+                                    : (isDark
+                                        ? const Color(0xFF34D399)
+                                        : AppTheme.primaryDark),
                                 fontFeatures: const [
                                   FontFeature.tabularFigures()
                                 ],
@@ -385,25 +398,25 @@ class _ModernInventoryCard extends StatelessWidget {
                             const SizedBox(width: 5),
                             Text(
                               '(~ $bagsCount bao 50kg)',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11.5,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                               ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    const Divider(height: 14),
+                    Divider(height: 14, color: AppTheme.border(context)),
 
                     // Vị trí Silo / Kệ và Quy cách đóng gói
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.warehouse_outlined,
                           size: 14,
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.textSecondaryColor(context),
                         ),
                         const SizedBox(width: 4),
                         Expanded(
@@ -411,9 +424,9 @@ class _ModernInventoryCard extends StatelessWidget {
                             'Vị trí: $locationText',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11.5,
-                              color: AppTheme.textSecondary,
+                              color: AppTheme.textSecondaryColor(context),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -421,10 +434,12 @@ class _ModernInventoryCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           '$batchCount lô lưu kho',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.accentTeal,
+                            color: isDark
+                                ? const Color(0xFF38BDF8)
+                                : AppTheme.accentTeal,
                           ),
                         ),
                       ],
@@ -443,39 +458,42 @@ class _ModernInventoryCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 8),
                       minimumSize: const Size(0, 36),
-                      side: const BorderSide(color: AppTheme.borderColor),
+                      side: BorderSide(color: AppTheme.border(context)),
                     ),
                     onPressed: () =>
                         Navigator.of(context).pushNamed(AppRoutes.batches),
-                    icon: const Icon(Icons.qr_code_2_rounded,
-                        size: 16, color: AppTheme.textSecondary),
-                    label: const Text(
+                    icon: Icon(Icons.qr_code_2_rounded,
+                        size: 16, color: AppTheme.textSecondaryColor(context)),
+                    label: Text(
                       'Lô hàng',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.textPrimaryColor(context),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
+                      backgroundColor: isDark
+                          ? const Color(0xFF10B981)
+                          : AppTheme.primaryColor,
+                      foregroundColor: isDark ? const Color(0xFF0B1120) : Colors.white,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       minimumSize: const Size(0, 36),
                     ),
                     onPressed: () =>
                         Navigator.of(context).pushNamed(AppRoutes.addImport),
-                    icon: const Icon(Icons.add_circle_outline_rounded,
-                        size: 16, color: Colors.white),
-                    label: const Text(
+                    icon: Icon(Icons.add_circle_outline_rounded,
+                        size: 16, color: isDark ? const Color(0xFF0B1120) : Colors.white),
+                    label: Text(
                       'Nhập thêm',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: isDark ? const Color(0xFF0B1120) : Colors.white,
                       ),
                     ),
                   ),

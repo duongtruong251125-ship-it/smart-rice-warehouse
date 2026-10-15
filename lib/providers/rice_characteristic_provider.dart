@@ -1,26 +1,57 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:smart_rice_warehouse/models/rice_characteristic_model.dart';
+import 'package:smart_rice_warehouse/repositories/contracts/crud_repository.dart';
 
 class RiceCharacteristicProvider extends ChangeNotifier {
   RiceCharacteristicProvider({
     List<RiceCharacteristicModel>? initial,
     this.onPersist,
+    this.repository,
   }) : _characteristics = List<RiceCharacteristicModel>.from(
           initial ?? MockData.defaultCharacteristics,
-        );
+        ) {
+    if (repository != null) _subscribeToFirestore();
+  }
 
   final List<RiceCharacteristicModel> _characteristics;
   final ValueChanged<List<RiceCharacteristicModel>>? onPersist;
+  final CrudRepository<RiceCharacteristicModel>? repository;
+  StreamSubscription<List<RiceCharacteristicModel>>? _subscription;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   List<RiceCharacteristicModel> get characteristics =>
       List<RiceCharacteristicModel>.unmodifiable(_characteristics);
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  bool get usesFirestore => repository != null;
+
+  void _subscribeToFirestore() {
+    _isLoading = true;
+    _subscription = repository!.watchAll().listen(
+      (values) {
+        _characteristics
+          ..clear()
+          ..addAll(values);
+        _isLoading = false;
+        _errorMessage = null;
+        onPersist?.call(characteristics);
+        notifyListeners();
+      },
+      onError: (Object error) {
+        _isLoading = false;
+        _errorMessage = 'Không thể đồng bộ đặc tính gạo: $error';
+        notifyListeners();
+      },
+    );
+  }
 
   RiceCharacteristicModel? findById(String id) {
-    for (final char in _characteristics) {
-      if (char.id == id) {
-        return char;
-      }
+    for (final item in _characteristics) {
+      if (item.id == id) return item;
     }
     return null;
   }
@@ -28,14 +59,63 @@ class RiceCharacteristicProvider extends ChangeNotifier {
   bool isNameExists(String name, {String? excludeId}) {
     final normalized = name.trim().toLowerCase();
     return _characteristics.any(
-      (c) => c.id != excludeId && c.name.trim().toLowerCase() == normalized,
+      (item) =>
+          item.id != excludeId &&
+          item.name.trim().toLowerCase() == normalized,
     );
   }
 
-  bool addCharacteristic(RiceCharacteristicModel characteristic) {
-    if (isNameExists(characteristic.name)) {
+  Future<bool> addCharacteristicOnline(
+    RiceCharacteristicModel characteristic,
+  ) async {
+    if (repository == null) return addCharacteristic(characteristic);
+    if (isNameExists(characteristic.name)) return false;
+    try {
+      await repository!.create(characteristic.id, characteristic);
+      _errorMessage = null;
+      return true;
+    } catch (error) {
+      _errorMessage = 'Không thể thêm đặc tính: $error';
+      notifyListeners();
       return false;
     }
+  }
+
+  Future<bool> updateCharacteristicOnline(
+    RiceCharacteristicModel characteristic,
+  ) async {
+    if (repository == null) return updateCharacteristic(characteristic);
+    if (findById(characteristic.id) == null ||
+        isNameExists(characteristic.name, excludeId: characteristic.id)) {
+      return false;
+    }
+    try {
+      await repository!.update(characteristic.id, characteristic);
+      _errorMessage = null;
+      return true;
+    } catch (error) {
+      _errorMessage = 'Không thể cập nhật đặc tính: $error';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteCharacteristicOnline(String id) async {
+    if (repository == null) return deleteCharacteristic(id);
+    if (findById(id) == null) return false;
+    try {
+      await repository!.delete(id);
+      _errorMessage = null;
+      return true;
+    } catch (error) {
+      _errorMessage = 'Không thể xóa đặc tính: $error';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  bool addCharacteristic(RiceCharacteristicModel characteristic) {
+    if (repository != null || isNameExists(characteristic.name)) return false;
     _characteristics.add(characteristic);
     onPersist?.call(characteristics);
     notifyListeners();
@@ -43,13 +123,13 @@ class RiceCharacteristicProvider extends ChangeNotifier {
   }
 
   bool updateCharacteristic(RiceCharacteristicModel characteristic) {
+    if (repository != null) return false;
     final index =
         _characteristics.indexWhere((item) => item.id == characteristic.id);
     if (index == -1 ||
         isNameExists(characteristic.name, excludeId: characteristic.id)) {
       return false;
     }
-
     _characteristics[index] = characteristic;
     onPersist?.call(characteristics);
     notifyListeners();
@@ -57,11 +137,9 @@ class RiceCharacteristicProvider extends ChangeNotifier {
   }
 
   bool deleteCharacteristic(String id, {void Function(String id)? onDeleted}) {
+    if (repository != null) return false;
     final index = _characteristics.indexWhere((item) => item.id == id);
-    if (index == -1) {
-      return false;
-    }
-
+    if (index == -1) return false;
     _characteristics.removeAt(index);
     onDeleted?.call(id);
     onPersist?.call(characteristics);
@@ -73,7 +151,13 @@ class RiceCharacteristicProvider extends ChangeNotifier {
     if (ids.isEmpty) return const [];
     final idSet = ids.toSet();
     return _characteristics
-        .where((c) => idSet.contains(c.id))
+        .where((item) => idSet.contains(item.id))
         .toList(growable: false);
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }

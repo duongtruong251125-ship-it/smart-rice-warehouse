@@ -88,6 +88,134 @@ abstract final class AppTheme {
     ),
   ];
 
+  // ==========================================
+  // DARK MODE TOKENS - DEEP EMERALD SLATE
+  // ==========================================
+  static const Color darkBackground = Color(0xFF0B1120); // Slate 950 sâu thẳm
+  static const Color darkCard = Color(0xFF1E293B); // Slate 800 bề mặt thẻ
+  static const Color darkCardElevated = Color(0xFF243048); // Slate 750 phân tầng cao
+  static const Color darkBorder = Color(0xFF334155); // Slate 700 viền
+  static const Color darkBorderSubtle = Color(0x1FFFFFFF); // Viền mờ 12%
+
+  static const Color darkTextPrimary = Color(0xFFF8FAFC); // Slate 50 trắng sáng dịu
+  static const Color darkTextSecondary = Color(0xFF94A3B8); // Slate 400 xám bạc rõ ràng
+  static const Color darkTextMuted = Color(0xFF64748B); // Slate 500
+
+  // Thẻ trạng thái phát quang (Glow Tint) cho Dark Mode
+  static const Color darkSafeBg = Color(0x2610B981); // Emerald 15%
+  static const Color darkSafeBorder = Color(0x4D34D399); // Emerald 30%
+  static const Color darkSafeText = Color(0xFF34D399); // Emerald neon
+
+  static const Color darkWarningBg = Color(0x26F59E0B); // Amber 15%
+  static const Color darkWarningBorder = Color(0x4DFBBF24); // Amber 30%
+  static const Color darkWarningText = Color(0xFFFBBF24); // Amber neon
+
+  static const Color darkDangerBg = Color(0x26EF4444); // Rose 15%
+  static const Color darkDangerBorder = Color(0x4DF87171); // Rose 30%
+  static const Color darkDangerText = Color(0xFFF87171); // Rose neon
+
+  static const Color darkInfoBg = Color(0x263B82F6); // Blue 15%
+  static const Color darkInfoBorder = Color(0x4D60A5FA); // Blue 30%
+  static const Color darkInfoText = Color(0xFF60A5FA); // Blue neon
+
+  // Dark Gradients & Shadows
+  static const LinearGradient darkHeroGradient = LinearGradient(
+    colors: [Color(0xFF064E3B), Color(0xFF0F766E), Color(0xFF065F46)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient darkCardGradient = LinearGradient(
+    colors: [Color(0xFF1E293B), Color(0xFF162032)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const List<BoxShadow> darkCardShadow = [
+    BoxShadow(
+      color: Color(0x40000000),
+      blurRadius: 16,
+      offset: Offset(0, 4),
+    ),
+  ];
+
+  // ==========================================
+  // DYNAMIC CONTEXT-AWARE HELPERS
+  // ==========================================
+  static bool isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  static Color scaffoldBg(BuildContext context) =>
+      isDark(context) ? darkBackground : backgroundColor;
+
+  static Color cardBg(BuildContext context) =>
+      isDark(context) ? darkCard : cardColor;
+
+  static Color elevatedCardBg(BuildContext context) =>
+      isDark(context) ? darkCardElevated : cardColor;
+
+  static Color border(BuildContext context) =>
+      isDark(context) ? darkBorder : borderColor;
+
+  static Color textPrimaryColor(BuildContext context) =>
+      isDark(context) ? darkTextPrimary : textPrimary;
+
+  static Color textSecondaryColor(BuildContext context) =>
+      isDark(context) ? darkTextSecondary : textSecondary;
+
+  static Color safeBgColor(BuildContext context) =>
+      isDark(context) ? darkSafeBg : safeBg;
+
+  static Color safeTextColor(BuildContext context) =>
+      isDark(context) ? darkSafeText : safeText;
+
+  static Color safeBorderColor(BuildContext context) =>
+      isDark(context) ? darkSafeBorder : safeBorder;
+
+  static Color warningBgColor(BuildContext context) =>
+      isDark(context) ? darkWarningBg : warningBg;
+
+  static Color warningTextColor(BuildContext context) =>
+      isDark(context) ? darkWarningText : warningText;
+
+  static Color warningBorderColor(BuildContext context) =>
+      isDark(context) ? darkWarningBorder : warningBorder;
+
+  static Color dangerBgColor(BuildContext context) =>
+      isDark(context) ? darkDangerBg : dangerBg;
+
+  static Color dangerTextColor(BuildContext context) =>
+      isDark(context) ? darkDangerText : dangerText;
+
+  static Color dangerBorderColor(BuildContext context) =>
+      isDark(context) ? darkDangerBorder : dangerBorder;
+
+  static Color infoBgColor(BuildContext context) =>
+      isDark(context) ? darkInfoBg : infoLight;
+
+  static Color infoTextColor(BuildContext context) =>
+      isDark(context) ? darkInfoText : infoColor;
+
+  static LinearGradient heroGradient(BuildContext context) =>
+      isDark(context) ? darkHeroGradient : heroEmeraldGradient;
+
+  static BoxDecoration modernCardDecoration(
+    BuildContext context, {
+    BorderRadius? borderRadius,
+    Color? borderColor,
+  }) {
+    final dark = isDark(context);
+    return BoxDecoration(
+      color: dark ? darkCard : cardColor,
+      borderRadius: borderRadius ?? BorderRadius.circular(16),
+      border: Border.all(
+        color: borderColor ?? (dark ? darkBorder : AppTheme.borderColor),
+        width: 1,
+      ),
+      boxShadow: dark ? darkCardShadow : cardShadow,
+    );
+  }
+
   // Tabular Numbers TextStyle Helper
   static TextStyle tabularFigures({
     double? fontSize,
@@ -296,20 +424,24 @@ abstract final class AppTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: primaryColor,
       brightness: Brightness.dark,
-      surface: const Color(0xFF1E293B),
+      surface: darkCard,
     ).copyWith(
       primary: primaryColor,
       onPrimary: Colors.white,
-      primaryContainer: primaryDark,
-      onPrimaryContainer: Colors.white,
+      primaryContainer: const Color(0xFF064E3B),
+      onPrimaryContainer: darkSafeText,
       secondary: warningColor,
       onSecondary: Colors.white,
+      secondaryContainer: const Color(0xFF451A03),
+      onSecondaryContainer: darkWarningText,
       error: dangerColor,
-      surface: const Color(0xFF1E293B),
-      onSurface: Colors.white,
-      onSurfaceVariant: const Color(0xFF94A3B8),
-      outline: const Color(0xFF334155),
-      outlineVariant: const Color(0xFF475569),
+      errorContainer: const Color(0xFF4C0519),
+      onErrorContainer: darkDangerText,
+      surface: darkCard,
+      onSurface: darkTextPrimary,
+      onSurfaceVariant: darkTextSecondary,
+      outline: darkBorder,
+      outlineVariant: const Color(0xFF1E293B),
     );
 
     const cardBorderRadius = BorderRadius.all(Radius.circular(14));
@@ -318,75 +450,82 @@ abstract final class AppTheme {
 
     const outlineBorder = OutlineInputBorder(
       borderRadius: inputBorderRadius,
-      borderSide: BorderSide(color: Color(0xFF334155), width: 1),
+      borderSide: BorderSide(color: darkBorder, width: 1),
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: const Color(0xFF0F172A),
-      cardColor: const Color(0xFF1E293B),
+      scaffoldBackgroundColor: darkBackground,
+      cardColor: darkCard,
+      dividerColor: darkBorder,
       dividerTheme: const DividerThemeData(
-        color: Color(0xFF334155),
+        color: darkBorder,
         thickness: 1,
         space: 1,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF1E293B),
-        foregroundColor: Colors.white,
+        backgroundColor: darkCard,
+        foregroundColor: darkTextPrimary,
         surfaceTintColor: Colors.transparent,
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
-        shape: Border(bottom: BorderSide(color: Color(0xFF334155), width: 1)),
+        shape: Border(bottom: BorderSide(color: darkBorder, width: 1)),
         titleTextStyle: TextStyle(
-            color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
-        iconTheme: IconThemeData(color: Colors.white),
+          color: darkTextPrimary,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ),
+        iconTheme: IconThemeData(color: darkTextPrimary),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: darkBackground,
         elevation: 0,
-        indicatorColor: primaryColor.withValues(alpha: 0.3),
+        indicatorColor: primaryColor.withValues(alpha: 0.25),
         height: 64,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: primaryLight);
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: darkSafeText,
+            );
           }
           return const TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF94A3B8));
+            fontSize: 11.5,
+            fontWeight: FontWeight.w500,
+            color: darkTextSecondary,
+          );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: primaryLight, size: 24);
+            return const IconThemeData(color: darkSafeText, size: 24);
           }
-          return const IconThemeData(color: Color(0xFF94A3B8), size: 24);
+          return const IconThemeData(color: darkTextSecondary, size: 24);
         }),
       ),
       cardTheme: const CardThemeData(
-        color: Color(0xFF1E293B),
+        color: darkCard,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: cardBorderRadius,
-          side: BorderSide(color: Color(0xFF334155), width: 1),
+          side: BorderSide(color: darkBorder, width: 1),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF0F172A),
-        labelStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+        fillColor: const Color(0xFF131D31),
+        labelStyle: const TextStyle(color: darkTextSecondary, fontSize: 14),
+        hintStyle: const TextStyle(color: darkTextMuted, fontSize: 14),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: outlineBorder,
         enabledBorder: outlineBorder,
         focusedBorder: outlineBorder.copyWith(
-            borderSide: const BorderSide(color: primaryColor, width: 1.5)),
+          borderSide: const BorderSide(color: primaryColor, width: 1.5),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -412,8 +551,8 @@ abstract final class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white,
-          side: const BorderSide(color: Color(0xFF475569), width: 1),
+          foregroundColor: darkTextPrimary,
+          side: const BorderSide(color: darkBorder, width: 1),
           minimumSize: const Size(64, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: const RoundedRectangleBorder(borderRadius: buttonBorderRadius),
@@ -422,19 +561,19 @@ abstract final class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFF334155),
+        backgroundColor: darkCardElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        contentTextStyle: const TextStyle(color: Colors.white),
+        contentTextStyle: const TextStyle(color: darkTextPrimary),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: Color(0xFF1E293B),
+        backgroundColor: darkCard,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
       ),
       dialogTheme: const DialogThemeData(
-        backgroundColor: Color(0xFF1E293B),
+        backgroundColor: darkCard,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(16)),

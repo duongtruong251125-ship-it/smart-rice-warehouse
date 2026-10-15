@@ -4,19 +4,59 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:smart_rice_warehouse/firebase_options.dart';
 
+class AuthenticatedUser {
+  const AuthenticatedUser({
+    required this.uid,
+    required this.email,
+    this.displayName,
+  });
+
+  final String uid;
+  final String email;
+  final String? displayName;
+}
+
+abstract interface class AuthenticationService {
+  bool get isInitialized;
+  AuthenticatedUser? get currentUser;
+  Stream<AuthenticatedUser?> get authStateChanges;
+
+  Future<FirebaseAuthResult> signIn({
+    required String email,
+    required String password,
+  });
+
+  Future<FirebaseAuthResult> register({
+    required String email,
+    required String password,
+    required String displayName,
+  });
+
+  Future<FirebaseAuthResult> sendPasswordResetEmail({required String email});
+  Future<FirebaseAuthResult> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+  Future<FirebaseAuthResult> updateDisplayName(String displayName);
+  Future<void> signOut();
+}
+
 /// Kết quả trả về từ các tác vụ Firebase Authentication
 class FirebaseAuthResult {
-  final bool isSuccess;
-  final String? message;
-  final User? user;
-
   const FirebaseAuthResult({
     required this.isSuccess,
     this.message,
     this.user,
   });
 
-  factory FirebaseAuthResult.success([User? user, String? message]) {
+  final bool isSuccess;
+  final String? message;
+  final AuthenticatedUser? user;
+
+  factory FirebaseAuthResult.success([
+    AuthenticatedUser? user,
+    String? message,
+  ]) {
     return FirebaseAuthResult(isSuccess: true, user: user, message: message);
   }
 
@@ -27,11 +67,14 @@ class FirebaseAuthResult {
 
 /// Dịch vụ quản lý xác thực Firebase với cơ chế Safe Fallback
 /// Tự động thích ứng nếu chưa cấu hình google-services.json hoặc đang chạy offline/test.
-class FirebaseAuthService {
+class FirebaseAuthService implements AuthenticationService {
   FirebaseAuthService._();
   static final FirebaseAuthService instance = FirebaseAuthService._();
 
   bool _isInitialized = false;
+
+  @override
+  bool get isInitialized => _isInitialized;
 
   FirebaseAuth? get _auth {
     if (!_isInitialized) return null;
@@ -40,6 +83,17 @@ class FirebaseAuthService {
     } catch (_) {
       return null;
     }
+  }
+
+  @override
+  AuthenticatedUser? get currentUser =>
+      _toAuthenticatedUser(_auth?.currentUser);
+
+  @override
+  Stream<AuthenticatedUser?> get authStateChanges {
+    final auth = _auth;
+    if (auth == null) return Stream<AuthenticatedUser?>.value(null);
+    return auth.authStateChanges().map(_toAuthenticatedUser);
   }
 
   /// Khởi tạo an toàn Firebase Core với DefaultFirebaseOptions
@@ -67,6 +121,7 @@ class FirebaseAuthService {
   }
 
   /// Đăng nhập bằng Email & Mật khẩu qua Firebase
+  @override
   Future<FirebaseAuthResult> signIn({
     required String email,
     required String password,
@@ -84,7 +139,9 @@ class FirebaseAuthService {
         password: password,
       );
       return FirebaseAuthResult.success(
-          credential.user, 'Đăng nhập thành công!');
+        _toAuthenticatedUser(credential.user),
+        'Đăng nhập thành công!',
+      );
     } on FirebaseAuthException catch (e) {
       return FirebaseAuthResult.failure(_mapErrorCode(e.code, e.message));
     } catch (e) {
@@ -93,6 +150,7 @@ class FirebaseAuthService {
   }
 
   /// Đăng ký tài khoản thủ kho mới trên Firebase Authentication
+  @override
   Future<FirebaseAuthResult> register({
     required String email,
     required String password,
@@ -123,7 +181,7 @@ class FirebaseAuthService {
       }
 
       return FirebaseAuthResult.success(
-        auth.currentUser ?? credential.user,
+        _toAuthenticatedUser(auth.currentUser ?? credential.user),
         'Tạo tài khoản thành công!',
       );
     } on FirebaseAuthException catch (e) {
@@ -134,6 +192,7 @@ class FirebaseAuthService {
   }
 
   /// Gửi email khôi phục mật khẩu qua Firebase
+  @override
   Future<FirebaseAuthResult> sendPasswordResetEmail(
       {required String email}) async {
     final auth = _auth;
@@ -157,12 +216,76 @@ class FirebaseAuthService {
   }
 
   /// Đăng xuất khỏi Firebase
+  @override
   Future<void> signOut() async {
     try {
       await _auth?.signOut();
     } catch (e) {
       debugPrint('Lỗi đăng xuất Firebase: $e');
     }
+  }
+
+  @override
+  Future<FirebaseAuthResult> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final auth = _auth;
+    final user = auth?.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) {
+      return FirebaseAuthResult.failure('Phiên đăng nhập đã hết hạn.');
+    }
+
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+      return FirebaseAuthResult.success(
+        _toAuthenticatedUser(user),
+        'Đổi mật khẩu thành công!',
+      );
+    } on FirebaseAuthException catch (error) {
+      return FirebaseAuthResult.failure(
+        _mapErrorCode(error.code, error.message),
+      );
+    } catch (error) {
+      return FirebaseAuthResult.failure('Không thể đổi mật khẩu: $error');
+    }
+  }
+
+  @override
+  Future<FirebaseAuthResult> updateDisplayName(String displayName) async {
+    final user = _auth?.currentUser;
+    if (user == null) {
+      return FirebaseAuthResult.failure('Phiên đăng nhập đã hết hạn.');
+    }
+
+    try {
+      await user.updateDisplayName(displayName.trim());
+      await user.reload();
+      return FirebaseAuthResult.success(
+        _toAuthenticatedUser(_auth?.currentUser ?? user),
+      );
+    } on FirebaseAuthException catch (error) {
+      return FirebaseAuthResult.failure(
+        _mapErrorCode(error.code, error.message),
+      );
+    } catch (error) {
+      return FirebaseAuthResult.failure('Không thể cập nhật tên: $error');
+    }
+  }
+
+  AuthenticatedUser? _toAuthenticatedUser(User? user) {
+    if (user == null) return null;
+    return AuthenticatedUser(
+      uid: user.uid,
+      email: user.email ?? '',
+      displayName: user.displayName,
+    );
   }
 
   /// Chuyển đổi mã lỗi Firebase sang tiếng Việt dễ hiểu

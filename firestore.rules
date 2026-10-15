@@ -1,0 +1,162 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function currentUserPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function hasActiveProfile() {
+      return signedIn()
+        && exists(currentUserPath())
+        && get(currentUserPath()).data.isActive == true;
+    }
+
+    function isAdmin() {
+      return hasActiveProfile()
+        && get(currentUserPath()).data.role == 'admin';
+    }
+
+    function isStaffOrAdmin() {
+      return hasActiveProfile()
+        && get(currentUserPath()).data.role in ['admin', 'staff'];
+    }
+
+    function hasOnlyUserFields() {
+      return request.resource.data.keys().hasOnly([
+        'email',
+        'displayName',
+        'role',
+        'isActive',
+        'createdAt',
+        'updatedAt',
+        'avatarPath'
+      ]);
+    }
+
+    function hasValidUserData() {
+      return hasOnlyUserFields()
+        && request.resource.data.email is string
+        && request.resource.data.displayName is string
+        && request.resource.data.role in ['admin', 'staff']
+        && request.resource.data.isActive is bool
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+
+      // A newly registered account can only create a disabled staff profile.
+      // An administrator must activate it before business data is accessible.
+      allow create: if hasValidUserData() && (
+        isAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.role == 'staff'
+          && request.resource.data.isActive == false
+        )
+      );
+
+      // Cập nhật hồ sơ:
+      // 1. Quản trị viên (admin) có toàn quyền cập nhật hoặc phân quyền tài khoản
+      // 2. Người dùng chỉ được phép đổi tên hiển thị (displayName) và thời gian cập nhật của chính mình;
+      //    tuyệt đối KHÔNG ĐƯỢC PHÉP và KHÔNG THỂ thay đổi chức vụ (role), email hoặc trạng thái kích hoạt (isActive).
+      allow update: if (
+        isAdmin() && hasValidUserData()
+      ) || (
+        signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName', 'updatedAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 100
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /rice_products/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /rice_characteristics/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /suppliers/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /customers/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /warehouse_locations/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /batches/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update: if isStaffOrAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /import_receipts/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow create: if isStaffOrAdmin();
+      allow update, delete: if false;
+    }
+
+    match /export_receipts/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow create: if isStaffOrAdmin();
+      allow update, delete: if false;
+    }
+
+    match /damage_reports/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow create: if isStaffOrAdmin();
+      allow update, delete: if false;
+    }
+
+    match /inventory_checks/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update: if isStaffOrAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /inventory_snapshots/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow write: if isStaffOrAdmin();
+    }
+
+    match /stock_movements/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow create: if isStaffOrAdmin();
+      // Immutable audit ledger: never allow update or delete
+      allow update, delete: if false;
+    }
+
+    match /migration_runs/{documentId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Deny collections that are not explicitly declared above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
