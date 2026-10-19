@@ -85,18 +85,18 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
                               children: [
                                 Text(
                                   'Kiểm kê lô: ${batch.code}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w800,
-                                    color: AppTheme.textPrimary,
+                                    color: AppTheme.textPrimaryColor(sheetContext),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   'Loại gạo: ${batch.riceName} • Vị trí: ${batch.locationName ?? 'Khu A'}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12.5,
-                                    color: AppTheme.textSecondary,
+                                    color: AppTheme.textSecondaryColor(sheetContext),
                                   ),
                                 ),
                               ],
@@ -112,28 +112,31 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: AppTheme.isDark(sheetContext)
+                              ? AppTheme.darkCardElevated
+                              : const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppTheme.borderColor),
+                          border: Border.all(
+                              color: AppTheme.border(sheetContext)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Tồn kho hệ thống:',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(sheetContext),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
                               '${NumberFormatter.quantity(batch.quantity)} kg (~ ${(batch.quantity / 50).round()} bao 50kg)',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textPrimary,
-                                fontFeatures: [FontFeature.tabularFigures()],
+                                color: AppTheme.textPrimaryColor(sheetContext),
+                                fontFeatures: const [FontFeature.tabularFigures()],
                               ),
                             ),
                           ],
@@ -229,12 +232,12 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
                       // Bắt buộc chọn lý do nếu có chênh lệch
                       if (currentDiff.abs() >= 0.001) ...[
                         const SizedBox(height: 14),
-                        const Text(
+                        Text(
                           'Lý do chênh lệch (Bắt buộc):',
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.textPrimaryColor(sheetContext),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -400,27 +403,27 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
           // Banner phiên kiểm kê
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: AppTheme.cardColor,
+            color: AppTheme.cardBg(context),
             child: Row(
               children: [
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Phiên kiểm kê đang hoạt động',
                         style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textSecondary,
+                            color: AppTheme.textSecondaryColor(context),
                             fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         'Đã kiểm: ${items.length} lô • Chênh lệch: ${session != null ? '${session.totalDifference >= 0 ? '+' : ''}${NumberFormatter.quantity(session.totalDifference)} kg' : '0 kg'}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                          color: AppTheme.textPrimaryColor(context),
                         ),
                       ),
                     ],
@@ -473,12 +476,12 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
                                   fontSize: 15, fontWeight: FontWeight.w800),
                             ),
                             const SizedBox(height: 6),
-                            const Text(
+                            Text(
                               'Bấm nút "Quét QR Lô" ở trên hoặc chọn nhanh lô gợi ý dưới đây để nhập khối lượng thực tế.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                   fontSize: 12.5,
-                                  color: AppTheme.textSecondary),
+                                  color: AppTheme.textSecondaryColor(context)),
                             ),
                             const SizedBox(height: 18),
                             Wrap(
@@ -487,12 +490,13 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
                               alignment: WrapAlignment.center,
                               children: batchProvider.batches.take(4).map((b) {
                                 return ActionChip(
-                                  backgroundColor: AppTheme.cardColor,
-                                  side: const BorderSide(
-                                      color: AppTheme.borderColor),
+                                  backgroundColor: AppTheme.cardBg(context),
+                                  side: BorderSide(
+                                      color: AppTheme.border(context)),
                                   label: Text('${b.code} (${b.riceName})',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w600)),
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.textPrimaryColor(context))),
                                   onPressed: () => _openCountDialog(b),
                                 );
                               }).toList(),
@@ -524,17 +528,23 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
 
                       final isDiff = item.hasDifference;
 
+                      final isDark = AppTheme.isDark(context);
+
                       return Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: AppTheme.cardColor,
+                          color: AppTheme.cardBg(context),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: isDiff
-                                ? AppTheme.warningBorder
-                                : AppTheme.borderColor,
+                                ? (isDark
+                                    ? AppTheme.darkWarningBorder
+                                    : AppTheme.warningBorder)
+                                : AppTheme.border(context),
                           ),
-                          boxShadow: AppTheme.softShadow,
+                          boxShadow: isDark
+                              ? AppTheme.darkCardShadow
+                              : AppTheme.softShadow,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -548,17 +558,17 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
                                     children: [
                                       Text(
                                         item.batchCode,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w800,
-                                          color: AppTheme.textPrimary,
+                                          color: AppTheme.textPrimaryColor(context),
                                         ),
                                       ),
                                       Text(
                                         item.riceName,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 12.5,
-                                            color: AppTheme.textSecondary),
+                                            color: AppTheme.textSecondaryColor(context)),
                                       ),
                                     ],
                                   ),
@@ -585,9 +595,9 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
                               children: [
                                 Text(
                                   'Hệ thống: ${NumberFormatter.quantity(item.expectedQuantity)} kg',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 12,
-                                      color: AppTheme.textSecondary),
+                                      color: AppTheme.textSecondaryColor(context)),
                                 ),
                                 Text(
                                   'Thực tế: ${NumberFormatter.quantity(item.actualQuantity)} kg',
@@ -659,17 +669,21 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
               summaryWidget: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Tổng chênh lệch phiên kiểm:',
+                  Text('Tổng chênh lệch phiên kiểm:',
                       style: TextStyle(
-                          fontSize: 12, color: AppTheme.textSecondary)),
+                          fontSize: 12, color: AppTheme.textSecondaryColor(context))),
                   Text(
                     '${session != null ? (session.totalDifference >= 0 ? '+' : '') : ''}${session != null ? NumberFormatter.quantity(session.totalDifference) : '0'} kg',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: session != null && session.totalDifference < 0
-                          ? AppTheme.dangerText
-                          : AppTheme.primaryDark,
+                          ? (AppTheme.isDark(context)
+                              ? AppTheme.darkDangerText
+                              : AppTheme.dangerText)
+                          : (AppTheme.isDark(context)
+                              ? AppTheme.darkSafeText
+                              : AppTheme.primaryDark),
                     ),
                   ),
                 ],

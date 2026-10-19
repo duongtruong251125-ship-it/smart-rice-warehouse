@@ -40,7 +40,7 @@ class ManagementListScaffold extends StatelessWidget {
       body: Column(
         children: [
           Container(
-            color: AppTheme.cardColor,
+            color: AppTheme.cardBg(context),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +63,7 @@ class ManagementListScaffold extends StatelessWidget {
                       child: Text(
                         'Tổng cộng: $itemCount mục',
                         style: theme.textTheme.labelMedium?.copyWith(
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.textSecondaryColor(context),
                           fontWeight: FontWeight.w600,
                         ),
                       ),

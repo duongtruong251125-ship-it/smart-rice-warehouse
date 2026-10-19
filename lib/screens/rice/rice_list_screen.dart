@@ -420,9 +420,11 @@ class _RiceCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: AppTheme.isDark(context)
+                    ? AppTheme.darkCardElevated
+                    : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppTheme.borderColor),
+                border: Border.all(color: AppTheme.border(context)),
               ),
               child: Wrap(
                 spacing: 24,
@@ -431,7 +433,7 @@ class _RiceCard extends StatelessWidget {
                   _PriceLabel(
                     label: 'Giá nhập',
                     value: CurrencyFormatter.formatVnd(rice.purchasePrice),
-                    valueColor: AppTheme.textPrimary,
+                    valueColor: AppTheme.textPrimaryColor(context),
                   ),
                   _PriceLabel(
                     label: 'Giá bán',

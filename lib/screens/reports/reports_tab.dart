@@ -214,10 +214,10 @@ class _ReportsTabState extends State<ReportsTab> {
           const SizedBox(height: 4),
           Text(
             'Nhập: ${NumberFormatter.quantity(total7DaysImport)} kg • Xuất: ${NumberFormatter.quantity(total7DaysExport)} kg',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textSecondary,
+              color: AppTheme.textSecondaryColor(context),
             ),
           ),
           const SizedBox(height: 12),

@@ -32,6 +32,15 @@ import 'package:smart_rice_warehouse/repositories/firestore/rice_product_mapper.
 import 'package:smart_rice_warehouse/repositories/firestore/supplier_mapper.dart';
 import 'package:smart_rice_warehouse/repositories/firestore/warehouse_location_mapper.dart';
 
+/// Controls only the warehouse/business collections. Firebase Authentication
+/// and its user-profile collection are initialized independently below so an
+/// app can use real accounts without unexpectedly replacing local warehouse
+/// data with an empty Firestore project.
+const bool useFirebaseBackend = bool.fromEnvironment(
+  'USE_FIREBASE',
+  defaultValue: false,
+);
+
 typedef BootstrapData = ({
   AppDatabase database,
   AppSnapshot snapshot,
@@ -69,18 +78,20 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
   Future<BootstrapData> _load() async {
     final settings = SettingsService();
     await settings.init();
-    // Khởi tạo an toàn Firebase (nếu có cấu hình, nếu không sẽ tự động chạy Local)
     final firebaseReady = await FirebaseAuthService.instance.initialize();
     final database = await AppDatabase.open();
+    if (!firebaseReady || !useFirebaseBackend) {
+      await database.seedLocalDataIfNeeded();
+    }
     final snapshot = await database.loadSnapshot(
       authUid: FirebaseAuthService.instance.currentUser?.uid,
     );
     final userProfiles = firebaseReady
-        ? FirestoreUserProfileRepository(
-            firestore: FirebaseFirestore.instance,
-          )
+        ? FirestoreUserProfileRepository(firestore: FirebaseFirestore.instance)
         : null;
-    final firestore = firebaseReady ? FirebaseFirestore.instance : null;
+    final firestore = firebaseReady && useFirebaseBackend
+        ? FirebaseFirestore.instance
+        : null;
 
     final riceProducts = firestore == null
         ? null

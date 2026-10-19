@@ -9,6 +9,12 @@ import 'package:smart_rice_warehouse/models/damage_report_model.dart';
 import 'package:smart_rice_warehouse/providers/damage_provider.dart';
 import 'package:smart_rice_warehouse/widgets/empty_state.dart';
 
+bool _damageImageExists(String path) =>
+    path.startsWith('assets/') || File(path).existsSync();
+
+ImageProvider<Object> _damageImageProvider(String path) =>
+    path.startsWith('assets/') ? AssetImage(path) : FileImage(File(path));
+
 class DamageListScreen extends StatefulWidget {
   const DamageListScreen({super.key});
 
@@ -52,10 +58,11 @@ class _DamageListScreenState extends State<DamageListScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Tổng gạo hư hỏng đã ghi nhận',
                         style: TextStyle(
-                            fontSize: 12, color: AppTheme.textSecondary),
+                            fontSize: 12,
+                            color: AppTheme.textSecondaryColor(context)),
                       ),
                       Text(
                         '${NumberFormatter.quantity(damageProvider.totalDamagedWeight)} kg (${damageProvider.reports.length} phiếu)',
@@ -146,18 +153,20 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                       children: [
                                         Text(
                                           item.code,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w800,
-                                            color: AppTheme.textPrimary,
+                                            color: AppTheme.textPrimaryColor(
+                                                context),
                                           ),
                                         ),
                                         Text(
                                           'Lô: ${item.batchCode} • ${item.riceName}',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
-                                            color: AppTheme.textSecondary,
+                                            color: AppTheme.textSecondaryColor(
+                                                context),
                                           ),
                                         ),
                                       ],
@@ -199,9 +208,10 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                   ),
                                   Text(
                                     DateFormatter.ddMMyyyy(item.createdAt),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 12,
-                                        color: AppTheme.textSecondary),
+                                        color: AppTheme.textSecondaryColor(
+                                            context)),
                                   ),
                                 ],
                               ),
@@ -210,17 +220,19 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                 const SizedBox(height: 6),
                                 Text(
                                   'Ghi chú: ${item.note!}',
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      fontStyle: FontStyle.italic),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontStyle: FontStyle.italic,
+                                    color: AppTheme.textSecondaryColor(context),
+                                  ),
                                 ),
                               ],
                               if (item.imagePath != null) ...[
                                 const SizedBox(height: 10),
                                 InkWell(
                                   onTap: () {
-                                    final file = File(item.imagePath!);
-                                    if (file.existsSync()) {
+                                    final imagePath = item.imagePath!;
+                                    if (_damageImageExists(imagePath)) {
                                       showDialog<void>(
                                         context: context,
                                         builder: (ctx) => Dialog(
@@ -256,8 +268,10 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                                     const BoxConstraints(
                                                   maxHeight: 400,
                                                 ),
-                                                child: Image.file(
-                                                  file,
+                                                child: Image(
+                                                  image: _damageImageProvider(
+                                                    imagePath,
+                                                  ),
                                                   fit: BoxFit.contain,
                                                 ),
                                               ),
@@ -266,10 +280,11 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                                     const EdgeInsets.all(12),
                                                 child: Text(
                                                   'Lô: ${item.batchCode} • Lý do: ${item.reason.label}',
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontSize: 12,
-                                                    color:
-                                                        AppTheme.textSecondary,
+                                                    color: AppTheme
+                                                        .textSecondaryColor(
+                                                            context),
                                                   ),
                                                 ),
                                               ),
@@ -296,12 +311,16 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        if (File(item.imagePath!).existsSync())
+                                        if (_damageImageExists(
+                                          item.imagePath!,
+                                        ))
                                           ClipRRect(
                                             borderRadius:
                                                 BorderRadius.circular(4),
-                                            child: Image.file(
-                                              File(item.imagePath!),
+                                            child: Image(
+                                              image: _damageImageProvider(
+                                                item.imagePath!,
+                                              ),
                                               width: 24,
                                               height: 24,
                                               fit: BoxFit.cover,
@@ -314,12 +333,16 @@ class _DamageListScreenState extends State<DamageListScreen> {
                                             color: AppTheme.infoColor,
                                           ),
                                         const SizedBox(width: 6),
-                                        const Text(
-                                          'Xem ảnh minh chứng 🔍',
-                                          style: TextStyle(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppTheme.infoColor,
+                                        const Flexible(
+                                          child: Text(
+                                            'Xem ảnh minh chứng 🔍',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppTheme.infoColor,
+                                            ),
                                           ),
                                         ),
                                       ],

@@ -1,4 +1,28 @@
-# smart_rice_warehouse
+# Smart Rice Warehouse
+
+Ứng dụng mặc định chạy ở chế độ cục bộ, dùng SQLite và tự nạp một lần bộ dữ
+liệu kho gạo mẫu trong `lib/data/mock_data.dart`. Không cần Firebase để đăng
+nhập, xem hoặc chỉnh sửa dữ liệu.
+
+Tài khoản mẫu:
+
+- Email: `admin@gmail.com`
+- Mật khẩu: `123456`
+
+Chạy chế độ cục bộ:
+
+```sh
+flutter run
+```
+
+Chỉ bật Firebase khi chủ động truyền biến build sau:
+
+```sh
+flutter run --dart-define=USE_FIREBASE=true
+```
+
+Ở chế độ cục bộ, thay đổi được lưu trên thiết bị bằng SQLite. Chúng không tự
+đồng bộ sang điện thoại khác.
 
 A new Flutter project.
 

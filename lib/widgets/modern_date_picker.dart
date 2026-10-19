@@ -21,7 +21,7 @@ class ModernDatePicker {
             height: 420,
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
             decoration: BoxDecoration(
-              color: AppTheme.cardColor,
+              color: AppTheme.cardBg(context),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -31,10 +31,10 @@ class ModernDatePicker {
                   padding: const EdgeInsets.only(left: 8, bottom: 12),
                   child: Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.textPrimaryColor(context),
                     ),
                   ),
                 ),
@@ -46,18 +46,18 @@ class ModernDatePicker {
                     selectionMode: DateRangePickerSelectionMode.single,
                     selectionColor: AppTheme.primaryColor,
                     todayHighlightColor: AppTheme.primaryColor,
-                    headerStyle: const DateRangePickerHeaderStyle(
+                    headerStyle: DateRangePickerHeaderStyle(
                       textStyle: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.textPrimaryColor(context),
                       ),
                     ),
-                    monthCellStyle: const DateRangePickerMonthCellStyle(
+                    monthCellStyle: DateRangePickerMonthCellStyle(
                       textStyle: TextStyle(
                         fontWeight: FontWeight.w500,
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.textPrimaryColor(context),
                       ),
-                      todayTextStyle: TextStyle(
+                      todayTextStyle: const TextStyle(
                         fontWeight: FontWeight.w700,
                         color: AppTheme.primaryColor,
                       ),
@@ -72,7 +72,7 @@ class ModernDatePicker {
                   children: [
                     TextButton(
                       style: TextButton.styleFrom(
-                        foregroundColor: AppTheme.textSecondary,
+                        foregroundColor: AppTheme.textSecondaryColor(context),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),

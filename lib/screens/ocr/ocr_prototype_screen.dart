@@ -274,7 +274,7 @@ class _OcrInvoiceScreenState extends State<OcrInvoiceScreen> {
               'Nội dung quét OCR (Văn bản nhận dạng):',
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: AppTheme.textSecondary,
+                color: AppTheme.textSecondaryColor(context),
               ),
             ),
             const SizedBox(height: 6),
@@ -335,7 +335,7 @@ class _OcrInvoiceScreenState extends State<OcrInvoiceScreen> {
                       Text(
                         'Bắt buộc kiểm tra & chỉnh sửa trước khi xác nhận tạo phiếu',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.textSecondaryColor(context),
                           fontSize: 11,
                         ),
                       ),

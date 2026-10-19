@@ -195,11 +195,11 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
-                            const Text(
+                            Text(
                               'Ưu tiên xuất lô cận hạn nhất trước để giảm thiểu hao hụt',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                               ),
                             ),
                           ],
@@ -213,9 +213,11 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: AppTheme.isDark(context)
+                          ? AppTheme.darkCardElevated
+                          : const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppTheme.borderColor),
+                      border: Border.all(color: AppTheme.border(context)),
                     ),
                     child: Column(
                       children: [
@@ -324,11 +326,11 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
+                              Text(
                                 'Lấy từ lô này:',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppTheme.textSecondary,
+                                  color: AppTheme.textSecondaryColor(context),
                                 ),
                               ),
                               Text(
@@ -345,11 +347,11 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text(
+                              Text(
                                 'Còn lại sau xuất:',
                                 style: TextStyle(
                                   fontSize: 11.5,
-                                  color: AppTheme.textSecondary,
+                                  color: AppTheme.textSecondaryColor(context),
                                 ),
                               ),
                               Text(
@@ -447,13 +449,13 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
       children: [
         Text(label,
             style:
-                const TextStyle(fontSize: 12.5, color: AppTheme.textSecondary)),
+                TextStyle(fontSize: 12.5, color: AppTheme.textSecondaryColor(context))),
         Text(
           value,
           style: TextStyle(
             fontSize: 12.5,
             fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-            color: color ?? AppTheme.textPrimary,
+            color: color ?? AppTheme.textPrimaryColor(context),
           ),
         ),
       ],
@@ -593,12 +595,12 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Đơn vị quy đổi nhanh:',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -621,12 +623,12 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                                             : FontWeight.w600,
                                         color: isSelected
                                             ? AppTheme.secondaryColor
-                                            : AppTheme.textSecondary,
+                                            : AppTheme.textSecondaryColor(context),
                                       ),
                                       side: BorderSide(
                                         color: isSelected
                                             ? AppTheme.secondaryColor
-                                            : AppTheme.borderColor,
+                                            : AppTheme.border(context),
                                       ),
                                       onSelected: (val) {
                                         if (val) {
@@ -719,20 +721,20 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Tổng sản lượng xuất:',
                             style: TextStyle(
                               fontSize: 11.5,
-                              color: AppTheme.textSecondary,
+                              color: AppTheme.textSecondaryColor(context),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
                             '${_formatNumber(_calculatedQuantityKg)} kg (~ ${(_calculatedQuantityKg / 1000).toStringAsFixed(2)} Tấn)',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                              color: AppTheme.textPrimaryColor(context),
                             ),
                           ),
                         ],
@@ -740,11 +742,11 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text(
+                          Text(
                             'Tổng tiền dự tính:',
                             style: TextStyle(
                               fontSize: 11.5,
-                              color: AppTheme.textSecondary,
+                              color: AppTheme.textSecondaryColor(context),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -784,13 +786,15 @@ class _ExportSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: AppTheme.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor, width: 1),
-        boxShadow: AppTheme.softShadow,
+        border: Border.all(color: AppTheme.border(context), width: 1),
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,10 +805,10 @@ class _ExportSectionCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
+                  color: AppTheme.textPrimaryColor(context),
                 ),
               ),
             ],

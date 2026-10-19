@@ -200,19 +200,19 @@ class _DamageFormScreenState extends State<DamageFormScreen> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
+                            color: AppTheme.cardBg(context),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppTheme.borderColor),
+                            border: Border.all(color: AppTheme.border(context)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Expanded(
+                              Expanded(
                                 child: Text(
                                   'Tồn kho khả dụng:',
                                   style: TextStyle(
                                       fontSize: 12,
-                                      color: AppTheme.textSecondary),
+                                      color: AppTheme.textSecondaryColor(context)),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -348,26 +348,26 @@ class _DamageFormScreenState extends State<DamageFormScreen> {
                           child: Container(
                             height: 100,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
+                              color: AppTheme.cardBg(context),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: AppTheme.borderColor,
+                                color: AppTheme.border(context),
                                 style: BorderStyle.solid,
                               ),
                             ),
-                            child: const Center(
+                            child: Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.add_a_photo_outlined,
+                                  const Icon(Icons.add_a_photo_outlined,
                                       size: 28, color: AppTheme.primaryColor),
-                                  SizedBox(height: 6),
+                                  const SizedBox(height: 6),
                                   Text(
                                     'Chụp ảnh hoặc chọn ảnh minh chứng',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                         fontSize: 12,
-                                        color: AppTheme.textSecondary),
+                                        color: AppTheme.textSecondaryColor(context)),
                                   ),
                                 ],
                               ),

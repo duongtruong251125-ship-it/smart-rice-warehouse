@@ -110,14 +110,14 @@ class _ForecastScreenState extends State<ForecastScreen> {
                 const SizedBox(height: 20),
 
                 // --- TIÊU ĐỀ BẢNG XẾP HẠNG (RESPONSIVE KHÔNG TRÀN VIỀN) ---
-                const Row(
+                Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.sort_rounded,
                       size: 18,
                       color: AppTheme.primaryColor,
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Xếp hạng ưu tiên nhập hàng (Reorder Ranking)',
@@ -126,7 +126,7 @@ class _ForecastScreenState extends State<ForecastScreen> {
                         style: TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                          color: AppTheme.textPrimaryColor(context),
                         ),
                       ),
                     ),
@@ -270,13 +270,15 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
-        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.border(context)),
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.cardShadow,
       ),
       child: Row(
         children: [
@@ -298,10 +300,10 @@ class _MetricCard extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.textSecondaryColor(context),
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -334,6 +336,7 @@ class _ForecastCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final Color statusColor;
     final Color statusBgColor;
     final IconData statusIcon;
@@ -341,22 +344,22 @@ class _ForecastCard extends StatelessWidget {
     switch (forecast.status) {
       case ForecastStatus.reorderSoon:
         statusColor = const Color(0xFFDC2626);
-        statusBgColor = const Color(0xFFFEE2E2);
+        statusBgColor = isDark ? const Color(0x33DC2626) : const Color(0xFFFEE2E2);
         statusIcon = Icons.warning_rounded;
         break;
       case ForecastStatus.attention:
         statusColor = const Color(0xFFD97706);
-        statusBgColor = const Color(0xFFFEF3C7);
+        statusBgColor = isDark ? const Color(0x33D97706) : const Color(0xFFFEF3C7);
         statusIcon = Icons.access_time_rounded;
         break;
       case ForecastStatus.safe:
-        statusColor = AppTheme.primaryColor;
-        statusBgColor = AppTheme.primaryLight;
+        statusColor = isDark ? AppTheme.darkSafeText : AppTheme.primaryColor;
+        statusBgColor = isDark ? AppTheme.darkSafeBg : AppTheme.primaryLight;
         statusIcon = Icons.check_circle_outline_rounded;
         break;
       case ForecastStatus.noData:
-        statusColor = AppTheme.textSecondary;
-        statusBgColor = const Color(0xFFF1F5F9);
+        statusColor = AppTheme.textSecondaryColor(context);
+        statusBgColor = isDark ? AppTheme.darkCardElevated : const Color(0xFFF1F5F9);
         statusIcon = Icons.info_outline_rounded;
         break;
     }
@@ -368,11 +371,11 @@ class _ForecastCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: forecast.isCritical
-              ? statusColor.withValues(alpha: 0.4)
-              : AppTheme.borderColor,
+              ? (isDark ? AppTheme.darkDangerBorder : statusColor.withValues(alpha: 0.4))
+              : AppTheme.border(context),
           width: forecast.isCritical ? 1.5 : 1.0,
         ),
-        boxShadow: AppTheme.cardShadow,
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,23 +386,23 @@ class _ForecastCard extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryLight,
+                  color: isDark ? AppTheme.darkSafeBg : AppTheme.primaryLight,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.rice_bowl_outlined,
                   size: 18,
-                  color: AppTheme.primaryColor,
+                  color: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   '${forecast.riceName} (${forecast.riceCode})',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.textPrimaryColor(context),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -437,6 +440,7 @@ class _ForecastCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _statItem(
+                  context: context,
                   label: 'Tồn khả dụng',
                   value:
                       '${NumberFormatter.quantity(forecast.currentStock)} ${forecast.unit}',
@@ -445,6 +449,7 @@ class _ForecastCard extends StatelessWidget {
               ),
               Expanded(
                 child: _statItem(
+                  context: context,
                   label: 'Xuất TB/ngày',
                   value: forecast.averageDailyExport > 0
                       ? '${forecast.averageDailyExport.toStringAsFixed(1)} ${forecast.unit}'
@@ -453,6 +458,7 @@ class _ForecastCard extends StatelessWidget {
               ),
               Expanded(
                 child: _statItem(
+                  context: context,
                   label: 'Dự kiến còn',
                   value: forecast.estimatedDaysRemaining != null
                       ? '${forecast.estimatedDaysRemaining!.toStringAsFixed(1)} ngày'
@@ -467,9 +473,9 @@ class _ForecastCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: isDark ? AppTheme.darkCardElevated : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: AppTheme.border(context)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,8 +489,8 @@ class _ForecastCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     forecast.reorderSuggestion,
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                    style: TextStyle(
+                      color: AppTheme.textPrimaryColor(context),
                       fontSize: 12,
                       height: 1.35,
                       fontWeight: FontWeight.w500,
@@ -500,6 +506,7 @@ class _ForecastCard extends StatelessWidget {
   }
 
   Widget _statItem({
+    required BuildContext context,
     required String label,
     required String value,
     bool highlight = false,
@@ -509,9 +516,9 @@ class _ForecastCard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
-            color: AppTheme.textSecondary,
+            color: AppTheme.textSecondaryColor(context),
             fontWeight: FontWeight.w500,
           ),
           maxLines: 1,
@@ -526,7 +533,7 @@ class _ForecastCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
-              color: highlight ? const Color(0xFFDC2626) : AppTheme.textPrimary,
+              color: highlight ? const Color(0xFFDC2626) : AppTheme.textPrimaryColor(context),
             ),
           ),
         ),

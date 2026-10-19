@@ -60,6 +60,7 @@ abstract final class ImageStorageService {
   /// Xóa file ảnh cũ nếu tồn tại
   static Future<bool> deleteImageIfExists(String? path) async {
     if (path == null || path.isEmpty) return false;
+    if (path.startsWith('assets/')) return false;
     try {
       final file = File(path);
       if (await file.exists()) {

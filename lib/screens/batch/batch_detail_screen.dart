@@ -61,13 +61,13 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Chuyển vị trí kho lưu trữ',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                              color: AppTheme.textPrimaryColor(sheetContext),
                             ),
                           ),
                         ),
@@ -80,19 +80,19 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Lô hàng: ${batch.code} (${batch.riceName} - ${NumberFormatter.quantity(batch.quantity)} kg)',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: AppTheme.textSecondary,
+                        color: AppTheme.textSecondaryColor(sheetContext),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const Text(
+                    Text(
                       'Chọn vị trí kho mới:',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.textPrimaryColor(sheetContext),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -116,12 +116,12 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppTheme.primaryLight
-                                    : const Color(0xFFF8FAFC),
+                                    : AppTheme.cardBg(sheetContext),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppTheme.primaryColor
-                                      : AppTheme.borderColor,
+                                      : AppTheme.border(sheetContext),
                                   width: isSelected ? 1.5 : 1,
                                 ),
                               ),
@@ -133,7 +133,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                                         : Icons.radio_button_off_rounded,
                                     color: isSelected
                                         ? AppTheme.primaryColor
-                                        : AppTheme.textSecondary,
+                                        : AppTheme.textSecondaryColor(sheetContext),
                                     size: 20,
                                   ),
                                   const SizedBox(width: 10),
@@ -149,16 +149,16 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                                             fontWeight: FontWeight.w700,
                                             color: isSelected
                                                 ? AppTheme.primaryColor
-                                                : AppTheme.textPrimary,
+                                                : AppTheme.textPrimaryColor(sheetContext),
                                           ),
                                         ),
                                         if (loc.description != null) ...[
                                           const SizedBox(height: 2),
                                           Text(
                                             loc.description!,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 11,
-                                              color: AppTheme.textSecondary,
+                                              color: AppTheme.textSecondaryColor(sheetContext),
                                             ),
                                           ),
                                         ],
@@ -167,10 +167,10 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                                   ),
                                   Text(
                                     '${loc.currentBatchCount} lô',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: AppTheme.textSecondary,
+                                      color: AppTheme.textSecondaryColor(sheetContext),
                                     ),
                                   ),
                                 ],
@@ -281,9 +281,9 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
               const SizedBox(height: 4),
               Text(
                 'HSD: ${DateFormatter.ddMMyyyy(batch.expiryDate)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: AppTheme.textSecondary,
+                  color: AppTheme.textSecondaryColor(dialogCtx),
                 ),
               ),
             ],
@@ -373,19 +373,19 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                           children: [
                             Text(
                               batch.code,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: AppTheme.textPrimary,
+                                color: AppTheme.textPrimaryColor(context),
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               batch.riceName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                               ),
                             ),
                           ],
@@ -401,12 +401,12 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Số lượng tồn kho:',
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.textSecondary,
+                            color: AppTheme.textSecondaryColor(context),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -442,13 +442,13 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                         size: 20,
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Mã QR Lô hàng',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.textPrimaryColor(context),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -491,10 +491,10 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Dữ liệu mã QR: ${batch.code}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
+                      color: AppTheme.textSecondaryColor(context),
                     ),
                   ),
                 ],
@@ -518,13 +518,13 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                         size: 20,
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Vị trí lưu kho',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.textPrimaryColor(context),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -545,27 +545,27 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: AppTheme.cardBg(context),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppTheme.borderColor),
+                      border: Border.all(color: AppTheme.border(context)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           batch.locationName ?? 'Chưa gán vị trí lưu kho',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.textPrimaryColor(context),
                           ),
                         ),
                         const SizedBox(height: 2),
-                        const Text(
+                        Text(
                           'Thao tác chuyển vị trí không làm thay đổi số lượng tồn.',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppTheme.textSecondary,
+                            color: AppTheme.textSecondaryColor(context),
                           ),
                         ),
                       ],
@@ -584,12 +584,12 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Thông số nguồn gốc & Hạn dùng',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.textPrimaryColor(context),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -679,9 +679,9 @@ class _DetailRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
-            color: AppTheme.textSecondary,
+            color: AppTheme.textSecondaryColor(context),
           ),
         ),
         const SizedBox(width: 8),
@@ -692,7 +692,7 @@ class _DetailRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: valueColor ?? AppTheme.textPrimary,
+              color: valueColor ?? AppTheme.textPrimaryColor(context),
             ),
           ),
         ),

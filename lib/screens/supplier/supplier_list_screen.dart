@@ -171,8 +171,11 @@ class _SupplierCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: AppTheme.isDark(context)
+                    ? AppTheme.darkCardElevated
+                    : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.border(context)),
               ),
               child: Column(
                 children: [

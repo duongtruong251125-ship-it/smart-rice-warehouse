@@ -98,8 +98,8 @@ abstract final class AppTheme {
   static const Color darkBorderSubtle = Color(0x1FFFFFFF); // Viền mờ 12%
 
   static const Color darkTextPrimary = Color(0xFFF8FAFC); // Slate 50 trắng sáng dịu
-  static const Color darkTextSecondary = Color(0xFF94A3B8); // Slate 400 xám bạc rõ ràng
-  static const Color darkTextMuted = Color(0xFF64748B); // Slate 500
+  static const Color darkTextSecondary = Color(0xFFCBD5E1); // Slate 300 xám sáng rõ ràng (tương phản > 9:1)
+  static const Color darkTextMuted = Color(0xFF94A3B8); // Slate 400 chuẩn WCAG 2.2 AA (tương phản > 4.5:1)
 
   // Thẻ trạng thái phát quang (Glow Tint) cho Dark Mode
   static const Color darkSafeBg = Color(0x2610B981); // Emerald 15%
@@ -162,6 +162,9 @@ abstract final class AppTheme {
 
   static Color textSecondaryColor(BuildContext context) =>
       isDark(context) ? darkTextSecondary : textSecondary;
+
+  static Color textMutedColor(BuildContext context) =>
+      isDark(context) ? darkTextMuted : textMuted;
 
   static Color safeBgColor(BuildContext context) =>
       isDark(context) ? darkSafeBg : safeBg;
@@ -268,6 +271,24 @@ abstract final class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: backgroundColor,
       cardColor: cardColor,
+      iconTheme: const IconThemeData(color: textPrimary),
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: textPrimary),
+        displayMedium: TextStyle(color: textPrimary),
+        displaySmall: TextStyle(color: textPrimary),
+        headlineLarge: TextStyle(color: textPrimary),
+        headlineMedium: TextStyle(color: textPrimary),
+        headlineSmall: TextStyle(color: textPrimary),
+        titleLarge: TextStyle(color: textPrimary),
+        titleMedium: TextStyle(color: textPrimary),
+        titleSmall: TextStyle(color: textPrimary),
+        bodyLarge: TextStyle(color: textPrimary),
+        bodyMedium: TextStyle(color: textPrimary),
+        bodySmall: TextStyle(color: textSecondary),
+        labelLarge: TextStyle(color: textPrimary),
+        labelMedium: TextStyle(color: textSecondary),
+        labelSmall: TextStyle(color: textSecondary),
+      ),
       dividerTheme: const DividerThemeData(
         color: borderColor,
         thickness: 1,
@@ -458,6 +479,24 @@ abstract final class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: darkBackground,
       cardColor: darkCard,
+      iconTheme: const IconThemeData(color: darkTextPrimary),
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: darkTextPrimary),
+        displayMedium: TextStyle(color: darkTextPrimary),
+        displaySmall: TextStyle(color: darkTextPrimary),
+        headlineLarge: TextStyle(color: darkTextPrimary),
+        headlineMedium: TextStyle(color: darkTextPrimary),
+        headlineSmall: TextStyle(color: darkTextPrimary),
+        titleLarge: TextStyle(color: darkTextPrimary),
+        titleMedium: TextStyle(color: darkTextPrimary),
+        titleSmall: TextStyle(color: darkTextPrimary),
+        bodyLarge: TextStyle(color: darkTextPrimary),
+        bodyMedium: TextStyle(color: darkTextPrimary),
+        bodySmall: TextStyle(color: darkTextSecondary),
+        labelLarge: TextStyle(color: darkTextPrimary),
+        labelMedium: TextStyle(color: darkTextSecondary),
+        labelSmall: TextStyle(color: darkTextSecondary),
+      ),
       dividerColor: darkBorder,
       dividerTheme: const DividerThemeData(
         color: darkBorder,
@@ -581,4 +620,14 @@ abstract final class AppTheme {
       ),
     );
   }
+}
+
+extension ThemeContextX on BuildContext {
+  bool get isDark => AppTheme.isDark(this);
+  Color get textPrimary => AppTheme.textPrimaryColor(this);
+  Color get textSecondary => AppTheme.textSecondaryColor(this);
+  Color get textMuted => AppTheme.textMutedColor(this);
+  Color get cardBg => AppTheme.cardBg(this);
+  Color get border => AppTheme.border(this);
+  Color get scaffoldBg => AppTheme.scaffoldBg(this);
 }

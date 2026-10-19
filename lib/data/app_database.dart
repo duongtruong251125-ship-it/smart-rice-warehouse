@@ -12,6 +12,7 @@ import 'package:smart_rice_warehouse/models/rice_model.dart';
 import 'package:smart_rice_warehouse/models/supplier_model.dart';
 import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
 import 'package:smart_rice_warehouse/models/inventory_snapshot_model.dart';
+import 'package:smart_rice_warehouse/data/mock_data.dart';
 import 'package:sqflite/sqflite.dart';
 
 class AppSnapshot {
@@ -57,6 +58,8 @@ class AppSnapshot {
 class AppDatabase {
   AppDatabase._(this._database);
 
+  static const int _localSeedVersion = 3;
+
   final Database _database;
   Future<void> _writeQueue = Future<void>.value();
 
@@ -70,6 +73,130 @@ class AppDatabase {
       ),
     );
     return AppDatabase._(database);
+  }
+
+  /// Installs the bundled warehouse sample data once for local/offline mode.
+  ///
+  /// A version marker prevents deleted records from being recreated on every
+  /// launch. Increment [_localSeedVersion] only when a deliberate seed-data
+  /// migration is required.
+  Future<bool> seedLocalDataIfNeeded() async {
+    final installedVersion = await _loadValue<int>('local_seed_version') ?? 0;
+    if (installedVersion >= _localSeedVersion) return false;
+
+    if (installedVersion == 0) {
+      final collections = <String, List<Map<String, Object?>>>{
+        'rices': MockData.rices.map((item) => item.toJson()).toList(),
+        'characteristics': MockData.defaultCharacteristics
+            .map((item) => item.toJson())
+            .toList(),
+        'suppliers': MockData.suppliers.map((item) => item.toJson()).toList(),
+        'customers': MockData.customers.map((item) => item.toJson()).toList(),
+        'batches': MockData.batches.map((item) => item.toJson()).toList(),
+        'import_receipts':
+            MockData.importReceipts.map((item) => item.toJson()).toList(),
+        'export_receipts':
+            MockData.exportReceipts.map((item) => item.toJson()).toList(),
+        'locations':
+            MockData.warehouseLocations.map((item) => item.toJson()).toList(),
+        'damage_reports':
+            MockData.initialDamageReports.map((item) => item.toJson()).toList(),
+        'inventory_checks': MockData.initialInventoryChecks
+            .map((item) => item.toJson())
+            .toList(),
+      };
+
+      await _database.transaction((transaction) async {
+        for (final entry in collections.entries) {
+          await transaction.insert(
+            'app_state',
+            {'state_key': entry.key, 'payload': jsonEncode(entry.value)},
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+        await _writeSeedVersion(transaction);
+      });
+      return true;
+    }
+
+    // Version 2 adds bundled product images. Preserve all user-created data
+    // and only fill missing image paths for the original sample rice records.
+    if (installedVersion < 2) {
+      final existingRices =
+          await _load('rices', RiceModel.fromJson) ?? const [];
+      final sampleImages = <String, String>{
+        for (final rice in MockData.rices)
+          if (rice.imagePath != null) rice.id: rice.imagePath!,
+      };
+      final updatedRices = existingRices
+          .map(
+            (rice) => rice.imagePath?.trim().isNotEmpty == true
+                ? rice
+                : rice.copyWith(imagePath: sampleImages[rice.id]),
+          )
+          .toList();
+
+      await _replaceCollection(
+        'rices',
+        updatedRices.map((item) => item.toJson()).toList(),
+      );
+    }
+
+    // Version 3 adds three photographic damage-report examples. Existing
+    // reports and user-selected photos win over bundled sample images.
+    if (installedVersion < 3) {
+      final existingReports =
+          await _load('damage_reports', DamageReportModel.fromJson) ?? const [];
+      final samplesById = <String, DamageReportModel>{
+        for (final report in MockData.initialDamageReports) report.id: report,
+      };
+      final updatedReports = existingReports.map((report) {
+        final sample = samplesById[report.id];
+        if (sample == null ||
+            report.imagePath?.trim().isNotEmpty == true ||
+            sample.imagePath == null) {
+          return report;
+        }
+        return report.copyWith(imagePath: sample.imagePath);
+      }).toList();
+      final existingIds = updatedReports.map((report) => report.id).toSet();
+      updatedReports.addAll(
+        MockData.initialDamageReports.where(
+          (report) => !existingIds.contains(report.id),
+        ),
+      );
+      await _replaceCollection(
+        'damage_reports',
+        updatedReports.map((item) => item.toJson()).toList(),
+      );
+    }
+
+    await _database.transaction((transaction) async {
+      await _writeSeedVersion(transaction);
+    });
+    return true;
+  }
+
+  Future<void> _replaceCollection(
+    String key,
+    List<Map<String, Object?>> values,
+  ) async {
+    await _database.insert(
+      'app_state',
+      {'state_key': key, 'payload': jsonEncode(values)},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> _writeSeedVersion(Transaction transaction) async {
+    await transaction.insert(
+      'app_state',
+      {
+        'state_key': 'local_seed_version',
+        'payload': jsonEncode(_localSeedVersion),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<AppSnapshot> loadSnapshot({String? authUid}) async {

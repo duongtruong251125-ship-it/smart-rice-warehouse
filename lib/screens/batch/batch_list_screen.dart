@@ -165,8 +165,8 @@ class _BatchListScreenState extends State<BatchListScreen> {
                         'Hiển thị: ${filteredBatches.length} lô gạo • '
                         'Tổng: ${totalKg >= 1000 ? '${totalTons.toStringAsFixed(2).replaceAll('.', ',')} Tấn' : '${NumberFormatter.quantity(totalKg)} kg'} '
                         '(~ $totalBags bao)',
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
+                        style: TextStyle(
+                          color: AppTheme.textSecondaryColor(context),
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -260,7 +260,9 @@ class _ModernBatchCard extends StatelessWidget {
             color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
             width: 1,
           ),
-          boxShadow: AppTheme.softShadow,
+          boxShadow: AppTheme.isDark(context)
+              ? AppTheme.darkCardShadow
+              : AppTheme.softShadow,
         ),
         child: IntrinsicHeight(
           child: Row(
@@ -298,10 +300,10 @@ class _ModernBatchCard extends StatelessWidget {
                                           batch.code,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w700,
-                                            color: AppTheme.textPrimary,
+                                            color: AppTheme.textPrimaryColor(context),
                                           ),
                                         ),
                                       ),
@@ -337,10 +339,10 @@ class _ModernBatchCard extends StatelessWidget {
                                     batch.riceName,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
-                                      color: AppTheme.textSecondary,
+                                      color: AppTheme.textSecondaryColor(context),
                                     ),
                                   ),
                                 ],
@@ -357,9 +359,9 @@ class _ModernBatchCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.backgroundColor,
+                            color: AppTheme.cardBg(context),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.borderColor),
+                            border: Border.all(color: AppTheme.border(context)),
                           ),
                           child: Column(
                             children: [
@@ -367,18 +369,18 @@ class _ModernBatchCard extends StatelessWidget {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text('Số lượng:',
+                                  Text('Số lượng:',
                                       style: TextStyle(
                                           fontSize: 12,
-                                          color: AppTheme.textSecondary)),
+                                          color: AppTheme.textSecondaryColor(context))),
                                   Text(
                                     batch.quantity >= 1000
                                         ? '${tons.toStringAsFixed(2).replaceAll('.', ',')} Tấn'
                                         : '${NumberFormatter.quantity(batch.quantity)} $unit',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: AppTheme.textPrimary),
+                                        color: AppTheme.textPrimaryColor(context)),
                                   ),
                                 ],
                               ),
@@ -389,14 +391,14 @@ class _ModernBatchCard extends StatelessWidget {
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(Icons.location_on_rounded,
+                                      Icon(Icons.location_on_rounded,
                                           size: 14,
-                                          color: AppTheme.textSecondary),
+                                          color: AppTheme.textSecondaryColor(context)),
                                       const SizedBox(width: 4),
                                       Text(batch.locationName ?? 'Chưa xếp',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontSize: 12,
-                                              color: AppTheme.textSecondary)),
+                                              color: AppTheme.textSecondaryColor(context))),
                                     ],
                                   ),
                                   Text(
@@ -407,7 +409,7 @@ class _ModernBatchCard extends StatelessWidget {
                                       color:
                                           (isWarning || isCritical || isExpired)
                                               ? AppTheme.dangerColor
-                                              : AppTheme.textPrimary,
+                                              : AppTheme.textPrimaryColor(context),
                                     ),
                                   ),
                                 ],
@@ -421,15 +423,15 @@ class _ModernBatchCard extends StatelessWidget {
                           children: [
                             Text(
                               'Nhập: ${DateFormatter.ddMMyyyy(batch.importDate)}',
-                              style: const TextStyle(
-                                  fontSize: 11, color: AppTheme.textSecondary),
+                              style: TextStyle(
+                                  fontSize: 11, color: AppTheme.textSecondaryColor(context)),
                             ),
                             Row(
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.swap_horiz_rounded,
                                       size: 20),
-                                  color: AppTheme.textSecondary,
+                                  color: AppTheme.textSecondaryColor(context),
                                   onPressed: () => Navigator.of(context)
                                       .pushNamed(AppRoutes.warehouseLocations),
                                   tooltip: 'Chuyển vị trí',

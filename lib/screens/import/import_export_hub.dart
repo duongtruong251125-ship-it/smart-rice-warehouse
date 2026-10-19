@@ -70,12 +70,12 @@ class ImportExportHub extends StatelessWidget {
         const SizedBox(height: 20),
 
         // --- TẦNG 3: SỔ GIAO DỊCH KHO GẠO ---
-        const Text(
+        Text(
           'Sổ giao dịch Kho gạo',
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,
-            color: AppTheme.textPrimary,
+            color: AppTheme.textPrimaryColor(context),
             letterSpacing: -0.2,
           ),
         ),
@@ -105,12 +105,12 @@ class ImportExportHub extends StatelessWidget {
         // --- TẦNG 4: BIẾN ĐỘNG GẦN ĐÂY ---
         if (recentEntries.isNotEmpty) ...[
           const SizedBox(height: 22),
-          const Text(
+          Text(
             'Biến động Giao nhận Gần đây',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: AppTheme.textPrimary,
+              color: AppTheme.textPrimaryColor(context),
               letterSpacing: -0.2,
             ),
           ),
@@ -336,8 +336,10 @@ class _TransactionOverviewCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppTheme.borderColor),
-                boxShadow: AppTheme.cardShadow,
+                border: Border.all(color: AppTheme.border(context)),
+                boxShadow: AppTheme.isDark(context)
+                    ? AppTheme.darkCardShadow
+                    : AppTheme.cardShadow,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,27 +350,31 @@ class _TransactionOverviewCard extends StatelessWidget {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryLight,
+                          color: AppTheme.isDark(context)
+                              ? AppTheme.darkSafeBg
+                              : AppTheme.primaryLight,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.south_west_rounded,
-                          color: AppTheme.primaryColor,
+                          color: AppTheme.isDark(context)
+                              ? AppTheme.darkSafeText
+                              : AppTheme.primaryColor,
                           size: 18,
                         ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.chevron_right_rounded,
-                          size: 16, color: AppTheme.textSecondary),
+                      Icon(Icons.chevron_right_rounded,
+                          size: 16, color: AppTheme.textSecondaryColor(context)),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     'Tổng Nhập kho',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary),
+                        color: AppTheme.textSecondaryColor(context)),
                   ),
                   const SizedBox(height: 2),
                   FittedBox(
@@ -379,17 +385,19 @@ class _TransactionOverviewCard extends StatelessWidget {
                       style: AppTheme.tabularFigures(
                         fontSize: 20,
                         fontWeight: FontWeight.w900,
-                        color: AppTheme.primaryColor,
+                        color: AppTheme.isDark(context)
+                            ? AppTheme.darkSafeText
+                            : AppTheme.primaryColor,
                       ),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '$importCount phiếu nhập',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary),
+                        color: AppTheme.textSecondaryColor(context)),
                   ),
                 ],
               ),
@@ -407,8 +415,10 @@ class _TransactionOverviewCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppTheme.borderColor),
-                boxShadow: AppTheme.cardShadow,
+                border: Border.all(color: AppTheme.border(context)),
+                boxShadow: AppTheme.isDark(context)
+                    ? AppTheme.darkCardShadow
+                    : AppTheme.cardShadow,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,17 +439,17 @@ class _TransactionOverviewCard extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.chevron_right_rounded,
-                          size: 16, color: AppTheme.textSecondary),
+                      Icon(Icons.chevron_right_rounded,
+                          size: 16, color: AppTheme.textSecondaryColor(context)),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     'Tổng Xuất kho',
                     style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary),
+                        color: AppTheme.textSecondaryColor(context)),
                   ),
                   const SizedBox(height: 2),
                   FittedBox(
@@ -457,10 +467,10 @@ class _TransactionOverviewCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '$exportCount phiếu xuất',
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondary),
+                        color: AppTheme.textSecondaryColor(context)),
                   ),
                 ],
               ),
@@ -511,11 +521,11 @@ class _OcrQuickBanner extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Nhập kho bằng OCR Hóa đơn / Cân xe',
                     style: TextStyle(
                       fontSize: 13,
@@ -525,18 +535,18 @@ class _OcrQuickBanner extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 1),
+                  const SizedBox(height: 1),
                   Text(
                     'Quét phiếu cân tự động điền số lượng',
                     style:
-                        TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                        TextStyle(fontSize: 11, color: AppTheme.textSecondaryColor(context)),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: AppTheme.textSecondary,
+              color: AppTheme.textSecondaryColor(context),
               size: 20,
             ),
           ],
@@ -581,8 +591,10 @@ class _HubItemCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.borderColor),
-          boxShadow: AppTheme.softShadow,
+          border: Border.all(color: AppTheme.border(context)),
+          boxShadow: AppTheme.isDark(context)
+              ? AppTheme.darkCardShadow
+              : AppTheme.softShadow,
         ),
         child: Row(
           children: [
@@ -607,10 +619,10 @@ class _HubItemCard extends StatelessWidget {
                           title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                            color: AppTheme.textPrimaryColor(context),
                           ),
                         ),
                       ),
@@ -640,20 +652,20 @@ class _HubItemCard extends StatelessWidget {
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                      color: AppTheme.textSecondaryColor(context),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 18,
-              color: AppTheme.textSecondary,
+              color: AppTheme.textSecondaryColor(context),
             ),
           ],
         ),
@@ -683,8 +695,10 @@ class _RecentTransactionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.borderColor),
-        boxShadow: AppTheme.softShadow,
+        border: Border.all(color: AppTheme.border(context)),
+        boxShadow: AppTheme.isDark(context)
+            ? AppTheme.darkCardShadow
+            : AppTheme.softShadow,
       ),
       child: Row(
         children: [
@@ -710,10 +724,10 @@ class _RecentTransactionCard extends StatelessWidget {
               children: [
                 Text(
                   entry.riceName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.textPrimaryColor(context),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -721,10 +735,10 @@ class _RecentTransactionCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${entry.code} • ${DateFormatter.ddMMyyyy(entry.date)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.textSecondaryColor(context),
                   ),
                 ),
               ],
@@ -745,10 +759,10 @@ class _RecentTransactionCard extends StatelessWidget {
               const SizedBox(height: 1),
               Text(
                 '~$bags bao • ${CurrencyFormatter.formatVnd(entry.totalAmount)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
+                  color: AppTheme.textSecondaryColor(context),
                 ),
               ),
             ],

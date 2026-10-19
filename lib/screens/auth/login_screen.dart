@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
@@ -337,7 +338,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 22,
+                                      horizontal: 18,
                                       vertical: 24,
                                     ),
                                     child: Column(
@@ -473,60 +474,75 @@ class _LoginScreenState extends State<LoginScreen> {
                                               child: InkWell(
                                                 borderRadius:
                                                     BorderRadius.circular(8),
-                                                onTap: () => setState(
-                                                  () => _rememberLogin =
-                                                      !_rememberLogin,
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    SizedBox(
-                                                      width: 24,
-                                                      height: 24,
-                                                      child: Checkbox(
-                                                        value: _rememberLogin,
-                                                        activeColor: AppTheme
-                                                            .primaryColor,
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(4),
-                                                        ),
-                                                        onChanged: (value) =>
+                                                onTap: () {
+                                                  HapticFeedback.selectionClick();
+                                                  setState(
+                                                    () => _rememberLogin =
+                                                        !_rememberLogin,
+                                                  );
+                                                },
+                                                child: Padding(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    vertical: 4,
+                                                  ),
+                                                  child: Row(
+                                                    children: [
+                                                      SizedBox(
+                                                        width: 20,
+                                                        height: 20,
+                                                        child: Checkbox(
+                                                          value: _rememberLogin,
+                                                          activeColor: AppTheme
+                                                              .primaryColor,
+                                                          visualDensity: VisualDensity.compact,
+                                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(4),
+                                                          ),
+                                                          onChanged: (value) {
+                                                            HapticFeedback.selectionClick();
                                                             setState(
-                                                          () => _rememberLogin =
-                                                              value ?? false,
+                                                              () => _rememberLogin =
+                                                                  value ?? false,
+                                                            );
+                                                          },
                                                         ),
                                                       ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Flexible(
-                                                      child: Text(
-                                                        'Ghi nhớ đăng nhập',
-                                                        style: TextStyle(
-                                                          fontSize: 13,
-                                                          color: AppTheme
-                                                              .textSecondaryColor(context),
+                                                      const SizedBox(width: 6),
+                                                      Flexible(
+                                                        child: Text(
+                                                          'Ghi nhớ đăng nhập',
+                                                          style: TextStyle(
+                                                            fontSize: 12.5,
+                                                            color: AppTheme
+                                                                .textSecondaryColor(context),
+                                                          ),
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
                                                         ),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
                                                       ),
-                                                    ),
-                                                  ],
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                             TextButton(
                                               onPressed: _isLoading
                                                   ? null
-                                                  : _showForgotPasswordDialog,
+                                                  : () {
+                                                      HapticFeedback.lightImpact();
+                                                      _showForgotPasswordDialog();
+                                                    },
                                               style: TextButton.styleFrom(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                  horizontal: 6,
+                                                  horizontal: 4,
                                                   vertical: 4,
                                                 ),
-                                                minimumSize: Size.zero,
+                                                minimumSize: const Size(0, 36),
                                                 tapTargetSize:
                                                     MaterialTapTargetSize
                                                         .shrinkWrap,
@@ -538,7 +554,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                       ? AppTheme.darkSafeText
                                                       : AppTheme.primaryDark,
                                                   fontWeight: FontWeight.w700,
-                                                  fontSize: 13,
+                                                  fontSize: 12.5,
                                                 ),
                                               ),
                                             ),
@@ -549,11 +565,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                         // Nút Đăng nhập
                                         FilledButton(
-                                          onPressed:
-                                              _isLoading ? null : _submit,
+                                          onPressed: _isLoading
+                                              ? null
+                                              : () {
+                                                  HapticFeedback.lightImpact();
+                                                  _submit();
+                                                },
                                           style: FilledButton.styleFrom(
                                             backgroundColor:
                                                 AppTheme.primaryColor,
+                                            minimumSize: const Size.fromHeight(50),
                                             padding: const EdgeInsets.symmetric(
                                               vertical: 14,
                                             ),
@@ -598,17 +619,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                             ),
                                             Padding(
                                               padding: const EdgeInsets.symmetric(
-                                                horizontal: 12,
+                                                horizontal: 14,
                                               ),
                                               child: Text(
                                                 'HOẶC',
                                                 style: TextStyle(
                                                   color: isDark
                                                       ? AppTheme.darkTextMuted
-                                                      : AppTheme.textMuted,
-                                                  fontSize: 11,
+                                                      : AppTheme.textSecondary,
+                                                  fontSize: 11.5,
                                                   fontWeight: FontWeight.w700,
-                                                  letterSpacing: 0.8,
+                                                  letterSpacing: 1.0,
                                                 ),
                                               ),
                                             ),
@@ -627,7 +648,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                         OutlinedButton.icon(
                                           onPressed: _isLoading
                                               ? null
-                                              : _showRegisterDialog,
+                                              : () {
+                                                  HapticFeedback.lightImpact();
+                                                  _showRegisterDialog();
+                                                },
                                           icon: const Icon(
                                             Icons.person_add_rounded,
                                             size: 19,
@@ -654,6 +678,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 ? AppTheme.darkSafeBg
                                                 : AppTheme.primaryLight
                                                     .withValues(alpha: 0.4),
+                                            minimumSize: const Size.fromHeight(50),
                                             padding: const EdgeInsets.symmetric(
                                               vertical: 13,
                                             ),
@@ -682,9 +707,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             Center(
                               child: Text(
                                 'Dương Vân Trường - Vũ Huy',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: AppTheme.textMuted,
-                                  fontSize: 11.5,
+                                style: TextStyle(
+                                  color: AppTheme.textMutedColor(context),
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                             ),
@@ -732,6 +759,7 @@ class _RegisterDialogState extends State<_RegisterDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
@@ -747,99 +775,111 @@ class _RegisterDialogState extends State<_RegisterDialog> {
           ),
         ],
       ),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Họ và tên',
-                  prefixIcon: Icon(Icons.badge_outlined),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _nameController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Họ và tên',
+                    prefixIcon: Icon(Icons.badge_outlined),
+                  ),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Vui lòng nhập họ tên'
+                      : null,
                 ),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? 'Vui lòng nhập họ tên'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.newUsername],
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.newUsername],
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                  validator: _LoginScreenState._validateEmail,
                 ),
-                validator: _LoginScreenState._validateEmail,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: !_passwordVisible,
-                textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.newPassword],
-                decoration: InputDecoration(
-                  labelText: 'Mật khẩu',
-                  helperText: 'Tối thiểu 6 ký tự',
-                  prefixIcon: const Icon(Icons.lock_outline_rounded),
-                  suffixIcon: IconButton(
-                    tooltip: _passwordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu',
-                    onPressed: () => setState(
-                      () => _passwordVisible = !_passwordVisible,
-                    ),
-                    icon: Icon(
-                      _passwordVisible
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: !_passwordVisible,
+                  textInputAction: TextInputAction.next,
+                  autofillHints: const [AutofillHints.newPassword],
+                  decoration: InputDecoration(
+                    labelText: 'Mật khẩu',
+                    helperText: 'Tối thiểu 6 ký tự',
+                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                    suffixIcon: IconButton(
+                      tooltip: _passwordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu',
+                      onPressed: () => setState(
+                        () => _passwordVisible = !_passwordVisible,
+                      ),
+                      icon: Icon(
+                        _passwordVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
                     ),
                   ),
+                  validator: _LoginScreenState._validatePassword,
                 ),
-                validator: _LoginScreenState._validatePassword,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _confirmPasswordController,
-                obscureText: !_passwordVisible,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: 'Nhập lại mật khẩu',
-                  prefixIcon: Icon(Icons.verified_user_outlined),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  obscureText: !_passwordVisible,
+                  textInputAction: TextInputAction.done,
+                  decoration: const InputDecoration(
+                    labelText: 'Nhập lại mật khẩu',
+                    prefixIcon: Icon(Icons.verified_user_outlined),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Vui lòng nhập lại mật khẩu';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Mật khẩu nhập lại không khớp';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Vui lòng nhập lại mật khẩu';
-                  }
-                  if (value != _passwordController.text) {
-                    return 'Mật khẩu nhập lại không khớp';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                initialValue: 'Nhân viên (chờ quản trị viên kích hoạt)',
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'Vai trò',
-                  helperText: 'Vai trò được quản trị viên cấp sau khi đăng ký',
-                  prefixIcon: Icon(Icons.lock_person_outlined),
+                const SizedBox(height: 12),
+                TextFormField(
+                  initialValue: 'Nhân viên (chờ quản trị viên kích hoạt)',
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Vai trò',
+                    helperText: 'Vai trò được quản trị viên cấp sau khi đăng ký',
+                    prefixIcon: Icon(Icons.lock_person_outlined),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
       actions: [
         TextButton(
           onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            minimumSize: const Size(80, 44),
+          ),
           child: const Text('Hủy'),
         ),
         FilledButton(
           onPressed: _submitting ? null : _handleRegister,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(100, 44),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
           child: _submitting
               ? const SizedBox(
                   width: 20,
@@ -910,37 +950,64 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Khôi phục mật khẩu'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Nhập email đã đăng ký. Hệ thống sẽ gửi liên kết để bạn tạo mật khẩu mới.',
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      title: const Row(
+        children: [
+          Icon(Icons.lock_reset_rounded, color: AppTheme.primaryColor),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Khôi phục mật khẩu',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
-            const SizedBox(height: 14),
-            TextFormField(
-              controller: _controller,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Email tài khoản',
-                prefixIcon: Icon(Icons.email_outlined),
+          ),
+        ],
+      ),
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Nhập email đã đăng ký. Hệ thống sẽ gửi liên kết để bạn tạo mật khẩu mới.',
               ),
-              validator: _LoginScreenState._validateEmail,
-            ),
-          ],
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _controller,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email tài khoản',
+                  prefixIcon: Icon(Icons.email_outlined),
+                ),
+                validator: _LoginScreenState._validateEmail,
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
         TextButton(
           onPressed:
               _submitting ? null : () => Navigator.of(context).pop(false),
+          style: TextButton.styleFrom(
+            minimumSize: const Size(80, 44),
+          ),
           child: const Text('Hủy'),
         ),
         FilledButton(
           onPressed: _submitting ? null : _handleReset,
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(110, 44),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
           child: _submitting
               ? const SizedBox(
                   width: 20,

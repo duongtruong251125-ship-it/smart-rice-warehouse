@@ -23,12 +23,14 @@ class DashboardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveColor = accentColor ?? AppTheme.primaryColor;
 
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: AppTheme.cardBg(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderColor),
-        boxShadow: AppTheme.softShadow,
+        border: Border.all(color: AppTheme.border(context)),
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.softShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -50,10 +52,10 @@ class DashboardCard extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.textSecondaryColor(context),
                         ),
                       ),
                     ),
@@ -76,12 +78,12 @@ class DashboardCard extends StatelessWidget {
                   child: Text(
                     value,
                     maxLines: 1,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.textPrimaryColor(context),
                       letterSpacing: -0.4,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                 ),
@@ -91,10 +93,10 @@ class DashboardCard extends StatelessWidget {
                     subtitle!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                      color: AppTheme.textSecondaryColor(context),
                     ),
                   ),
                 ],

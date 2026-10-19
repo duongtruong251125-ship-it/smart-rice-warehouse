@@ -201,11 +201,15 @@ class _WarehouseLocationScreenState extends State<WarehouseLocationScreen> {
                     label: Text(zone),
                     selected: isSelected,
                     onSelected: (_) => setState(() => _selectedZone = zone),
-                    selectedColor: AppTheme.primaryLight,
+                    selectedColor: AppTheme.isDark(context)
+                        ? AppTheme.darkSafeBg
+                        : AppTheme.primaryLight,
                     labelStyle: TextStyle(
                       color: isSelected
-                          ? AppTheme.primaryColor
-                          : AppTheme.textPrimary,
+                          ? (AppTheme.isDark(context)
+                              ? AppTheme.darkSafeText
+                              : AppTheme.primaryColor)
+                          : AppTheme.textPrimaryColor(context),
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -276,6 +280,7 @@ class _LocationCardState extends State<_LocationCard> {
     final loc = widget.location;
     final batches = widget.storedBatches;
     final percent = (widget.totalWeight / loc.capacity).clamp(0.0, 1.0);
+    final isDark = AppTheme.isDark(context);
 
     return Card(
       child: Padding(
@@ -289,12 +294,12 @@ class _LocationCardState extends State<_LocationCard> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryLight,
+                    color: isDark ? AppTheme.darkSafeBg : AppTheme.primaryLight,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.shelves,
-                    color: AppTheme.primaryColor,
+                    color: isDark ? AppTheme.darkSafeText : AppTheme.primaryColor,
                     size: 22,
                   ),
                 ),
@@ -310,25 +315,27 @@ class _LocationCardState extends State<_LocationCard> {
                         children: [
                           Text(
                             loc.code,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
+                              color: AppTheme.textPrimaryColor(context),
                             ),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
+                              color: isDark
+                                  ? AppTheme.darkCardElevated
+                                  : const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               loc.zone,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                               ),
                             ),
                           ),
@@ -337,9 +344,9 @@ class _LocationCardState extends State<_LocationCard> {
                       const SizedBox(height: 2),
                       Text(
                         '${loc.rack} • ${loc.shelf}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.textSecondaryColor(context),
                         ),
                       ),
                     ],
@@ -367,8 +374,8 @@ class _LocationCardState extends State<_LocationCard> {
                     Expanded(
                       child: Text(
                         'Tải trọng: ${NumberFormatter.quantity(widget.totalWeight)} / ${NumberFormatter.quantity(loc.capacity)} kg',
-                        style: const TextStyle(
-                            fontSize: 11, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                            fontSize: 11, color: AppTheme.textSecondaryColor(context)),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -443,8 +450,8 @@ class _LocationCardState extends State<_LocationCard> {
                     return ListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.qr_code_2_rounded,
-                          size: 20, color: AppTheme.textSecondary),
+                      leading: Icon(Icons.qr_code_2_rounded,
+                          size: 20, color: AppTheme.textSecondaryColor(context)),
                       title: Text(
                         '${b.code} - ${b.riceName}',
                         style: const TextStyle(

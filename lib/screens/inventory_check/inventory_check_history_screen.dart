@@ -83,17 +83,17 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
                     children: [
                       Text(
                         session.code,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                          color: AppTheme.textPrimaryColor(context),
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         '${DateFormatter.ddMMyyyy(session.createdAt)} • Người lập: ${session.createdBy}',
-                        style: const TextStyle(
-                            fontSize: 11, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                            fontSize: 11, color: AppTheme.textSecondaryColor(context)),
                       ),
                     ],
                   ),
@@ -143,10 +143,10 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
               const SizedBox(height: 6),
               Text(
                 'Ghi chú: ${session.note!}',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
-                    color: AppTheme.textSecondary),
+                    color: AppTheme.textSecondaryColor(context)),
               ),
             ],
             if (session.items.isNotEmpty) ...[
@@ -201,9 +201,9 @@ class _SessionHistoryCardState extends State<_SessionHistoryCard> {
                                 ),
                                 Text(
                                   'Sổ sách: ${NumberFormatter.quantity(item.expectedQuantity)} kg → Thực tế: ${NumberFormatter.quantity(item.actualQuantity)} kg',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 11,
-                                      color: AppTheme.textSecondary),
+                                      color: AppTheme.textSecondaryColor(context)),
                                 ),
                                 if (itemDiff)
                                   Text(

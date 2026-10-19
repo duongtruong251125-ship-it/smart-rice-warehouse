@@ -53,34 +53,37 @@ class ExportDetailScreen extends StatelessWidget {
                       Text(
                         DateFormatter.ddMMyyyy(receipt.date),
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.textSecondaryColor(context),
                         ),
                       ),
                     ],
                   ),
                   const Divider(height: 24),
-                  _infoRow('Khách hàng:', receipt.customerName),
+                  _infoRow(context, 'Khách hàng:', receipt.customerName),
                   const SizedBox(height: 8),
-                  _infoRow('Loại gạo xuất:', receipt.riceName),
+                  _infoRow(context, 'Loại gạo xuất:', receipt.riceName),
                   const SizedBox(height: 8),
                   _infoRow(
+                    context,
                     'Số lượng xuất:',
                     '${NumberFormatter.quantity(receipt.quantity)} kg',
                   ),
                   const SizedBox(height: 8),
                   _infoRow(
+                    context,
                     'Đơn giá bán:',
                     CurrencyFormatter.formatVnd(receipt.sellingPrice),
                   ),
                   const SizedBox(height: 8),
                   _infoRow(
+                    context,
                     'Tổng tiền:',
                     CurrencyFormatter.formatVnd(receipt.totalAmount),
                     isHighlighted: true,
                   ),
                   if (receipt.note.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    _infoRow('Ghi chú:', receipt.note),
+                    _infoRow(context, 'Ghi chú:', receipt.note),
                   ],
                 ],
               ),
@@ -109,7 +112,7 @@ class ExportDetailScreen extends StatelessWidget {
           Text(
             'Hệ thống tự động ưu tiên xuất các lô có hạn dùng gần nhất trước.',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: AppTheme.textSecondary,
+              color: AppTheme.textSecondaryColor(context),
             ),
           ),
           const SizedBox(height: 12),
@@ -120,16 +123,16 @@ class ExportDetailScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.info_outline_rounded,
-                      color: AppTheme.textSecondary,
+                      color: AppTheme.textSecondaryColor(context),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Phiếu xuất ban đầu chưa lưu chi tiết phân bổ từng lô hoặc xuất kho trực tiếp.',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.textSecondaryColor(context),
                         ),
                       ),
                     ),
@@ -219,7 +222,7 @@ class ExportDetailScreen extends StatelessWidget {
                           Text(
                             'Tồn lô sau khi xuất:',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textSecondary,
+                              color: AppTheme.textSecondaryColor(context),
                             ),
                           ),
                           Text(
@@ -240,15 +243,17 @@ class ExportDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(String label, String value, {bool isHighlighted = false}) {
+  Widget _infoRow(BuildContext context, String label, String value,
+      {bool isHighlighted = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: TextStyle(
-            color:
-                isHighlighted ? AppTheme.textPrimary : AppTheme.textSecondary,
+            color: isHighlighted
+                ? AppTheme.textPrimaryColor(context)
+                : AppTheme.textSecondaryColor(context),
             fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -256,8 +261,9 @@ class ExportDetailScreen extends StatelessWidget {
           value,
           style: TextStyle(
             fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,
-            color:
-                isHighlighted ? AppTheme.secondaryColor : AppTheme.textPrimary,
+            color: isHighlighted
+                ? AppTheme.secondaryColor
+                : AppTheme.textPrimaryColor(context),
             fontSize: isHighlighted ? 16 : 14,
           ),
         ),

@@ -91,6 +91,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 16,
@@ -101,13 +103,13 @@ class _MainScreenState extends State<MainScreen> {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: AppTheme.primaryLight,
+                color: isDark ? AppTheme.darkSafeBg : AppTheme.primaryLight,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.warehouse_rounded,
                 size: 22,
-                color: AppTheme.primaryDark,
+                color: isDark ? AppTheme.darkSafeText : AppTheme.primaryDark,
               ),
             ),
             const SizedBox(width: 12),
@@ -132,10 +134,10 @@ class _MainScreenState extends State<MainScreen> {
                       key: ValueKey<String>(_titles[_selectedIndex]),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: AppTheme.textPrimaryColor(context),
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -153,13 +155,13 @@ class _MainScreenState extends State<MainScreen> {
             icon: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceMuted,
+                color: isDark ? AppTheme.darkCardElevated : AppTheme.surfaceMuted,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.qr_code_scanner_rounded,
                 size: 19,
-                color: AppTheme.textPrimary,
+                color: AppTheme.textPrimaryColor(context),
               ),
             ),
           ),
@@ -169,11 +171,11 @@ class _MainScreenState extends State<MainScreen> {
               return IconButton(
                 tooltip: 'Cảnh báo & Thông báo',
                 onPressed: () =>
-                    Navigator.of(context).pushNamed(AppRoutes.alerts),
+                Navigator.of(context).pushNamed(AppRoutes.alerts),
                 icon: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceMuted,
+                    color: isDark ? AppTheme.darkCardElevated : AppTheme.surfaceMuted,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Badge(
@@ -183,13 +185,14 @@ class _MainScreenState extends State<MainScreen> {
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
                     ),
                     backgroundColor: AppTheme.dangerColor,
-                    child: const Icon(
+                    child: Icon(
                       Icons.notifications_none_rounded,
                       size: 19,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.textPrimaryColor(context),
                     ),
                   ),
                 ),

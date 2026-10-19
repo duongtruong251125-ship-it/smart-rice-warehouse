@@ -67,9 +67,10 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppTheme.scaffoldBg(context),
       body: SafeArea(
         child: Stack(
           children: [
@@ -167,10 +168,10 @@ class _SplashScreenState extends State<SplashScreen>
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryLight,
+                          color: AppTheme.safeBgColor(context),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFFC3E8D3),
+                            color: AppTheme.safeBorderColor(context),
                             width: 1,
                           ),
                         ),
@@ -178,7 +179,7 @@ class _SplashScreenState extends State<SplashScreen>
                           'POS • QUẢN LÝ KHO GẠO TINH GỌN',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.primaryDark,
+                            color: AppTheme.safeTextColor(context),
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.8,
                           ),
@@ -192,7 +193,7 @@ class _SplashScreenState extends State<SplashScreen>
                         'Smart Rice Warehouse',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.headlineSmall?.copyWith(
-                          color: AppTheme.textPrimary,
+                          color: AppTheme.textPrimaryColor(context),
                           fontWeight: FontWeight.w900,
                           letterSpacing: -0.5,
                           fontSize: 26,
@@ -206,7 +207,7 @@ class _SplashScreenState extends State<SplashScreen>
                         'Vận hành kho gạo nhanh chóng, trực quan & chuẩn xác',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
+                          color: AppTheme.textSecondaryColor(context),
                           height: 1.4,
                         ),
                       ),
@@ -219,20 +220,22 @@ class _SplashScreenState extends State<SplashScreen>
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Column(
                           children: [
-                            const ClipRRect(
+                            ClipRRect(
                               borderRadius:
-                                  BorderRadius.all(Radius.circular(6)),
+                                  const BorderRadius.all(Radius.circular(6)),
                               child: LinearProgressIndicator(
                                 minHeight: 4,
                                 color: AppTheme.primaryColor,
-                                backgroundColor: AppTheme.primaryLight,
+                                backgroundColor: isDark
+                                    ? AppTheme.darkBorder
+                                    : AppTheme.primaryLight,
                               ),
                             ),
                             const SizedBox(height: 12),
                             Text(
                               'Đang kết nối hệ thống kho...',
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color: AppTheme.textSecondary,
+                                color: AppTheme.textSecondaryColor(context),
                                 fontWeight: FontWeight.w500,
                                 fontSize: 12,
                               ),
@@ -255,7 +258,7 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Text(
                   'Phiên bản 1.0.0 • Nền tảng Nông nghiệp Số FEFO & OCR',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppTheme.textMuted,
+                    color: AppTheme.textMutedColor(context),
                     fontSize: 11,
                     letterSpacing: 0.3,
                   ),

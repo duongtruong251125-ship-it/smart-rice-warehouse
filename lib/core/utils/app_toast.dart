@@ -69,8 +69,8 @@ abstract final class AppToast {
           message,
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: AppTheme.textPrimary,
+          style: TextStyle(
+            color: AppTheme.textPrimaryColor(effectiveContext),
             fontWeight: FontWeight.w700,
             height: 1.3,
           ),
@@ -79,8 +79,8 @@ abstract final class AppToast {
         autoCloseDuration: duration,
         animationDuration: const Duration(milliseconds: 280),
         primaryColor: color,
-        backgroundColor: AppTheme.cardColor,
-        foregroundColor: AppTheme.textPrimary,
+        backgroundColor: AppTheme.cardBg(effectiveContext),
+        foregroundColor: AppTheme.textPrimaryColor(effectiveContext),
         borderRadius: BorderRadius.circular(14),
         margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -88,13 +88,15 @@ abstract final class AppToast {
         closeOnClick: true,
         dragToClose: true,
         pauseOnHover: true,
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A17251F),
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppTheme.isDark(effectiveContext)
+            ? AppTheme.darkCardShadow
+            : const [
+                BoxShadow(
+                  color: Color(0x1A17251F),
+                  blurRadius: 24,
+                  offset: Offset(0, 8),
+                ),
+              ],
       );
     }
 

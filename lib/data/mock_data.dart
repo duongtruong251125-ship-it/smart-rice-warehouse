@@ -18,46 +18,53 @@ abstract final class MockData {
     role: 'admin',
   );
 
-  static const List<RiceCharacteristicModel> defaultCharacteristics = <RiceCharacteristicModel>[
+  static const List<RiceCharacteristicModel> defaultCharacteristics =
+      <RiceCharacteristicModel>[
     RiceCharacteristicModel(
       id: 'char-deo',
       name: 'Dẻo',
-      description: 'Hạt cơm dẻo quánh, kết dính tốt, giữ độ ẩm lâu khi để nguội.',
+      description:
+          'Hạt cơm dẻo quánh, kết dính tốt, giữ độ ẩm lâu khi để nguội.',
       colorValue: 0xFF0D9488,
       isDefault: true,
     ),
     RiceCharacteristicModel(
       id: 'char-thom',
       name: 'Thơm',
-      description: 'Mùi thơm tự nhiên đặc trưng như hoa lài, lá dứa thoang thoảng.',
+      description:
+          'Mùi thơm tự nhiên đặc trưng như hoa lài, lá dứa thoang thoảng.',
       colorValue: 0xFFD97706,
       isDefault: true,
     ),
     RiceCharacteristicModel(
       id: 'char-mem',
       name: 'Mềm',
-      description: 'Cơm mềm tơi, dễ nhai, phù hợp gia đình, người lớn tuổi và trẻ em.',
+      description:
+          'Cơm mềm tơi, dễ nhai, phù hợp gia đình, người lớn tuổi và trẻ em.',
       colorValue: 0xFF2563EB,
       isDefault: true,
     ),
     RiceCharacteristicModel(
       id: 'char-xop',
       name: 'Xốp',
-      description: 'Cơm xốp, nở hạt nhiều, ráo nước, rất thích hợp cho quán cơm chiên.',
+      description:
+          'Cơm xốp, nở hạt nhiều, ráo nước, rất thích hợp cho quán cơm chiên.',
       colorValue: 0xFF7C3AED,
       isDefault: true,
     ),
     RiceCharacteristicModel(
       id: 'char-kho',
       name: 'Khô',
-      description: 'Ít dẻo, hạt rời rạc, thích hợp làm bún phở, bánh cuốn và chế biến.',
+      description:
+          'Ít dẻo, hạt rời rạc, thích hợp làm bún phở, bánh cuốn và chế biến.',
       colorValue: 0xFFB45309,
       isDefault: true,
     ),
     RiceCharacteristicModel(
       id: 'char-ngot',
       name: 'Ngọt cơm',
-      description: 'Vị ngọt thanh hậu đậm đà từ tinh bột nguyên chất của lúa mùa.',
+      description:
+          'Vị ngọt thanh hậu đậm đà từ tinh bột nguyên chất của lúa mùa.',
       colorValue: 0xFFE11D48,
       isDefault: true,
     ),
@@ -75,6 +82,7 @@ abstract final class MockData {
       minimumStock: 300,
       description: 'Gạo thơm, hạt dài và mềm cơm.',
       isActive: true,
+      imagePath: 'assets/images/rice/st25.jpg',
       characteristicIds: ['char-deo', 'char-thom', 'char-mem'],
     ),
     RiceModel(
@@ -88,6 +96,7 @@ abstract final class MockData {
       minimumStock: 250,
       description: 'Gạo thơm nhẹ, phù hợp bữa ăn hằng ngày.',
       isActive: true,
+      imagePath: 'assets/images/rice/jasmine.jpg',
       characteristicIds: ['char-thom', 'char-mem'],
     ),
     RiceModel(
@@ -101,6 +110,7 @@ abstract final class MockData {
       minimumStock: 120,
       description: 'Gạo nguyên cám giàu chất xơ.',
       isActive: true,
+      imagePath: 'assets/images/rice/brown-rice.jpg',
       characteristicIds: ['char-kho'],
     ),
     RiceModel(
@@ -114,6 +124,7 @@ abstract final class MockData {
       minimumStock: 180,
       description: 'Gạo dẻo, thơm tự nhiên.',
       isActive: true,
+      imagePath: 'assets/images/rice/nang-huong.jpg',
     ),
     RiceModel(
       id: 'rice-glutinous',
@@ -126,6 +137,7 @@ abstract final class MockData {
       minimumStock: 150,
       description: 'Nếp dẻo dùng cho xôi và bánh.',
       isActive: true,
+      imagePath: 'assets/images/rice/glutinous-rice.jpg',
     ),
   ];
 
@@ -703,9 +715,40 @@ abstract final class MockData {
       quantity: 15,
       reason: DamageReason.baoRach,
       note: 'Rách bao trong quá trình bốc dỡ',
+      imagePath: 'assets/images/damage/torn-sack.jpg',
       createdBy: 'Admin',
       createdAt: DateTime(2026, 9, 25, 14, 15),
       status: DamageReportStatus.confirmed,
+    ),
+    DamageReportModel(
+      id: 'damage-002',
+      code: 'BH-202610-002',
+      batchId: 'batch-003',
+      batchCode: 'LO-JAS-001',
+      riceId: 'rice-jasmine',
+      riceName: 'Gạo Jasmine',
+      quantity: 8,
+      reason: DamageReason.moc,
+      note: 'Bao bị thấm nước, gạo vón cục và xuất hiện mốc.',
+      imagePath: 'assets/images/damage/wet-mold.jpg',
+      createdBy: 'Admin',
+      createdAt: DateTime(2026, 10, 12, 9, 20),
+      status: DamageReportStatus.pending,
+    ),
+    DamageReportModel(
+      id: 'damage-003',
+      code: 'BH-202610-003',
+      batchId: 'batch-006',
+      batchCode: 'LO-NEP-001',
+      riceId: 'rice-glutinous',
+      riceName: 'Nếp',
+      quantity: 5,
+      reason: DamageReason.conTrung,
+      note: 'Phát hiện mọt gạo trong mẫu kiểm tra của lô.',
+      imagePath: 'assets/images/damage/rice-weevils.jpg',
+      createdBy: 'Admin',
+      createdAt: DateTime(2026, 10, 16, 15, 40),
+      status: DamageReportStatus.pending,
     ),
   ];
 }

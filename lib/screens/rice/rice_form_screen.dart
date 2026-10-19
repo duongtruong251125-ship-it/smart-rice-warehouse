@@ -122,7 +122,8 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
               ),
               const SizedBox(height: 12),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: AppTheme.primaryColor),
+                leading: const Icon(Icons.camera_alt_outlined,
+                    color: AppTheme.primaryColor),
                 title: const Text('Chụp ảnh hạt gạo mới'),
                 onTap: () {
                   Navigator.pop(bottomSheetContext);
@@ -130,7 +131,8 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined, color: AppTheme.primaryColor),
+                leading: const Icon(Icons.photo_library_outlined,
+                    color: AppTheme.primaryColor),
                 title: const Text('Chọn ảnh từ thư viện'),
                 onTap: () {
                   Navigator.pop(bottomSheetContext);
@@ -139,8 +141,10 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
               ),
               if (_imagePath != null)
                 ListTile(
-                  leading: const Icon(Icons.delete_outline_rounded, color: AppTheme.dangerColor),
-                  title: const Text('Xóa ảnh hiện tại', style: TextStyle(color: AppTheme.dangerColor)),
+                  leading: const Icon(Icons.delete_outline_rounded,
+                      color: AppTheme.dangerColor),
+                  title: const Text('Xóa ảnh hiện tại',
+                      style: TextStyle(color: AppTheme.dangerColor)),
                   onTap: () {
                     Navigator.pop(bottomSheetContext);
                     setState(() => _imagePath = null);
@@ -230,8 +234,7 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
 
     final riceProvider = context.read<RiceProvider>();
     final rice = RiceModel(
-      id: _originalRice?.id ??
-          const Uuid().v4(),
+      id: _originalRice?.id ?? const Uuid().v4(),
       code: _codeController.text.trim(),
       name: _nameController.text.trim(),
       category: _categoryController.text.trim(),
@@ -262,8 +265,7 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
       return;
     }
 
-    if (oldImageToDelete != null &&
-        oldImageToDelete != permanentImagePath) {
+    if (oldImageToDelete != null && oldImageToDelete != permanentImagePath) {
       await ImageStorageService.deleteImageIfExists(oldImageToDelete);
     }
     if (!mounted) return;
@@ -297,7 +299,8 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.image_outlined, size: 18, color: colorScheme.primary),
+                    Icon(Icons.image_outlined,
+                        size: 18, color: colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       'Ảnh minh họa giống gạo',
@@ -310,10 +313,14 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
                 if (hasImage)
                   TextButton.icon(
                     onPressed: () => setState(() => _imagePath = null),
-                    icon: const Icon(Icons.delete_outline, size: 16, color: AppTheme.dangerColor),
-                    label: const Text('Xóa ảnh', style: TextStyle(color: AppTheme.dangerColor, fontSize: 12)),
+                    icon: const Icon(Icons.delete_outline,
+                        size: 16, color: AppTheme.dangerColor),
+                    label: const Text('Xóa ảnh',
+                        style: TextStyle(
+                            color: AppTheme.dangerColor, fontSize: 12)),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
@@ -330,10 +337,13 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        color:
+                            colorScheme.outlineVariant.withValues(alpha: 0.5),
                       ),
                       image: DecorationImage(
-                        image: FileImage(File(_imagePath!)),
+                        image: _imagePath!.startsWith('assets/')
+                            ? AssetImage(_imagePath!)
+                            : FileImage(File(_imagePath!)),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -343,11 +353,13 @@ class _RiceFormScreenState extends State<RiceFormScreen> {
                     child: ElevatedButton.icon(
                       onPressed: _showImageSourcePicker,
                       icon: const Icon(Icons.photo_camera_rounded, size: 16),
-                      label: const Text('Đổi ảnh', style: TextStyle(fontSize: 12)),
+                      label:
+                          const Text('Đổi ảnh', style: TextStyle(fontSize: 12)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black.withValues(alpha: 0.7),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         visualDensity: VisualDensity.compact,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

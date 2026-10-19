@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
 
 class TransactionReceiptCard extends StatelessWidget {
   const TransactionReceiptCard({
@@ -156,9 +157,11 @@ class TransactionReceiptCard extends StatelessWidget {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
+                          color: AppTheme.isDark(context)
+                              ? AppTheme.darkCardElevated
+                              : const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: AppTheme.border(context)),
                         ),
                         child: Row(
                           children: [

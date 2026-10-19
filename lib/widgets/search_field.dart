@@ -17,29 +17,31 @@ class SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Container(
       height: 46,
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: AppTheme.cardBg(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borderColor, width: 1),
-        boxShadow: AppTheme.softShadow,
+        border: Border.all(color: AppTheme.border(context), width: 1),
+        boxShadow: isDark ? AppTheme.darkCardShadow : AppTheme.softShadow,
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         textInputAction: TextInputAction.search,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 13.5,
           fontWeight: FontWeight.w500,
-          color: AppTheme.textPrimary,
+          color: AppTheme.textPrimaryColor(context),
         ),
         decoration: InputDecoration(
           isDense: true,
           hintText: hintText,
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
             fontSize: 13,
-            color: AppTheme.textMuted,
+            color: AppTheme.textMutedColor(context),
             fontWeight: FontWeight.w400,
           ),
           filled: false,
@@ -66,10 +68,10 @@ class SearchField extends StatelessWidget {
                     controller.clear();
                     onChanged('');
                   },
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.cancel_rounded,
                     size: 18,
-                    color: AppTheme.textMuted,
+                    color: AppTheme.textMutedColor(context),
                   ),
                 ),
               if (trailing != null) trailing!,
@@ -100,6 +102,8 @@ class HorizontalFilterBar<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
@@ -120,13 +124,14 @@ class HorizontalFilterBar<T> extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color:
-                      isSelected ? AppTheme.primaryColor : AppTheme.cardColor,
+                  color: isSelected
+                      ? AppTheme.primaryColor
+                      : AppTheme.cardBg(context),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
                     color: isSelected
                         ? AppTheme.primaryColor
-                        : AppTheme.borderColor,
+                        : AppTheme.border(context),
                     width: 1,
                   ),
                   boxShadow: isSelected
@@ -149,8 +154,9 @@ class HorizontalFilterBar<T> extends StatelessWidget {
                         fontSize: 12,
                         fontWeight:
                             isSelected ? FontWeight.w700 : FontWeight.w600,
-                        color:
-                            isSelected ? Colors.white : AppTheme.textSecondary,
+                        color: isSelected
+                            ? Colors.white
+                            : AppTheme.textSecondaryColor(context),
                       ),
                     ),
                     if (count != null && count > 0) ...[
@@ -163,7 +169,9 @@ class HorizontalFilterBar<T> extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Colors.white.withValues(alpha: 0.25)
-                              : AppTheme.surfaceMuted,
+                              : (isDark
+                                  ? AppTheme.darkCardElevated
+                                  : AppTheme.surfaceMuted),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
@@ -173,7 +181,7 @@ class HorizontalFilterBar<T> extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                             color: isSelected
                                 ? Colors.white
-                                : AppTheme.textSecondary,
+                                : AppTheme.textSecondaryColor(context),
                           ),
                         ),
                       ),

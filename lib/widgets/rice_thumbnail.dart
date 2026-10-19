@@ -34,8 +34,16 @@ class RiceThumbnail extends StatelessWidget {
   bool get _hasValidImage {
     final path = _effectiveImagePath;
     if (path == null || path.trim().isEmpty) return false;
+    if (path.startsWith('assets/')) return true;
     final file = File(path);
     return file.existsSync();
+  }
+
+  ImageProvider<Object> get _imageProvider {
+    final path = _effectiveImagePath!;
+    return path.startsWith('assets/')
+        ? AssetImage(path)
+        : FileImage(File(path));
   }
 
   void _showImagePreview(BuildContext context) {
@@ -43,8 +51,6 @@ class RiceThumbnail extends StatelessWidget {
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final file = File(_effectiveImagePath!);
-
     showDialog<void>(
       context: context,
       barrierDismissible: true,
@@ -62,7 +68,8 @@ class RiceThumbnail extends StatelessWidget {
                   color: Colors.black54,
                   shape: const CircleBorder(),
                   child: IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Colors.white, size: 22),
+                    icon: const Icon(Icons.close_rounded,
+                        color: Colors.white, size: 22),
                     tooltip: 'Đóng',
                     onPressed: () => Navigator.of(dialogCtx).pop(),
                   ),
@@ -95,14 +102,15 @@ class RiceThumbnail extends StatelessWidget {
                     Flexible(
                       child: InteractiveViewer(
                         maxScale: 3.5,
-                        child: Image.file(
-                          file,
+                        child: Image(
+                          image: _imageProvider,
                           fit: BoxFit.contain,
                           errorBuilder: (_, __, ___) => Container(
                             height: 200,
                             color: colorScheme.surfaceContainerHighest,
                             child: const Center(
-                              child: Icon(Icons.broken_image_rounded, size: 48, color: Colors.grey),
+                              child: Icon(Icons.broken_image_rounded,
+                                  size: 48, color: Colors.grey),
                             ),
                           ),
                         ),
@@ -115,7 +123,9 @@ class RiceThumbnail extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: colorScheme.surface,
                         border: Border(
-                          top: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+                          top: BorderSide(
+                              color: colorScheme.outlineVariant
+                                  .withValues(alpha: 0.4)),
                         ),
                       ),
                       child: Column(
@@ -135,7 +145,8 @@ class RiceThumbnail extends StatelessWidget {
                               ),
                               if (_effectiveCode.isNotEmpty)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: colorScheme.primaryContainer,
                                     borderRadius: BorderRadius.circular(8),
@@ -155,7 +166,8 @@ class RiceThumbnail extends StatelessWidget {
                             const SizedBox(height: 6),
                             Row(
                               children: [
-                                Icon(Icons.grain_rounded, size: 14, color: colorScheme.primary),
+                                Icon(Icons.grain_rounded,
+                                    size: 14, color: colorScheme.primary),
                                 const SizedBox(width: 4),
                                 Text(
                                   _effectiveCategory,
@@ -198,7 +210,7 @@ class RiceThumbnail extends StatelessWidget {
             width: 1,
           ),
           image: DecorationImage(
-            image: FileImage(File(_effectiveImagePath!)),
+            image: _imageProvider,
             fit: BoxFit.cover,
           ),
         ),
