@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/core/firebase/firestore_converters.dart';
-import 'package:smart_rice_warehouse/core/firebase/firestore_paths.dart';
+import 'package:smart_rice_warehouse/data/firebase/config/firestore_converters.dart';
+import 'package:smart_rice_warehouse/data/firebase/config/firestore_paths.dart';
 
 void main() {
   group('Firestore paths', () {

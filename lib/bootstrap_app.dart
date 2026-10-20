@@ -1,36 +1,46 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_rice_warehouse/app.dart';
-import 'package:smart_rice_warehouse/core/firebase/firestore_paths.dart';
-import 'package:smart_rice_warehouse/core/services/firebase_auth_service.dart';
-import 'package:smart_rice_warehouse/core/services/settings_service.dart';
-import 'package:smart_rice_warehouse/core/theme/app_theme.dart';
-import 'package:smart_rice_warehouse/data/app_database.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/customer_model.dart';
-import 'package:smart_rice_warehouse/models/damage_report_model.dart';
-import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
-import 'package:smart_rice_warehouse/models/rice_characteristic_model.dart';
-import 'package:smart_rice_warehouse/models/rice_model.dart';
-import 'package:smart_rice_warehouse/models/supplier_model.dart';
-import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
-import 'package:smart_rice_warehouse/repositories/contracts/crud_repository.dart';
-import 'package:smart_rice_warehouse/repositories/contracts/user_profile_repository.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/batch_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/customer_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/damage_report_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/export_receipt_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/firestore_collection_repository.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/firestore_user_profile_repository.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/import_receipt_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/inventory_check_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/inventory_transaction_repository.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/rice_characteristic_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/rice_product_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/supplier_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/warehouse_location_mapper.dart';
+import 'package:smart_rice_warehouse/data/firebase/config/firestore_paths.dart';
+import 'package:smart_rice_warehouse/data/firebase/firebase_auth_service.dart';
+import 'package:smart_rice_warehouse/data/local/settings_service.dart';
+import 'package:smart_rice_warehouse/presentation/theme/app_theme.dart';
+import 'package:smart_rice_warehouse/data/local/app_database.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/customer_model.dart';
+import 'package:smart_rice_warehouse/logic/models/damage_report_model.dart';
+import 'package:smart_rice_warehouse/logic/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/inventory_check_model.dart';
+import 'package:smart_rice_warehouse/logic/models/rice_characteristic_model.dart';
+import 'package:smart_rice_warehouse/logic/models/rice_model.dart';
+import 'package:smart_rice_warehouse/logic/models/supplier_model.dart';
+import 'package:smart_rice_warehouse/logic/models/warehouse_location_model.dart';
+import 'package:smart_rice_warehouse/logic/contracts/repositories/crud_repository.dart';
+import 'package:smart_rice_warehouse/logic/contracts/repositories/user_profile_repository.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/firestore_batch_repository.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/customer_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/damage_report_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/export_receipt_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/firestore_collection_repository.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/firestore_user_profile_repository.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/import_receipt_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/inventory_check_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/callable_inventory_transactions.dart';
+import 'package:smart_rice_warehouse/logic/contracts/inventory_transactions.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/rice_characteristic_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/rice_product_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/supplier_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/warehouse_location_mapper.dart';
+
+import 'package:smart_rice_warehouse/data/firebase/business_sync_policy.dart';
+import 'package:smart_rice_warehouse/data/firebase/firebase_data_migration_service.dart';
+import 'package:smart_rice_warehouse/logic/models/warehouse_data_mode.dart';
+import 'package:smart_rice_warehouse/logic/services/cloud_refresh_service.dart';
+import 'package:smart_rice_warehouse/data/local/image_storage_service.dart';
+import 'package:smart_rice_warehouse/data/mock/mock_data.dart';
+import 'package:smart_rice_warehouse/logic/contracts/initial_data_provider.dart';
+import 'package:smart_rice_warehouse/logic/services/media_service.dart';
 
 /// Controls only the warehouse/business collections. Firebase Authentication
 /// and its user-profile collection are initialized independently below so an
@@ -38,13 +48,16 @@ import 'package:smart_rice_warehouse/repositories/firestore/warehouse_location_m
 /// data with an empty Firestore project.
 const bool useFirebaseBackend = bool.fromEnvironment(
   'USE_FIREBASE',
-  defaultValue: false,
+  defaultValue: true,
 );
+const bool demoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
 
 typedef BootstrapData = ({
+  WarehouseDataMode mode,
   AppDatabase database,
   AppSnapshot snapshot,
   SettingsService settings,
+  AuthenticationService authenticationService,
   UserProfileRepository? userProfiles,
   CrudRepository<RiceModel>? riceProducts,
   CrudRepository<RiceCharacteristicModel>? riceCharacteristics,
@@ -56,7 +69,7 @@ typedef BootstrapData = ({
   CrudRepository<ExportReceiptModel>? exportReceipts,
   CrudRepository<DamageReportModel>? damageReports,
   CrudRepository<InventoryCheckSession>? inventoryChecks,
-  InventoryTransactionRepository? transactionRepository,
+  InventoryTransactions? transactionRepository,
 });
 
 class WarehouseBootstrapApp extends StatefulWidget {
@@ -66,38 +79,79 @@ class WarehouseBootstrapApp extends StatefulWidget {
   State<WarehouseBootstrapApp> createState() => _WarehouseBootstrapAppState();
 }
 
-class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
+class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp>
+    with WidgetsBindingObserver {
   late Future<BootstrapData> _future;
+  BusinessSyncPolicy? _syncPolicy;
+  SettingsService? _settings;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _future = _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _settings?.removeListener(_updateSyncSetting);
+    _syncPolicy?.dispose();
+    _settings?.dispose();
+    super.dispose();
+  }
+
+  void _updateSyncSetting() {
+    _syncPolicy?.configure(backgroundSyncEnabled: _settings?.backgroundSync);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _syncPolicy?.configure(foreground: state == AppLifecycleState.resumed);
   }
 
   Future<BootstrapData> _load() async {
     final settings = SettingsService();
     await settings.init();
-    final firebaseReady = await FirebaseAuthService.instance.initialize();
-    final database = await AppDatabase.open();
-    if (!firebaseReady || !useFirebaseBackend) {
-      await database.seedLocalDataIfNeeded();
+    final firebaseReady =
+        !demoMode && await FirebaseAuthService.instance.initialize();
+    final mode = WarehouseDataMode.resolve(
+        demoMode: demoMode,
+        useFirebaseBackend: useFirebaseBackend,
+        firebaseReady: firebaseReady);
+    final database = await AppDatabase.open(mode: mode);
+    await database.seedLocalDataIfNeeded(
+        demoMode: mode == WarehouseDataMode.demo);
+    if (!mounted) {
+      await database.close();
+      settings.dispose();
+      throw StateError('Khởi tạo đã bị hủy.');
     }
-    final snapshot = await database.loadSnapshot(
-      authUid: FirebaseAuthService.instance.currentUser?.uid,
-    );
+    _settings?.removeListener(_updateSyncSetting);
+    _settings = settings;
+    _syncPolicy =
+        BusinessSyncPolicy(backgroundSyncEnabled: settings.backgroundSync);
+    settings.addListener(_updateSyncSetting);
+    _syncPolicy!.configure(
+        foreground: WidgetsBinding.instance.lifecycleState == null ||
+            WidgetsBinding.instance.lifecycleState ==
+                AppLifecycleState.resumed);
+
+    final authUid =
+        firebaseReady ? FirebaseAuthService.instance.currentUser?.uid : null;
+    final snapshot = await database.loadSnapshot(authUid: authUid);
     final userProfiles = firebaseReady
         ? FirestoreUserProfileRepository(firestore: FirebaseFirestore.instance)
         : null;
-    final firestore = firebaseReady && useFirebaseBackend
-        ? FirebaseFirestore.instance
-        : null;
+    final firestore =
+        mode == WarehouseDataMode.cloud ? FirebaseFirestore.instance : null;
 
     final riceProducts = firestore == null
         ? null
         : FirestoreCollectionRepository<RiceModel>(
             firestore: firestore,
             collectionPath: FirestorePaths.riceProducts,
+            syncPolicy: _syncPolicy,
             mapper: const RiceProductMapper(),
             orderByField: 'code',
             manageTimestamps: true,
@@ -108,6 +162,7 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
         : FirestoreCollectionRepository<RiceCharacteristicModel>(
             firestore: firestore,
             collectionPath: FirestorePaths.riceCharacteristics,
+            syncPolicy: _syncPolicy,
             mapper: const RiceCharacteristicMapper(),
             orderByField: 'name',
             manageTimestamps: true,
@@ -118,6 +173,7 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
         : FirestoreCollectionRepository<SupplierModel>(
             firestore: firestore,
             collectionPath: FirestorePaths.suppliers,
+            syncPolicy: _syncPolicy,
             mapper: const SupplierMapper(),
             orderByField: 'name',
             manageTimestamps: true,
@@ -128,6 +184,7 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
         : FirestoreCollectionRepository<CustomerModel>(
             firestore: firestore,
             collectionPath: FirestorePaths.customers,
+            syncPolicy: _syncPolicy,
             mapper: const CustomerMapper(),
             orderByField: 'name',
             manageTimestamps: true,
@@ -138,6 +195,7 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
         : FirestoreCollectionRepository<WarehouseLocationModel>(
             firestore: firestore,
             collectionPath: FirestorePaths.warehouseLocations,
+            syncPolicy: _syncPolicy,
             mapper: const WarehouseLocationMapper(),
             orderByField: 'code',
             manageTimestamps: true,
@@ -145,19 +203,15 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
 
     final batches = firestore == null
         ? null
-        : FirestoreCollectionRepository<BatchModel>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.batches,
-            mapper: const BatchMapper(),
-            orderByField: 'code',
-            manageTimestamps: true,
-          );
+        : FirestoreBatchRepository(
+            firestore: firestore, syncPolicy: _syncPolicy);
 
     final importReceipts = firestore == null
         ? null
         : FirestoreCollectionRepository<ImportReceiptModel>(
             firestore: firestore,
             collectionPath: FirestorePaths.importReceipts,
+            syncPolicy: _syncPolicy,
             mapper: const ImportReceiptMapper(),
             orderByField: 'date',
             manageTimestamps: true,
@@ -168,6 +222,7 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
         : FirestoreCollectionRepository<ExportReceiptModel>(
             firestore: firestore,
             collectionPath: FirestorePaths.exportReceipts,
+            syncPolicy: _syncPolicy,
             mapper: const ExportReceiptMapper(),
             orderByField: 'date',
             manageTimestamps: true,
@@ -178,6 +233,7 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
         : FirestoreCollectionRepository<DamageReportModel>(
             firestore: firestore,
             collectionPath: FirestorePaths.damageReports,
+            syncPolicy: _syncPolicy,
             mapper: const DamageReportMapper(),
             orderByField: 'reportedAt',
             manageTimestamps: true,
@@ -188,19 +244,25 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
         : FirestoreCollectionRepository<InventoryCheckSession>(
             firestore: firestore,
             collectionPath: FirestorePaths.inventoryChecks,
+            syncPolicy: _syncPolicy,
             mapper: const InventoryCheckMapper(),
             orderByField: 'createdAt',
             manageTimestamps: true,
           );
 
-    final transactionRepository = firestore == null
-        ? null
-        : InventoryTransactionRepository(firestore: firestore);
+    final transactionRepository =
+        firestore == null ? null : CallableInventoryTransactions();
+
+    DefaultDataRegistry.provider =
+        mode == WarehouseDataMode.demo ? const MockInitialDataProvider() : null;
+    MediaService.initialize(const LocalMediaStorage());
 
     return (
+      mode: mode,
       database: database,
       snapshot: snapshot,
       settings: settings,
+      authenticationService: FirebaseAuthService.instance,
       userProfiles: userProfiles,
       riceProducts: riceProducts,
       riceCharacteristics: riceCharacteristics,
@@ -216,6 +278,56 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
     );
   }
 
+  Future<({bool success, String? message})> _refresh(BootstrapData data) async {
+    if (data.mode != WarehouseDataMode.cloud) {
+      try {
+        await data.database.flush();
+        return (
+          success: true,
+          message: 'Đã lưu dữ liệu trên thiết bị; không upload cloud.'
+        );
+      } catch (error) {
+        return (
+          success: false,
+          message: 'Không thể lưu dữ liệu thiết bị: $error'
+        );
+      }
+    }
+    return CloudRefreshService(
+        authentication: data.authenticationService,
+        profiles: data.userProfiles!,
+        refreshData: () async {
+          await Future.wait([
+            data.riceProducts!.getAll(),
+            data.riceCharacteristics!.getAll(),
+            data.suppliers!.getAll(),
+            data.customers!.getAll(),
+            data.warehouseLocations!.getAll(),
+            data.batches!.getAll(),
+            data.importReceipts!.getAll(),
+            data.exportReceipts!.getAll(),
+            data.damageReports!.getAll(),
+            data.inventoryChecks!.getAll(),
+          ]);
+        }).refresh();
+  }
+
+  Future<({bool success, String? message})> _migrateLegacy(
+      BootstrapData data) async {
+    final result = await FirebaseDataMigrationService(
+        authentication: data.authenticationService,
+        profiles: data.userProfiles!,
+        loadLegacySnapshot: () async {
+          final legacy = await AppDatabase.open(mode: WarehouseDataMode.local);
+          try {
+            return await legacy.loadSnapshot();
+          } finally {
+            await legacy.close();
+          }
+        }).runMigration();
+    return (success: result.isSuccess, message: result.message);
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<BootstrapData>(
@@ -224,9 +336,11 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
         if (state.hasData) {
           final data = state.data!;
           return SmartRiceWarehouseApp(
+            demoMode: demoMode,
             database: data.database,
             settings: data.settings,
             snapshot: data.snapshot,
+            authenticationService: data.authenticationService,
             userProfiles: data.userProfiles,
             riceProducts: data.riceProducts,
             riceCharacteristics: data.riceCharacteristics,
@@ -239,6 +353,10 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp> {
             damageReports: data.damageReports,
             inventoryChecks: data.inventoryChecks,
             transactionRepository: data.transactionRepository,
+            onForceCloudSync: () => _refresh(data),
+            onLegacyMigration: data.mode == WarehouseDataMode.cloud
+                ? () => _migrateLegacy(data)
+                : null,
           );
         }
         return MaterialApp(

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/core/services/settings_service.dart';
+import 'package:smart_rice_warehouse/data/local/settings_service.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/app.dart';
-import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
-import 'package:smart_rice_warehouse/providers/auth_provider.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
-import 'package:smart_rice_warehouse/providers/customer_provider.dart';
-import 'package:smart_rice_warehouse/providers/export_provider.dart';
-import 'package:smart_rice_warehouse/providers/import_provider.dart';
-import 'package:smart_rice_warehouse/providers/rice_provider.dart';
-import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
-import 'package:smart_rice_warehouse/screens/auth/login_screen.dart';
+import 'package:smart_rice_warehouse/presentation/routes/app_routes.dart';
+import 'package:smart_rice_warehouse/logic/providers/auth_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/customer_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/export_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/import_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/supplier_provider.dart';
+import 'package:smart_rice_warehouse/presentation/screens/auth/login_screen.dart';
 
 void main() {
   testWidgets('login is unified and exposes the account creation form', (
@@ -19,7 +19,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       ChangeNotifierProvider(
-        create: (_) => AuthProvider(),
+        create: (_) => AuthProvider(demoMode: true),
         child: const MaterialApp(home: LoginScreen()),
       ),
     );
@@ -67,7 +67,7 @@ void main() {
   });
 
   test('authentication and CRUD providers preserve expected behavior', () {
-    final authProvider = AuthProvider();
+    final authProvider = AuthProvider(demoMode: true);
     expect(
       authProvider.login(email: 'admin@gmail.com', password: 'wrong-password'),
       isFalse,
@@ -132,7 +132,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => AuthProvider()),
+          ChangeNotifierProvider(create: (_) => AuthProvider(demoMode: true)),
           ChangeNotifierProvider(create: (_) => RiceProvider()),
           ChangeNotifierProvider(create: (_) => SupplierProvider()),
           ChangeNotifierProvider(create: (_) => CustomerProvider()),
@@ -144,7 +144,8 @@ void main() {
             create: (_) => ExportProvider(batchProvider),
           ),
         ],
-        child: SmartRiceWarehouseApp(settings: SettingsService()),
+        child:
+            SmartRiceWarehouseApp(demoMode: true, settings: SettingsService()),
       ),
     );
 
@@ -169,6 +170,14 @@ void main() {
 
     expect(find.byType(NavigationDestination), findsNWidgets(5));
     expect(find.text('Xin chào, Admin'), findsOneWidget);
+    // The startup alert is modal; dismiss it before exercising navigation.
+    final closeAlert = find.widgetWithText(TextButton, 'Đóng');
+    if (closeAlert.evaluate().isNotEmpty) {
+      await tester.tap(closeAlert);
+      await tester.pumpAndSettle();
+    }
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
     final initialLayoutException = tester.takeException();
     expect(
       initialLayoutException,
@@ -185,6 +194,19 @@ void main() {
     ]) {
       await tester.tap(find.widgetWithText(NavigationDestination, label));
       await tester.pumpAndSettle();
+      const destinationIndices = {
+        'Kho hàng': 1,
+        'Nhập/Xuất': 2,
+        'Báo cáo': 3,
+        'Tài khoản': 4,
+        'Trang chủ': 0
+      };
+      expect(
+          tester
+              .widget<NavigationBar>(find.byType(NavigationBar))
+              .selectedIndex,
+          destinationIndices[label],
+          reason: 'Tab $label must actually open.');
       expect(
         tester.takeException(),
         isNull,

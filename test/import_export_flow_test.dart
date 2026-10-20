@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
-import 'package:smart_rice_warehouse/providers/export_provider.dart';
-import 'package:smart_rice_warehouse/providers/import_provider.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/export_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/import_provider.dart';
 
 void main() {
-  test('import increases stock and export decreases stock safely', () {
+  test('import increases stock and export decreases stock safely', () async {
     final batchProvider = BatchProvider();
     final importProvider = ImportProvider(batchProvider);
     final exportProvider = ExportProvider(batchProvider);
@@ -16,7 +16,7 @@ void main() {
     final now = DateTime.now();
     final initialStock = batchProvider.totalStockForRice(riceId);
 
-    final importCreated = importProvider.createImportReceipt(
+    final importCreated = await importProvider.createImportReceipt(
       receipt: ImportReceiptModel(
         id: 'test-import',
         code: 'PN-TEST',
@@ -48,7 +48,7 @@ void main() {
     expect(importCreated, isTrue);
     expect(batchProvider.totalStockForRice(riceId), initialStock + 10);
 
-    final exportCreated = exportProvider.createExportReceipt(
+    final exportCreated = await exportProvider.createExportReceipt(
       ExportReceiptModel(
         id: 'test-export',
         code: 'PX-TEST',
@@ -69,7 +69,7 @@ void main() {
 
     final stockBeforeRejectedExport = batchProvider.totalStockForRice(riceId);
     final receiptCountBeforeRejectedExport = exportProvider.receipts.length;
-    final oversizedExportCreated = exportProvider.createExportReceipt(
+    final oversizedExportCreated = await exportProvider.createExportReceipt(
       ExportReceiptModel(
         id: 'test-export-oversized',
         code: 'PX-TEST-OVERSIZED',

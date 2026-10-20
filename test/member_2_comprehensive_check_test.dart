@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:smart_rice_warehouse/data/mock_data.dart';
-import 'package:smart_rice_warehouse/models/alert_model.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/rice_model.dart';
-import 'package:smart_rice_warehouse/providers/alert_provider.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
-import 'package:smart_rice_warehouse/providers/export_provider.dart';
-import 'package:smart_rice_warehouse/providers/import_provider.dart';
-import 'package:smart_rice_warehouse/providers/rice_provider.dart';
-import 'package:smart_rice_warehouse/screens/reports/reports_tab.dart';
-import 'package:smart_rice_warehouse/services/fefo_service.dart';
-import 'package:smart_rice_warehouse/services/forecast_service.dart';
-import 'package:smart_rice_warehouse/services/ocr_service.dart';
+import 'package:smart_rice_warehouse/data/mock/mock_data.dart';
+import 'package:smart_rice_warehouse/logic/models/alert_model.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/rice_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/alert_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/export_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/import_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/presentation/screens/reports/reports_tab.dart';
+import 'package:smart_rice_warehouse/logic/services/fefo_service.dart';
+import 'package:smart_rice_warehouse/logic/services/forecast_service.dart';
+import 'package:smart_rice_warehouse/logic/services/ocr_service.dart';
 import 'fixtures/ocr_invoice_samples.dart';
 
 void main() {
@@ -326,7 +326,7 @@ void main() {
     // ----------------------------------------------------
     test(
         'Mục 6: OCR trích xuất chính xác 3 mẫu và hỗ trợ chọn mã lô có sẵn / tạo mới',
-        () {
+        () async {
       const ocr = OcrService();
       const suppliers = MockData.suppliers;
       const rices = MockData.rices;
@@ -397,7 +397,7 @@ void main() {
         quantity: 250,
       );
 
-      final success = importProvider.createImportReceipt(
+      final success = await importProvider.createImportReceipt(
         receipt: replenishReceipt,
         batch: replenishedBatch,
       );

@@ -1,25 +1,25 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/customer_model.dart';
-import 'package:smart_rice_warehouse/models/damage_report_model.dart';
-import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
-import 'package:smart_rice_warehouse/models/stock_movement_model.dart';
-import 'package:smart_rice_warehouse/models/supplier_model.dart';
-import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
-import 'package:smart_rice_warehouse/providers/customer_provider.dart';
-import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/batch_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/customer_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/damage_report_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/export_receipt_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/import_receipt_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/inventory_check_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/stock_movement_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/supplier_mapper.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/warehouse_location_mapper.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_allocation_model.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/customer_model.dart';
+import 'package:smart_rice_warehouse/logic/models/damage_report_model.dart';
+import 'package:smart_rice_warehouse/logic/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/inventory_check_model.dart';
+import 'package:smart_rice_warehouse/logic/models/stock_movement_model.dart';
+import 'package:smart_rice_warehouse/logic/models/supplier_model.dart';
+import 'package:smart_rice_warehouse/logic/models/warehouse_location_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/customer_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/supplier_provider.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/batch_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/customer_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/damage_report_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/export_receipt_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/import_receipt_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/inventory_check_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/stock_movement_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/supplier_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/warehouse_location_mapper.dart';
 
 void main() {
   group('Firestore Mappers Tests', () {
@@ -117,7 +117,8 @@ void main() {
       expect(restored.fullDisplayName, 'Khu A → Kệ 1 → Tầng 1 (A-K1-T1)');
     });
 
-    test('DamageReportMapper strictly excludes local imagePath from Firestore', () {
+    test('DamageReportMapper strictly excludes local imagePath from Firestore',
+        () {
       const mapper = DamageReportMapper();
       final now = DateTime.utc(2026, 10, 10);
       final report = DamageReportModel(
@@ -200,7 +201,8 @@ void main() {
       expect(restoredExp.allocations.first.allocatedQuantity, 500.0);
     });
 
-    test('StockMovementMapper serializes ledger entry without mutation fields', () {
+    test('StockMovementMapper serializes ledger entry without mutation fields',
+        () {
       const mapper = StockMovementMapper();
       final now = DateTime.utc(2026, 10, 15);
       final movement = StockMovementModel(

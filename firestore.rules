@@ -42,6 +42,8 @@ service cloud.firestore {
       return hasOnlyUserFields()
         && request.resource.data.email is string
         && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 100
         && request.resource.data.role in ['admin', 'staff']
         && request.resource.data.isActive is bool
         && request.resource.data.createdAt is timestamp
@@ -71,9 +73,12 @@ service cloud.firestore {
       //    tuyệt đối KHÔNG ĐƯỢC PHÉP và KHÔNG THỂ thay đổi chức vụ (role), email hoặc trạng thái kích hoạt (isActive).
       allow update: if (
         isAdmin() && hasValidUserData()
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.createdAt == resource.data.createdAt
       ) || (
-        signedIn()
+        hasActiveProfile()
         && request.auth.uid == userId
+        && hasValidUserData()
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['displayName', 'updatedAt'])
         && request.resource.data.displayName is string
@@ -110,32 +115,42 @@ service cloud.firestore {
 
     match /batches/{documentId} {
       allow read: if isStaffOrAdmin();
-      allow create, update: if isStaffOrAdmin();
-      allow delete: if isAdmin();
+      // Stock and lot identity are server-owned. A location move is not a
+      // stock transaction and may update only these display/location fields.
+      allow create, delete: if false;
+      allow update: if isStaffOrAdmin()
+        && request.resource.data.quantity is number
+        && request.resource.data.quantity >= 0
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'warehouseLocationId', 'locationName', 'locationNameSnapshot', 'updatedAt'
+        ])
+        && request.resource.data.warehouseLocationId is string
+        && request.resource.data.locationName is string
+        && request.resource.data.updatedAt is timestamp
+        && get(/databases/$(database)/documents/warehouse_locations/$(request.resource.data.warehouseLocationId)).data.isActive == true;
     }
 
     match /import_receipts/{documentId} {
       allow read: if isStaffOrAdmin();
-      allow create: if isStaffOrAdmin();
+      allow create: if false;
       allow update, delete: if false;
     }
 
     match /export_receipts/{documentId} {
       allow read: if isStaffOrAdmin();
-      allow create: if isStaffOrAdmin();
+      allow create: if false;
       allow update, delete: if false;
     }
 
     match /damage_reports/{documentId} {
       allow read: if isStaffOrAdmin();
-      allow create: if isStaffOrAdmin();
+      allow create: if false;
       allow update, delete: if false;
     }
 
     match /inventory_checks/{documentId} {
       allow read: if isStaffOrAdmin();
-      allow create, update: if isStaffOrAdmin();
-      allow delete: if isAdmin();
+      allow create, update, delete: if false;
     }
 
     match /inventory_snapshots/{documentId} {
@@ -145,13 +160,19 @@ service cloud.firestore {
 
     match /stock_movements/{documentId} {
       allow read: if isStaffOrAdmin();
-      allow create: if isStaffOrAdmin();
+      allow create: if false;
       // Immutable audit ledger: never allow update or delete
       allow update, delete: if false;
     }
 
     match /migration_runs/{documentId} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /batch_codes/{documentId} {
+      allow read: if isStaffOrAdmin();
+      allow write: if false;
     }
 
     // Deny collections that are not explicitly declared above.

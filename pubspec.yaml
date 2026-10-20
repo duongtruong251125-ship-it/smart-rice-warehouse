@@ -29,6 +29,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   cloud_firestore: ^6.10.0
+  cloud_functions: ^6.5.0
   crypto: ^3.0.7
   firebase_auth: ^6.7.0
   firebase_core: ^4.15.0
@@ -68,6 +69,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
+  sqflite_common_ffi: ^2.4.4
+  fake_cloud_firestore: ^4.3.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

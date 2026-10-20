@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
-import 'package:smart_rice_warehouse/providers/export_provider.dart';
-import 'package:smart_rice_warehouse/services/fefo_service.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/export_provider.dart';
+import 'package:smart_rice_warehouse/logic/services/fefo_service.dart';
 
 void main() {
   group('FEFO Service Engine Tests', () {
@@ -99,7 +99,8 @@ void main() {
       expect(result.allocations[1].batchRemainingQuantity, 30);
     });
 
-    test('3. 3 batch mới đủ: phân bổ hết batch 1, batch 2 và một phần batch 3', () {
+    test('3. 3 batch mới đủ: phân bổ hết batch 1, batch 2 và một phần batch 3',
+        () {
       final batches = [
         makeBatch(
           id: 'b1',
@@ -143,7 +144,8 @@ void main() {
       expect(result.allocations[2].batchRemainingQuantity, 40);
     });
 
-    test('4. requested = total available: phân bổ vét sạch các lô khả dụng', () {
+    test('4. requested = total available: phân bổ vét sạch các lô khả dụng',
+        () {
       final batches = [
         makeBatch(
           id: 'b1',
@@ -170,7 +172,9 @@ void main() {
 
       expect(result.isSuccess, isTrue);
       expect(result.allocatedQuantity, 100);
-      expect(result.allocations.fold(0.0, (s, a) => s + a.batchRemainingQuantity), 0);
+      expect(
+          result.allocations.fold(0.0, (s, a) => s + a.batchRemainingQuantity),
+          0);
     });
 
     test('5. requested > available -> reject với thông báo lỗi', () {
@@ -202,7 +206,8 @@ void main() {
           code: 'LOT-EXPIRED',
           riceId: 'rice-1',
           quantity: 100,
-          expiryDate: DateTime(2026, 9, 20), // Quá hạn so với today (2026-10-01)
+          expiryDate:
+              DateTime(2026, 9, 20), // Quá hạn so với today (2026-10-01)
         ),
         makeBatch(
           id: 'b-valid',
@@ -277,7 +282,8 @@ void main() {
       expect(result.errorMessage, contains('Không có lô hàng hợp lệ'));
     });
 
-    test('9. Export xong -> total inventory bằng tổng quantity batch còn lại', () {
+    test('9. Export xong -> total inventory bằng tổng quantity batch còn lại',
+        () async {
       final batchProvider = BatchProvider();
       final exportProvider = ExportProvider(batchProvider);
 
@@ -300,16 +306,19 @@ void main() {
         note: 'Test FEFO export flow',
       );
 
-      final success = exportProvider.createExportReceipt(receipt);
+      final success = await exportProvider.createExportReceipt(receipt);
       expect(success, isTrue);
 
       final finalStock = batchProvider.totalStockForRice(riceId);
       expect(finalStock, closeTo(initialStock - exportQty, 0.001));
 
       // Check that receipt stored the allocations
-      final savedReceipt = exportProvider.receipts.firstWhere((r) => r.id == 'test-exp-01');
+      final savedReceipt =
+          exportProvider.receipts.firstWhere((r) => r.id == 'test-exp-01');
       expect(savedReceipt.allocations, isNotEmpty);
-      expect(savedReceipt.allocations.fold(0.0, (s, a) => s + a.allocatedQuantity), exportQty);
+      expect(
+          savedReceipt.allocations.fold(0.0, (s, a) => s + a.allocatedQuantity),
+          exportQty);
     });
   });
 }

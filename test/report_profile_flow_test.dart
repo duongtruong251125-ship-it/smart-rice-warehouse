@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
-import 'package:smart_rice_warehouse/providers/auth_provider.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
-import 'package:smart_rice_warehouse/providers/export_provider.dart';
-import 'package:smart_rice_warehouse/providers/import_provider.dart';
-import 'package:smart_rice_warehouse/providers/rice_provider.dart';
-import 'package:smart_rice_warehouse/screens/profile/profile_tab.dart';
+import 'package:smart_rice_warehouse/presentation/routes/app_routes.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/auth_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/export_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/import_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/presentation/screens/profile/profile_tab.dart';
 import 'package:toastification/toastification.dart';
 
 void main() {
-  test('report totals and inventory value react to import and export', () {
+  test('report totals and inventory value react to import and export',
+      () async {
     final batchProvider = BatchProvider();
     final importProvider = ImportProvider(batchProvider);
     final exportProvider = ExportProvider(batchProvider);
@@ -27,7 +28,7 @@ void main() {
         batchProvider.inventoryValue(riceProvider.rices);
 
     expect(
-      importProvider.createImportReceipt(
+      await importProvider.createImportReceipt(
         receipt: ImportReceiptModel(
           id: 'report-import',
           code: 'PN-REPORT',
@@ -67,7 +68,7 @@ void main() {
     );
 
     expect(
-      exportProvider.createExportReceipt(
+      await exportProvider.createExportReceipt(
         ExportReceiptModel(
           id: 'report-export',
           code: 'PX-REPORT',
@@ -97,7 +98,7 @@ void main() {
   testWidgets('logout clears auth state and the main navigation stack', (
     tester,
   ) async {
-    final authProvider = AuthProvider();
+    final authProvider = AuthProvider(demoMode: true);
     authProvider.login(email: 'admin@gmail.com', password: '123456');
 
     await tester.pumpWidget(
@@ -129,7 +130,7 @@ void main() {
   testWidgets(
     'saving personal information updates name safely without altering locked role and without overlay exceptions',
     (tester) async {
-      final authProvider = AuthProvider();
+      final authProvider = AuthProvider(demoMode: true);
       authProvider.login(email: 'admin@gmail.com', password: '123456');
 
       await tester.pumpWidget(

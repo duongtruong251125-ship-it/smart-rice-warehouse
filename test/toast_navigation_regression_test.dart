@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/core/routes/app_routes.dart';
-import 'package:smart_rice_warehouse/core/utils/app_toast.dart';
+import 'package:smart_rice_warehouse/presentation/routes/app_routes.dart';
+import 'package:smart_rice_warehouse/presentation/utils/app_toast.dart';
 import 'package:toastification/toastification.dart';
 
 void main() {

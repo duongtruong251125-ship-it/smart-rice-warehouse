@@ -41,6 +41,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/.kotlin/
 
 # Coverage
 coverage/
+/test/firestore_rules/node_modules/
+/test/firestore_rules/*-debug.log
+/functions/node_modules/
+/functions/*-debug.log

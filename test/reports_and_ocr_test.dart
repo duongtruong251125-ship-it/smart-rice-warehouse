@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/data/mock_data.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
-import 'package:smart_rice_warehouse/providers/export_provider.dart';
-import 'package:smart_rice_warehouse/providers/import_provider.dart';
-import 'package:smart_rice_warehouse/services/fefo_service.dart';
-import 'package:smart_rice_warehouse/services/forecast_service.dart';
-import 'package:smart_rice_warehouse/services/ocr_service.dart';
+import 'package:smart_rice_warehouse/data/mock/mock_data.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/export_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/import_provider.dart';
+import 'package:smart_rice_warehouse/logic/services/fefo_service.dart';
+import 'package:smart_rice_warehouse/logic/services/forecast_service.dart';
+import 'package:smart_rice_warehouse/logic/services/ocr_service.dart';
 import 'fixtures/ocr_invoice_samples.dart';
 
 void main() {
@@ -165,7 +165,7 @@ void main() {
   group('Week 3 - Task 3.6 Full End-to-End Business Flow Test', () {
     test(
         'Import -> Batch Created -> Export with FEFO -> Inventory Updated -> Alerts Updated',
-        () {
+        () async {
       final batchProvider = BatchProvider();
       final importProvider = ImportProvider(batchProvider);
       final exportProvider = ExportProvider(batchProvider);
@@ -204,7 +204,7 @@ void main() {
         expiryDate: now.add(const Duration(days: 180)),
       );
 
-      final importSuccess = importProvider.createImportReceipt(
+      final importSuccess = await importProvider.createImportReceipt(
         receipt: importReceipt,
         batch: importBatch,
       );
@@ -228,7 +228,8 @@ void main() {
         note: 'E2E export test',
       );
 
-      final exportSuccess = exportProvider.createExportReceipt(exportReceipt);
+      final exportSuccess =
+          await exportProvider.createExportReceipt(exportReceipt);
       expect(exportSuccess, isTrue);
 
       final stockAfterExport = batchProvider.totalStockForRice(testRiceId);

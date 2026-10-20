@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/core/services/firebase_auth_service.dart';
-import 'package:smart_rice_warehouse/models/user_model.dart';
-import 'package:smart_rice_warehouse/providers/auth_provider.dart';
-import 'package:smart_rice_warehouse/repositories/contracts/user_profile_repository.dart';
-import 'package:smart_rice_warehouse/repositories/firestore/user_profile_mapper.dart';
+import 'package:smart_rice_warehouse/data/firebase/firebase_auth_service.dart';
+import 'package:smart_rice_warehouse/logic/models/user_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/auth_provider.dart';
+import 'package:smart_rice_warehouse/logic/contracts/repositories/user_profile_repository.dart';
+import 'package:smart_rice_warehouse/data/repositories/firestore/user_profile_mapper.dart';
 
 void main() {
   group('cloud authentication session', () {
@@ -66,7 +66,8 @@ void main() {
       await provider.waitUntilReady();
 
       expect(provider.isLoggedIn, isFalse);
-      expect(provider.authError, contains('chờ quản trị viên'));
+      expect(
+          provider.authError, contains('chưa được kích hoạt hoặc đã bị khóa'));
       expect(auth.signOutCount, 1);
       provider.dispose();
       await auth.close();

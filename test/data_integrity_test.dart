@@ -1,23 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smart_rice_warehouse/core/services/settings_service.dart';
-import 'package:smart_rice_warehouse/core/services/excel_export_service.dart';
-import 'package:smart_rice_warehouse/data/mock_data.dart';
-import 'package:smart_rice_warehouse/models/batch_allocation_model.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/import_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
-import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
-import 'package:smart_rice_warehouse/providers/auth_provider.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
-import 'package:smart_rice_warehouse/providers/customer_provider.dart';
-import 'package:smart_rice_warehouse/providers/import_provider.dart';
-import 'package:smart_rice_warehouse/providers/inventory_check_provider.dart';
-import 'package:smart_rice_warehouse/providers/inventory_snapshot_provider.dart';
-import 'package:smart_rice_warehouse/providers/rice_provider.dart';
-import 'package:smart_rice_warehouse/providers/supplier_provider.dart';
-import 'package:smart_rice_warehouse/providers/theme_provider.dart';
-import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
+import 'package:smart_rice_warehouse/data/local/settings_service.dart';
+import 'package:smart_rice_warehouse/logic/services/excel_export_service.dart';
+import 'package:smart_rice_warehouse/data/mock/mock_data.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_allocation_model.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/import_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/inventory_check_model.dart';
+import 'package:smart_rice_warehouse/logic/models/warehouse_location_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/auth_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/customer_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/import_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/inventory_check_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/inventory_snapshot_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/supplier_provider.dart';
+import 'package:smart_rice_warehouse/presentation/theme/theme_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/warehouse_provider.dart';
 
 void main() {
   final now = DateTime.now();
@@ -72,7 +72,8 @@ void main() {
     expect(provider.findById('b')!.quantity, 20);
   });
 
-  test('inventory check does not partially update when a batch is missing', () {
+  test('inventory check does not partially update when a batch is missing',
+      () async {
     final existing = batch(id: 'a', code: 'A');
     final missing = batch(id: 'missing', code: 'MISSING');
     final batches = BatchProvider(initial: [existing]);
@@ -89,12 +90,12 @@ void main() {
       reason: InventoryCheckReason.saiDuLieu,
     );
 
-    expect(checks.completeSession(batchProvider: batches), isFalse);
+    expect(await checks.completeSession(batchProvider: batches), isFalse);
     expect(batches.findById('a')!.quantity, 100);
     expect(checks.activeSession, isNotNull);
   });
 
-  test('duplicate batch import rejects incompatible lot metadata', () {
+  test('duplicate batch import rejects incompatible lot metadata', () async {
     final existing = batch(id: 'a', code: 'LOT-01');
     final batches = BatchProvider(initial: [existing]);
     final imports = ImportProvider(batches, initial: const []);
@@ -120,7 +121,7 @@ void main() {
     );
 
     expect(
-      imports.createImportReceipt(receipt: receipt, batch: incompatible),
+      await imports.createImportReceipt(receipt: receipt, batch: incompatible),
       isFalse,
     );
     expect(batches.findById('a')!.quantity, 100);
@@ -177,6 +178,7 @@ void main() {
     String? savedHash;
     bool? remembered;
     final auth = AuthProvider(
+      demoMode: true,
       onPersist: (_, hash, remember) {
         savedHash = hash;
         remembered = remember;
@@ -253,6 +255,7 @@ void main() {
     String? savedRole;
     String? savedAvatar;
     final auth = AuthProvider(
+      demoMode: true,
       rememberedSession: true,
       onProfilePersist: (name, role, avatar) {
         savedName = name;

@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:smart_rice_warehouse/data/mock_data.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/damage_report_model.dart';
-import 'package:smart_rice_warehouse/models/inventory_check_model.dart';
-import 'package:smart_rice_warehouse/models/warehouse_location_model.dart';
-import 'package:smart_rice_warehouse/providers/auth_provider.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
-import 'package:smart_rice_warehouse/providers/damage_provider.dart';
-import 'package:smart_rice_warehouse/providers/inventory_check_provider.dart';
-import 'package:smart_rice_warehouse/providers/rice_provider.dart';
-import 'package:smart_rice_warehouse/providers/warehouse_provider.dart';
-import 'package:smart_rice_warehouse/screens/batch/batch_detail_screen.dart';
-import 'package:smart_rice_warehouse/screens/damage/damage_form_screen.dart';
-import 'package:smart_rice_warehouse/screens/damage/damage_list_screen.dart';
-import 'package:smart_rice_warehouse/screens/inventory_check/inventory_check_screen.dart';
-import 'package:smart_rice_warehouse/screens/warehouse/warehouse_location_screen.dart';
-import 'package:smart_rice_warehouse/services/qr_service.dart';
-import 'package:smart_rice_warehouse/services/warehouse_service.dart';
+import 'package:smart_rice_warehouse/data/mock/mock_data.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/damage_report_model.dart';
+import 'package:smart_rice_warehouse/logic/models/inventory_check_model.dart';
+import 'package:smart_rice_warehouse/logic/models/warehouse_location_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/auth_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/damage_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/inventory_check_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/warehouse_provider.dart';
+import 'package:smart_rice_warehouse/presentation/screens/batch/batch_detail_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/damage/damage_form_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/damage/damage_list_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/inventory_check/inventory_check_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/warehouse/warehouse_location_screen.dart';
+import 'package:smart_rice_warehouse/logic/services/qr_service.dart';
+import 'package:smart_rice_warehouse/logic/services/warehouse_service.dart';
 
 Widget createTestApp(
   Widget child, {
@@ -29,12 +29,17 @@ Widget createTestApp(
 }) {
   return MultiProvider(
     providers: [
-      ChangeNotifierProvider<AuthProvider>(create: (_) => AuthProvider()),
+      ChangeNotifierProvider<AuthProvider>(
+          create: (_) => AuthProvider(demoMode: true)),
       ChangeNotifierProvider<RiceProvider>(create: (_) => RiceProvider()),
-      ChangeNotifierProvider<BatchProvider>(create: (_) => batchProvider ?? BatchProvider()),
-      ChangeNotifierProvider<WarehouseProvider>(create: (_) => warehouseProvider ?? WarehouseProvider()),
-      ChangeNotifierProvider<InventoryCheckProvider>(create: (_) => checkProvider ?? InventoryCheckProvider()),
-      ChangeNotifierProvider<DamageProvider>(create: (_) => damageProvider ?? DamageProvider()),
+      ChangeNotifierProvider<BatchProvider>(
+          create: (_) => batchProvider ?? BatchProvider()),
+      ChangeNotifierProvider<WarehouseProvider>(
+          create: (_) => warehouseProvider ?? WarehouseProvider()),
+      ChangeNotifierProvider<InventoryCheckProvider>(
+          create: (_) => checkProvider ?? InventoryCheckProvider()),
+      ChangeNotifierProvider<DamageProvider>(
+          create: (_) => damageProvider ?? DamageProvider()),
     ],
     child: MaterialApp(
       home: child,
@@ -44,7 +49,8 @@ Widget createTestApp(
 
 void main() {
   group('Member 1 - Task 1: QR & Warehouse Location Services & Models', () {
-    test('QRService generates stable parseable payload and parses correctly', () {
+    test('QRService generates stable parseable payload and parses correctly',
+        () {
       final batch = BatchModel(
         id: 'B001',
         code: 'ST25-2026-001',
@@ -57,7 +63,8 @@ void main() {
         status: BatchStatus.available,
       );
 
-      final payload = QrService.generateBatchQrPayload(batchCode: batch.code, batchId: batch.id);
+      final payload = QrService.generateBatchQrPayload(
+          batchCode: batch.code, batchId: batch.id);
       expect(payload, 'ST25-2026-001');
 
       final parsed = QrService.parseBatchQr(payload);
@@ -66,7 +73,8 @@ void main() {
     });
 
     test('QRService parses JSON format, prefixed codes and raw strings', () {
-      final jsonParsed = QrService.parseBatchQr('{"batchCode": "ST25-2026-001", "batchId": "B001"}');
+      final jsonParsed = QrService.parseBatchQr(
+          '{"batchCode": "ST25-2026-001", "batchId": "B001"}');
       expect(jsonParsed.isValid, isTrue);
       expect(jsonParsed.batchCode, 'ST25-2026-001');
       expect(jsonParsed.batchId, 'B001');
@@ -83,7 +91,9 @@ void main() {
       expect(invalid.isValid, isFalse);
     });
 
-    test('WarehouseService correctly calculates location usage and availability', () {
+    test(
+        'WarehouseService correctly calculates location usage and availability',
+        () {
       const loc = WarehouseLocationModel(
         id: 'LOC-A1-1',
         zone: 'Khu A',
@@ -132,7 +142,8 @@ void main() {
       expect(available250, isEmpty);
     });
 
-    test('Location assignment updates batch location without changing quantity', () {
+    test('Location assignment updates batch location without changing quantity',
+        () {
       final batchProvider = BatchProvider();
       final initialBatch = batchProvider.batches.first;
       final initialQuantity = initialBatch.quantity;
@@ -147,12 +158,15 @@ void main() {
       final updated = batchProvider.findById(initialBatch.id)!;
       expect(updated.warehouseLocationId, 'loc-a-02');
       expect(updated.locationName, 'Khu A → Kệ 1 → Tầng 2 (A-K1-T2)');
-      expect(updated.quantity, initialQuantity); // Quan trọng: quantity không đổi
+      expect(
+          updated.quantity, initialQuantity); // Quan trọng: quantity không đổi
     });
   });
 
   group('Member 1 - Task 2: Inventory Check Workflow', () {
-    test('Session tracks expected vs actual with accurate difference and requires reason on diff', () {
+    test(
+        'Session tracks expected vs actual with accurate difference and requires reason on diff',
+        () {
       final checkProvider = InventoryCheckProvider();
       final session = checkProvider.startNewSession(createdBy: 'Thủ kho');
 
@@ -202,12 +216,15 @@ void main() {
         actualQuantity: 20.0,
       );
 
-      final itemZeroDiff = checkProvider.activeSession!.items.firstWhere((i) => i.batchId == 'B002');
+      final itemZeroDiff = checkProvider.activeSession!.items
+          .firstWhere((i) => i.batchId == 'B002');
       expect(itemZeroDiff.difference, 0.0);
       expect(itemZeroDiff.reason, InventoryCheckReason.none);
     });
 
-    test('Completing inventory check session accurately adjusts batch quantities', () {
+    test(
+        'Completing inventory check session accurately adjusts batch quantities',
+        () async {
       final batchProvider = BatchProvider();
       final checkProvider = InventoryCheckProvider();
 
@@ -221,7 +238,8 @@ void main() {
         reason: InventoryCheckReason.saiDuLieu,
       );
 
-      final completed = checkProvider.completeSession(batchProvider: batchProvider);
+      final completed =
+          await checkProvider.completeSession(batchProvider: batchProvider);
 
       expect(completed, isTrue);
       expect(checkProvider.activeSession, isNull);
@@ -232,13 +250,14 @@ void main() {
   });
 
   group('Member 1 - Task 3: Damage Reporting Workflow', () {
-    test('Validation prevents reporting quantity > available or <= 0', () {
+    test('Validation prevents reporting quantity > available or <= 0',
+        () async {
       final damageProvider = DamageProvider();
       final batchProvider = BatchProvider();
       final batch = batchProvider.batches.first;
 
       // Quantity <= 0
-      final resultZero = damageProvider.createDamageReport(
+      final resultZero = await damageProvider.createDamageReport(
         batchId: batch.id,
         batchCode: batch.code,
         riceId: batch.riceId,
@@ -250,7 +269,7 @@ void main() {
       expect(resultZero, isFalse);
 
       // Quantity > Available
-      final resultExcess = damageProvider.createDamageReport(
+      final resultExcess = await damageProvider.createDamageReport(
         batchId: batch.id,
         batchCode: batch.code,
         riceId: batch.riceId,
@@ -262,14 +281,16 @@ void main() {
       expect(resultExcess, isFalse);
     });
 
-    test('Damage report reduces available batch stock and records history without going below 0', () {
+    test(
+        'Damage report reduces available batch stock and records history without going below 0',
+        () async {
       final damageProvider = DamageProvider();
       final batchProvider = BatchProvider();
       final targetBatch = batchProvider.batches.first;
       final initialStock = targetBatch.quantity;
       const damageQty = 15.0;
 
-      final success = damageProvider.createDamageReport(
+      final success = await damageProvider.createDamageReport(
         batchId: targetBatch.id,
         batchCode: targetBatch.code,
         riceId: targetBatch.riceId,
@@ -293,13 +314,15 @@ void main() {
   });
 
   group('Member 1 - Responsive UI Tests (320px narrow mobile)', () {
-    testWidgets('BatchDetailScreen renders at 320x640 without overflow', (tester) async {
+    testWidgets('BatchDetailScreen renders at 320x640 without overflow',
+        (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
       final testBatch = MockData.batches.first;
-      await tester.pumpWidget(createTestApp(BatchDetailScreen(batchId: testBatch.id)));
+      await tester
+          .pumpWidget(createTestApp(BatchDetailScreen(batchId: testBatch.id)));
       await tester.pumpAndSettle();
 
       expect(find.text('Lô: ${testBatch.code}'), findsOneWidget);
@@ -308,7 +331,8 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('WarehouseLocationScreen renders at 320x640 without overflow', (tester) async {
+    testWidgets('WarehouseLocationScreen renders at 320x640 without overflow',
+        (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -321,7 +345,8 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('InventoryCheckScreen renders at 320x640 without overflow', (tester) async {
+    testWidgets('InventoryCheckScreen renders at 320x640 without overflow',
+        (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -334,13 +359,15 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('DamageFormScreen renders at 320x640 without overflow', (tester) async {
+    testWidgets('DamageFormScreen renders at 320x640 without overflow',
+        (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
       final testBatch = MockData.batches.first;
-      await tester.pumpWidget(createTestApp(DamageFormScreen(initialBatch: testBatch)));
+      await tester
+          .pumpWidget(createTestApp(DamageFormScreen(initialBatch: testBatch)));
       await tester.pumpAndSettle();
 
       expect(find.text('Lập phiếu báo hỏng gạo'), findsOneWidget);
@@ -348,7 +375,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('DamageListScreen renders at 320x640 without overflow and displays history', (tester) async {
+    testWidgets(
+        'DamageListScreen renders at 320x640 without overflow and displays history',
+        (tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);

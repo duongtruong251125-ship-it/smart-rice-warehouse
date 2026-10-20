@@ -1,0 +1,167 @@
+import 'package:flutter/material.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/presentation/screens/alerts/alert_list_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/auth/login_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/batch/batch_detail_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/batch/batch_list_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/customer/customer_form_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/customer/customer_list_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/damage/damage_form_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/damage/damage_list_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/export/export_form_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/export/export_list_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/forecast/forecast_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/home/main_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/import/import_form_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/import/import_list_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/inventory/inventory_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/inventory_check/inventory_check_history_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/inventory_check/inventory_check_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/ocr/ocr_prototype_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/profile/profile_tab.dart';
+import 'package:smart_rice_warehouse/presentation/screens/reports/reports_tab.dart';
+import 'package:smart_rice_warehouse/presentation/screens/rice/rice_characteristics_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/rice/rice_form_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/rice/rice_list_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/scanner/qr_scanner_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/splash/splash_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/supplier/supplier_form_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/supplier/supplier_list_screen.dart';
+import 'package:smart_rice_warehouse/presentation/screens/warehouse/warehouse_location_screen.dart';
+
+abstract final class AppRoutes {
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
+  static const String splash = '/';
+  static const String login = '/login';
+  static const String home = '/home';
+  static const String rice = '/rice';
+  static const String addRice = '/rice/add';
+  static const String editRice = '/rice/edit';
+  static const String riceCharacteristics = '/rice/characteristics';
+  static const String suppliers = '/suppliers';
+  static const String addSupplier = '/suppliers/add';
+  static const String editSupplier = '/suppliers/edit';
+  static const String customers = '/customers';
+  static const String addCustomer = '/customers/add';
+  static const String editCustomer = '/customers/edit';
+  static const String batches = '/batches';
+  static const String import = '/import';
+  static const String addImport = '/import/add';
+  static const String export = '/export';
+  static const String addExport = '/export/add';
+  static const String inventory = '/inventory';
+  static const String reports = '/reports';
+  static const String profile = '/profile';
+  static const String alerts = '/alerts';
+  static const String forecast = '/forecast';
+  static const String ocrInvoice = '/ocr/invoice';
+
+  // Member 1 dynamic routes
+  static const String batchDetail = '/batch/detail';
+  static const String qrScanner = '/scanner';
+  static const String warehouseLocations = '/warehouse/locations';
+  static const String inventoryCheck = '/inventory-check';
+  static const String inventoryCheckHistory = '/inventory-check/history';
+  static const String damageReportForm = '/damage/form';
+  static const String damageReportList = '/damage/list';
+
+  static final Map<String, WidgetBuilder> routes = <String, WidgetBuilder>{
+    splash: (_) => const SplashScreen(),
+    login: (_) => const LoginScreen(),
+    home: (_) => const MainScreen(),
+    rice: (_) => const RiceListScreen(),
+    addRice: (_) => const RiceFormScreen(),
+    editRice: (context) {
+      final argument = ModalRoute.of(context)?.settings.arguments;
+      return RiceFormScreen(
+        riceId: argument is String ? argument : null,
+        isEditing: true,
+      );
+    },
+    riceCharacteristics: (_) => const RiceCharacteristicsScreen(),
+    suppliers: (_) => const SupplierListScreen(),
+    addSupplier: (_) => const SupplierFormScreen(),
+    editSupplier: (context) {
+      final argument = ModalRoute.of(context)?.settings.arguments;
+      return SupplierFormScreen(
+        supplierId: argument is String ? argument : null,
+        isEditing: true,
+      );
+    },
+    customers: (_) => const CustomerListScreen(),
+    addCustomer: (_) => const CustomerFormScreen(),
+    editCustomer: (context) {
+      final argument = ModalRoute.of(context)?.settings.arguments;
+      return CustomerFormScreen(
+        customerId: argument is String ? argument : null,
+        isEditing: true,
+      );
+    },
+    batches: (_) => const BatchListScreen(),
+    inventory: (_) => const InventoryScreen(),
+    import: (_) => const ImportListScreen(),
+    addImport: (_) => const ImportFormScreen(),
+    export: (_) => const ExportListScreen(),
+    addExport: (_) => const ExportFormScreen(),
+    reports: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Báo cáo')),
+          body: const ReportsTab(),
+        ),
+    profile: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Tài khoản')),
+          body: const ProfileTab(),
+        ),
+  };
+
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    if (settings.name == alerts) {
+      return MaterialPageRoute(builder: (_) => const AlertListScreen());
+    }
+    if (settings.name == forecast) {
+      return MaterialPageRoute(builder: (_) => const ForecastScreen());
+    }
+    if (settings.name == ocrInvoice) {
+      return MaterialPageRoute(builder: (_) => const OcrInvoiceScreen());
+    }
+    if (settings.name == batchDetail) {
+      final batchId = settings.arguments as String?;
+      return MaterialPageRoute(
+        builder: (_) => BatchDetailScreen(batchId: batchId ?? ''),
+      );
+    }
+    if (settings.name == qrScanner) {
+      return MaterialPageRoute(
+        builder: (_) => const QrScannerScreen(),
+      );
+    }
+    if (settings.name == warehouseLocations) {
+      return MaterialPageRoute(
+        builder: (_) => const WarehouseLocationScreen(),
+      );
+    }
+    if (settings.name == inventoryCheck) {
+      return MaterialPageRoute(
+        builder: (_) => const InventoryCheckScreen(),
+      );
+    }
+    if (settings.name == inventoryCheckHistory) {
+      return MaterialPageRoute(
+        builder: (_) => const InventoryCheckHistoryScreen(),
+      );
+    }
+    if (settings.name == damageReportForm) {
+      final initialBatch = settings.arguments as BatchModel?;
+      return MaterialPageRoute(
+        builder: (_) => DamageFormScreen(initialBatch: initialBatch),
+      );
+    }
+    if (settings.name == damageReportList) {
+      return MaterialPageRoute(
+        builder: (_) => const DamageListScreen(),
+      );
+    }
+    return null;
+  }
+}

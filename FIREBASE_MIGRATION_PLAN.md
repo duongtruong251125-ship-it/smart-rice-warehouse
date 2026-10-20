@@ -1,5 +1,10 @@
 # Firebase Migration Plan
 
+> Các đường dẫn trong kế hoạch này ghi nhận cấu trúc trước khi tách giao diện và
+> logic. Cấu trúc hiện tại và nơi sửa từng chức năng được mô tả trong
+> [ARCHITECTURE.md](ARCHITECTURE.md): màn hình ở `lib/presentation/`, nghiệp vụ ở
+> `lib/logic/`, SQLite/Firebase/repository ở `lib/data/`.
+
 ## 1. Phạm vi và nguyên tắc
 
 Mục tiêu là chuyển dữ liệu nghiệp vụ của Smart Rice Warehouse từ SQLite sang

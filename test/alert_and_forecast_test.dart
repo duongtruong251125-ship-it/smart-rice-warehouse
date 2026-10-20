@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/models/alert_model.dart';
-import 'package:smart_rice_warehouse/models/batch_model.dart';
-import 'package:smart_rice_warehouse/models/export_receipt_model.dart';
-import 'package:smart_rice_warehouse/models/forecast_model.dart';
-import 'package:smart_rice_warehouse/models/rice_model.dart';
-import 'package:smart_rice_warehouse/providers/alert_provider.dart';
-import 'package:smart_rice_warehouse/providers/batch_provider.dart';
-import 'package:smart_rice_warehouse/services/forecast_service.dart';
+import 'package:smart_rice_warehouse/logic/models/alert_model.dart';
+import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
+import 'package:smart_rice_warehouse/logic/models/export_receipt_model.dart';
+import 'package:smart_rice_warehouse/logic/models/forecast_model.dart';
+import 'package:smart_rice_warehouse/logic/models/rice_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/alert_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:smart_rice_warehouse/logic/services/forecast_service.dart';
 
 void main() {
   group('Week 2 - Alert Detection Test Cases', () {
@@ -52,7 +52,9 @@ void main() {
       );
     }
 
-    test('Low stock tests: currentStock > min (normal), = min (lowStock), < min (lowStock)', () {
+    test(
+        'Low stock tests: currentStock > min (normal), = min (lowStock), < min (lowStock)',
+        () {
       final rices = [
         makeRice(id: 'r1', name: 'Gạo Normal', minStock: 100),
         makeRice(id: 'r2', name: 'Gạo Equal', minStock: 100),
@@ -95,7 +97,9 @@ void main() {
       expect(lowStockAlerts.any((a) => a.riceId == 'r3'), isTrue);
     });
 
-    test('Expiry tests: > 30 days (normal), 15 days (warning), 5 days (critical), expired (expired)', () {
+    test(
+        'Expiry tests: > 30 days (normal), 15 days (warning), 5 days (critical), expired (expired)',
+        () {
       final rices = [makeRice(id: 'r1', name: 'Gạo', minStock: 10)];
 
       final batches = [
@@ -109,13 +113,15 @@ void main() {
           id: 'b-15d',
           riceId: 'r1',
           quantity: 100,
-          expiryDate: today.add(const Duration(days: 15)), // 8-30 days -> warning
+          expiryDate:
+              today.add(const Duration(days: 15)), // 8-30 days -> warning
         ),
         makeBatch(
           id: 'b-5d',
           riceId: 'r1',
           quantity: 100,
-          expiryDate: today.add(const Duration(days: 5)), // 1-7 days -> critical
+          expiryDate:
+              today.add(const Duration(days: 5)), // 1-7 days -> critical
         ),
         makeBatch(
           id: 'b-past',
@@ -178,7 +184,9 @@ void main() {
       );
     }
 
-    test('Forecast: Có lịch sử xuất vs Không có lịch sử xuất (Average = 0) - Không crash chia 0', () {
+    test(
+        'Forecast: Có lịch sử xuất vs Không có lịch sử xuất (Average = 0) - Không crash chia 0',
+        () {
       final batchProvider = BatchProvider();
       final rices = [
         makeRice(id: 'rice-st25', name: 'ST25', minStock: 200),
@@ -240,7 +248,9 @@ void main() {
       expect(forecast.status, ForecastStatus.reorderSoon);
     });
 
-    test('Forecast: Export tăng mạnh -> daysRemaining giảm và status reorderSoon', () {
+    test(
+        'Forecast: Export tăng mạnh -> daysRemaining giảm và status reorderSoon',
+        () {
       final batchProvider = BatchProvider();
       final rices = [
         makeRice(id: 'rice-st25', name: 'ST25', minStock: 100),

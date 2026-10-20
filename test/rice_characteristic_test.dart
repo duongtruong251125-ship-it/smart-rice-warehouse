@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/models/rice_characteristic_model.dart';
-import 'package:smart_rice_warehouse/models/rice_model.dart';
-import 'package:smart_rice_warehouse/providers/rice_characteristic_provider.dart';
-import 'package:smart_rice_warehouse/providers/rice_provider.dart';
+import 'package:smart_rice_warehouse/logic/models/rice_characteristic_model.dart';
+import 'package:smart_rice_warehouse/logic/models/rice_model.dart';
+import 'package:smart_rice_warehouse/logic/providers/rice_characteristic_provider.dart';
+import 'package:smart_rice_warehouse/logic/providers/rice_provider.dart';
 
 void main() {
   group('RiceCharacteristicModel Tests', () {
@@ -121,7 +121,8 @@ void main() {
       expect(added, isTrue);
       expect(provider.characteristics.length, 3);
       expect(provider.findById('char_custom_1')?.name, 'Xốp mềm');
-      expect(provider.findById('char_custom_1')?.description, 'Cơm nở xốp, tơi hạt');
+      expect(provider.findById('char_custom_1')?.description,
+          'Cơm nở xốp, tơi hạt');
 
       // 2. Trùng tên (case-insensitive)
       expect(provider.isNameExists('xốp mềm'), isTrue);
@@ -136,7 +137,8 @@ void main() {
       expect(provider.findById('char_custom_1')?.name, 'Xốp nở');
 
       // 4. Lấy theo danh sách ID
-      final retrieved = provider.getCharacteristicsForIds(['char_deo', 'char_custom_1']);
+      final retrieved =
+          provider.getCharacteristicsForIds(['char_deo', 'char_custom_1']);
       expect(retrieved.length, 2);
       expect(retrieved.map((c) => c.name), containsAll(['Dẻo', 'Xốp nở']));
 
