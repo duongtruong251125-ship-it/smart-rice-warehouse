@@ -14,7 +14,7 @@ void main() {
       MockData.rices.length > 1 ? MockData.rices[1] : MockData.rices.first;
   final supplier = MockData.suppliers.first;
   final customer = MockData.customers.first;
-  final fixedDate = DateTime(2026, 10, 19, 10, 0);
+  final fixedDate = DateTime.now();
 
   group('ImportFormViewModel', () {
     test('auto-selects first batch if rice has existing batches', () {

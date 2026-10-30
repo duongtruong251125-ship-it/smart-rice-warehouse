@@ -348,7 +348,7 @@ class AppDatabase {
     if (userPath != null || legacyPath == null) return userPath;
 
     // One-time compatibility bridge: attach the old single-device avatar to
-    // the authenticated Firebase uid without uploading the path to Firestore.
+    // the authenticated cloud uid without uploading the path to the database.
     await _database.insert(
       'app_state',
       {

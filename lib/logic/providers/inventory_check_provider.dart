@@ -6,6 +6,7 @@ import 'package:smart_rice_warehouse/logic/contracts/repositories/crud_repositor
 import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
 import 'package:smart_rice_warehouse/logic/models/inventory_check_model.dart';
 import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class InventoryCheckProvider extends ChangeNotifier {
   InventoryCheckProvider({
@@ -18,7 +19,7 @@ class InventoryCheckProvider extends ChangeNotifier {
       initial ?? DefaultDataRegistry.provider?.inventoryChecks ?? const [],
     );
     if (repository != null) {
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
     }
   }
 
@@ -37,9 +38,9 @@ class InventoryCheckProvider extends ChangeNotifier {
   bool get hasActiveSession => _activeSession != null;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get usesFirestore => repository != null;
+  bool get usesCloudBackend => repository != null;
 
-  void _subscribeToFirestore() {
+  void _subscribeToCloudRepository() {
     _isLoading = true;
     _subscription = repository!.watchAll().listen(
       (remoteSessions) {
@@ -69,7 +70,7 @@ class InventoryCheckProvider extends ChangeNotifier {
     _errorMessage = null;
     if (repository != null) {
       _subscription?.cancel();
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
       notifyListeners();
     } else {
       notifyListeners();
@@ -79,10 +80,13 @@ class InventoryCheckProvider extends ChangeNotifier {
   /// Bắt đầu một phiên kiểm kê mới
   InventoryCheckSession startNewSession({String createdBy = 'Admin'}) {
     final now = DateTime.now();
+    // The history stream can still be loading here, so deriving the visible
+    // code from its length can reuse a code already stored in the cloud.
+    final id = const Uuid().v4();
     final code =
-        'KK-${now.year}${now.month.toString().padLeft(2, '0')}-${(_history.length + 1).toString().padLeft(3, '0')}';
+        'KK-${now.year}${now.month.toString().padLeft(2, '0')}-${id.substring(0, 8).toUpperCase()}';
     final session = InventoryCheckSession(
-      id: 'session-${DateTime.now().millisecondsSinceEpoch}',
+      id: id,
       code: code,
       createdAt: now,
       createdBy: createdBy,

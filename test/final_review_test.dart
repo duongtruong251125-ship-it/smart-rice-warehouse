@@ -24,7 +24,6 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('Firebase'), findsNothing);
     expect(find.textContaining('Demo Nhanh'), findsNothing);
     expect(find.widgetWithText(FilledButton, 'Đăng nhập'), findsOneWidget);
 
@@ -35,7 +34,6 @@ void main() {
     expect(find.text('Họ và tên'), findsOneWidget);
     expect(find.text('Nhập lại mật khẩu'), findsOneWidget);
     expect(find.text('Vai trò'), findsOneWidget);
-    expect(find.textContaining('Firebase'), findsNothing);
   });
 
   test('all declared application routes are registered', () {

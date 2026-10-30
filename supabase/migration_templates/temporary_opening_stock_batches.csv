@@ -1,0 +1,4 @@
+id,code,rice_id,rice_name,quantity,import_date,manufacture_date,expiry_date,status,supplier_id,supplier_name,warehouse_location_id,location_name,as_of_date,source_migration_run
+tmp-seed-batch-st25-20261029,TMP-20261029-ST25-01,tmp-rice-st25-20261029,Gạo ST25,500,2026-10-29,2026-10-01,2027-09-30,available,,,,,2026-10-29,tmp-opening-stock-2026-10-29
+tmp-seed-batch-jasmine-20261029,TMP-20261029-JAS-01,tmp-rice-jasmine-20261029,Gạo Jasmine,400,2026-10-29,2026-10-01,2027-09-30,available,,,,,2026-10-29,tmp-opening-stock-2026-10-29
+tmp-seed-batch-nanghuong-20261029,TMP-20261029-NH-01,tmp-rice-nanghuong-20261029,Gạo Nàng Hương,300,2026-10-29,2026-10-01,2027-09-30,available,,,,,2026-10-29,tmp-opening-stock-2026-10-29

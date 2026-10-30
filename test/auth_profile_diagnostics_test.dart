@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/user_profile_mapper.dart';
+import 'package:smart_rice_warehouse/data/repositories/supabase/supabase_user_profile_codec.dart';
 import 'package:smart_rice_warehouse/logic/contracts/repositories/repository_exception.dart';
 import 'package:smart_rice_warehouse/logic/models/user_model.dart';
 import 'package:smart_rice_warehouse/logic/providers/auth_provider.dart';
@@ -17,9 +17,18 @@ class RawProfiles extends TestProfiles {
   Map<String, dynamic>? raw;
   int pendingWrites = 0;
   @override
-  Future<UserModel?> getById(String uid) async => raw == null
-      ? super.getById(uid)
-      : const UserProfileMapper().fromMap(uid, raw!);
+  Future<UserModel?> getById(String uid) async {
+    if (raw == null) return super.getById(uid);
+    final row = <String, dynamic>{
+      'id': uid,
+      'display_name': 'Quản trị kho',
+      'email': identity.email,
+      'is_active': raw!.containsKey('isActive') ? raw!['isActive'] : true,
+    };
+    if (raw!.containsKey('role')) row['role'] = raw!['role'];
+    return SupabaseUserProfileCodec.fromRow(row);
+  }
+
   @override
   Future<void> createPendingProfile(
       {required String uid,

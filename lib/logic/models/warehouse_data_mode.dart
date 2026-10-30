@@ -9,14 +9,14 @@ enum WarehouseDataMode {
 
   static WarehouseDataMode resolve({
     required bool demoMode,
-    required bool useFirebaseBackend,
-    required bool firebaseReady,
+    required bool supabaseReady,
   }) {
     if (demoMode) return demo;
-    if (!firebaseReady) {
+    if (!supabaseReady) {
       throw StateError(
-          'Firebase chưa sẵn sàng. Không chuyển sang dữ liệu local; vui lòng thử lại.');
+        'Supabase chưa sẵn sàng. Kiểm tra SUPABASE_URL và SUPABASE_PUBLISHABLE_KEY.',
+      );
     }
-    return useFirebaseBackend ? cloud : local;
+    return cloud;
   }
 }

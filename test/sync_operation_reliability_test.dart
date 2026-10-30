@@ -1,14 +1,10 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:smart_rice_warehouse/data/mock/mock_data.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/firestore_collection_repository.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/restarting_repository_stream.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/warehouse_location_mapper.dart';
+import 'package:smart_rice_warehouse/data/sync/restarting_repository_stream.dart';
 import 'package:smart_rice_warehouse/logic/contracts/repositories/batch_location_writer.dart';
 import 'package:smart_rice_warehouse/logic/contracts/repositories/crud_repository.dart';
 import 'package:smart_rice_warehouse/logic/contracts/repositories/repository_exception.dart';
@@ -74,16 +70,6 @@ class MoveRepository extends WriteRepository<BatchModel>
   }
 }
 
-class BrokenLocationMapper extends WarehouseLocationMapper {
-  const BrokenLocationMapper(this.error);
-  final Object error;
-  @override
-  WarehouseLocationModel fromFirestore(
-          DocumentSnapshot<Map<String, dynamic>> snapshot,
-          SnapshotOptions? options) =>
-      throw error;
-}
-
 Future<void> flush() async {
   for (var i = 0; i < 12; i++) {
     await Future<void>.delayed(Duration.zero);
@@ -100,38 +86,6 @@ const location = WarehouseLocationModel(
     currentBatchCount: 0);
 
 void main() {
-  for (final code in ['permission-denied', 'unavailable']) {
-    test(
-        'repository maps $code and provider exits loading with retry available',
-        () async {
-      final db = FakeFirebaseFirestore();
-      await db.collection('locations').doc('one').set({'code': 'A1'});
-      final repository = FirestoreCollectionRepository<WarehouseLocationModel>(
-          firestore: db,
-          collectionPath: 'locations',
-          mapper: BrokenLocationMapper(
-              FirebaseException(plugin: 'cloud_firestore', code: code)));
-      final provider = WarehouseProvider(initial: [], repository: repository);
-      addTearDown(provider.dispose);
-      final documentErrors = <Object>[];
-      final documentSub = repository
-          .watchById('one')
-          .listen((_) {}, onError: documentErrors.add);
-      addTearDown(documentSub.cancel);
-      await flush();
-      expect(provider.isLoading, isFalse);
-      expect(provider.lastFailure?.code, code);
-      expect(provider.lastFailure?.cause, isA<FirebaseException>());
-      expect(
-          documentErrors.single,
-          isA<RepositoryException>()
-              .having((error) => error.code, 'code', code));
-      provider.retrySync();
-      await flush();
-      expect(provider.lastFailure?.code, code);
-    });
-  }
-
   test(
       'replacement waits for cancellation; reconnect bursts have only one source',
       () async {

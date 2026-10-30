@@ -22,7 +22,7 @@ class DamageProvider extends ChangeNotifier {
       }
     }
     if (repository != null) {
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
     }
   }
 
@@ -39,7 +39,7 @@ class DamageProvider extends ChangeNotifier {
       List<DamageReportModel>.unmodifiable(_reports);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get usesFirestore => repository != null;
+  bool get usesCloudBackend => repository != null;
 
   static String resolveDefaultDamageImage(DamageReportModel report) {
     if (report.imagePath?.trim().isNotEmpty == true) {
@@ -58,7 +58,7 @@ class DamageProvider extends ChangeNotifier {
     }
   }
 
-  void _subscribeToFirestore() {
+  void _subscribeToCloudRepository() {
     _isLoading = true;
     _subscription = repository!.watchAll().listen(
       (remoteReports) {
@@ -95,7 +95,7 @@ class DamageProvider extends ChangeNotifier {
     _errorMessage = null;
     if (repository != null) {
       _subscription?.cancel();
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
       notifyListeners();
     } else {
       notifyListeners();

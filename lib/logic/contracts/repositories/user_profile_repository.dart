@@ -20,11 +20,15 @@ abstract interface class UserProfileRepository {
     required String displayName,
   });
 
-  /// Administrative operation. Firestore Security Rules are the final
+  /// Administrative operation. Supabase row-level security policies are the final
   /// authority and reject this call for non-admin accounts.
   Future<void> updateAccess({
     required String uid,
     required String role,
     required bool isActive,
   });
+
+  /// Confirms an account email through a server-side admin operation.
+  /// Returns true when the email had already been confirmed.
+  Future<bool> confirmEmail(String uid);
 }

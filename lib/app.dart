@@ -56,7 +56,6 @@ class SmartRiceWarehouseApp extends StatelessWidget {
     this.inventoryChecks,
     this.transactionRepository,
     this.onForceCloudSync,
-    this.onLegacyMigration,
     required this.settings,
   });
 
@@ -78,7 +77,6 @@ class SmartRiceWarehouseApp extends StatelessWidget {
   final CrudRepository<InventoryCheckSession>? inventoryChecks;
   final InventoryTransactions? transactionRepository;
   final Future<({bool success, String? message})> Function()? onForceCloudSync;
-  final Future<({bool success, String? message})> Function()? onLegacyMigration;
 
   List<T>? _initial<T>(List<T>? values) => values ?? (demoMode ? null : <T>[]);
 
@@ -107,7 +105,6 @@ class SmartRiceWarehouseApp extends StatelessWidget {
               loadAvatarPath: database?.loadAvatarPath,
               onAvatarPersist: database?.saveAvatarPath,
               onForceCloudSync: onForceCloudSync,
-              onLegacyMigration: onLegacyMigration,
               onPersist: (email, hash, remembered) => database?.saveAuth(
                 email: email,
                 passwordHash: hash,

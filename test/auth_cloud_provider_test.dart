@@ -1,15 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/data/firebase/firebase_auth_service.dart';
+import 'package:smart_rice_warehouse/logic/contracts/authentication_service.dart';
 import 'package:smart_rice_warehouse/logic/models/user_model.dart';
 import 'package:smart_rice_warehouse/logic/providers/auth_provider.dart';
 import 'package:smart_rice_warehouse/logic/contracts/repositories/user_profile_repository.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/user_profile_mapper.dart';
 
 void main() {
   group('cloud authentication session', () {
-    test('restores an active Firestore profile and local avatar by uid',
+    test('restores an active Supabase profile and local avatar by uid',
         () async {
       final auth = _FakeAuthenticationService();
       final profiles = _FakeUserProfileRepository()
@@ -75,7 +74,7 @@ void main() {
 
     test('registration always creates a pending staff profile', () async {
       final auth = _FakeAuthenticationService()
-        ..registerResult = FirebaseAuthResult.success(
+        ..registerResult = AuthResult.success(
           const AuthenticatedUser(
             uid: 'uid-new',
             email: 'new@example.com',
@@ -88,7 +87,7 @@ void main() {
         userProfileRepository: profiles,
       );
 
-      final result = await provider.registerWithFirebase(
+      final result = await provider.registerWithCloud(
         email: 'new@example.com',
         password: 'secret123',
         name: 'Người dùng mới',
@@ -103,23 +102,67 @@ void main() {
       provider.dispose();
       await auth.close();
     });
-  });
 
-  test('user profile mapper never serializes a local avatar path', () {
-    const mapper = UserProfileMapper();
-    final data = mapper.toFirestore(
-      const UserModel(
-        id: 'uid-1',
-        name: 'Admin',
-        email: 'ADMIN@example.com',
-        role: 'admin',
-        avatarPath: r'C:\device\avatar.jpg',
-      ),
-      null,
-    );
+    test('active admin can request email confirmation for another account',
+        () async {
+      final auth = _FakeAuthenticationService();
+      final profiles = _FakeUserProfileRepository()
+        ..profiles['admin-1'] = const UserModel(
+          id: 'admin-1',
+          name: 'Admin',
+          email: 'admin@example.com',
+          role: 'admin',
+          isActive: true,
+        )
+        ..profiles['staff-1'] = const UserModel(
+          id: 'staff-1',
+          name: 'Staff',
+          email: 'staff@example.com',
+          role: 'staff',
+          isActive: true,
+        );
+      final provider = AuthProvider(
+        authenticationService: auth,
+        userProfileRepository: profiles,
+      );
 
-    expect(data['email'], 'admin@example.com');
-    expect(data.containsKey('avatarPath'), isFalse);
+      auth.emit(
+          const AuthenticatedUser(uid: 'admin-1', email: 'admin@example.com'));
+      await provider.waitUntilReady();
+      final result = await provider.confirmUserEmail('staff-1');
+
+      expect(result.success, isTrue);
+      expect(profiles.confirmedUserIds, contains('staff-1'));
+      provider.dispose();
+      await auth.close();
+    });
+
+    test('staff cannot request admin email confirmation', () async {
+      final auth = _FakeAuthenticationService();
+      final profiles = _FakeUserProfileRepository()
+        ..profiles['staff-1'] = const UserModel(
+          id: 'staff-1',
+          name: 'Staff',
+          email: 'staff@example.com',
+          role: 'staff',
+          isActive: true,
+        );
+      final provider = AuthProvider(
+        authenticationService: auth,
+        userProfileRepository: profiles,
+      );
+
+      auth.emit(
+          const AuthenticatedUser(uid: 'staff-1', email: 'staff@example.com'));
+      await provider.waitUntilReady();
+      final result = await provider.confirmUserEmail('target-1');
+
+      expect(result.success, isFalse);
+      expect(result.message, contains('Chỉ Quản trị viên'));
+      expect(profiles.confirmedUserIds, isEmpty);
+      provider.dispose();
+      await auth.close();
+    });
   });
 }
 
@@ -127,8 +170,8 @@ class _FakeAuthenticationService implements AuthenticationService {
   final StreamController<AuthenticatedUser?> _controller =
       StreamController<AuthenticatedUser?>.broadcast();
 
-  FirebaseAuthResult? signInResult;
-  FirebaseAuthResult? registerResult;
+  AuthResult? signInResult;
+  AuthResult? registerResult;
   AuthenticatedUser? _currentUser;
   int signOutCount = 0;
 
@@ -149,27 +192,27 @@ class _FakeAuthenticationService implements AuthenticationService {
   bool get isInitialized => true;
 
   @override
-  Future<FirebaseAuthResult> register({
+  Future<AuthResult> register({
     required String email,
     required String password,
     required String displayName,
   }) async {
-    return registerResult ?? FirebaseAuthResult.failure('missing fake result');
+    return registerResult ?? AuthResult.failure('missing fake result');
   }
 
   @override
-  Future<FirebaseAuthResult> sendPasswordResetEmail({
+  Future<AuthResult> sendPasswordResetEmail({
     required String email,
   }) async {
-    return FirebaseAuthResult.success();
+    return AuthResult.success();
   }
 
   @override
-  Future<FirebaseAuthResult> signIn({
+  Future<AuthResult> signIn({
     required String email,
     required String password,
   }) async {
-    return signInResult ?? FirebaseAuthResult.failure('missing fake result');
+    return signInResult ?? AuthResult.failure('missing fake result');
   }
 
   @override
@@ -179,21 +222,22 @@ class _FakeAuthenticationService implements AuthenticationService {
   }
 
   @override
-  Future<FirebaseAuthResult> updateDisplayName(String displayName) async {
-    return FirebaseAuthResult.success(_currentUser);
+  Future<AuthResult> updateDisplayName(String displayName) async {
+    return AuthResult.success(_currentUser);
   }
 
   @override
-  Future<FirebaseAuthResult> updatePassword({
+  Future<AuthResult> updatePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
-    return FirebaseAuthResult.success(_currentUser);
+    return AuthResult.success(_currentUser);
   }
 }
 
 class _FakeUserProfileRepository implements UserProfileRepository {
   final Map<String, UserModel> profiles = {};
+  final Set<String> confirmedUserIds = {};
 
   @override
   Stream<List<UserModel>> watchAll() => Stream.value(profiles.values.toList());
@@ -236,6 +280,9 @@ class _FakeUserProfileRepository implements UserProfileRepository {
       profiles[uid] = profile.copyWith(role: role, isActive: isActive);
     }
   }
+
+  @override
+  Future<bool> confirmEmail(String uid) async => !confirmedUserIds.add(uid);
 
   @override
   Stream<UserModel?> watchById(String uid) => Stream.value(profiles[uid]);

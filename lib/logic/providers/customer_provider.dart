@@ -13,7 +13,7 @@ class CustomerProvider extends ChangeNotifier {
           initial ?? DefaultDataRegistry.provider?.customers ?? const [],
         ) {
     if (repository != null) {
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
     }
   }
 
@@ -28,9 +28,9 @@ class CustomerProvider extends ChangeNotifier {
       List<CustomerModel>.unmodifiable(_customers);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get usesFirestore => repository != null;
+  bool get usesCloudBackend => repository != null;
 
-  void _subscribeToFirestore() {
+  void _subscribeToCloudRepository() {
     _isLoading = true;
     _subscription = repository!.watchAll().listen(
       (remoteCustomers) {
@@ -60,7 +60,7 @@ class CustomerProvider extends ChangeNotifier {
     _errorMessage = null;
     if (repository != null) {
       _subscription?.cancel();
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
       notifyListeners();
     } else {
       notifyListeners();

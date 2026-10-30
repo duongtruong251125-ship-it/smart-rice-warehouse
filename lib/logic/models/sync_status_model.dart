@@ -8,12 +8,12 @@ enum WarehouseSyncState {
 
 class SyncSourceSnapshot {
   const SyncSourceSnapshot({
-    required this.usesFirestore,
+    required this.usesCloudBackend,
     required this.isLoading,
     this.errorMessage,
   });
 
-  final bool usesFirestore;
+  final bool usesCloudBackend;
   final bool isLoading;
   final String? errorMessage;
 }
@@ -81,7 +81,7 @@ class WarehouseSyncStatus {
       );
     }
 
-    final anyCloud = sources.any((source) => source.usesFirestore);
+    final anyCloud = sources.any((source) => source.usesCloudBackend);
     if (!anyCloud) {
       return const WarehouseSyncStatus(
         state: WarehouseSyncState.local,
@@ -89,7 +89,7 @@ class WarehouseSyncStatus {
       );
     }
 
-    final allCloud = sources.every((source) => source.usesFirestore);
+    final allCloud = sources.every((source) => source.usesCloudBackend);
     if (allCloud) {
       return WarehouseSyncStatus(
         state: WarehouseSyncState.synced,

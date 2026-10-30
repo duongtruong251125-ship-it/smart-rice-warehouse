@@ -17,7 +17,7 @@ class WarehouseProvider extends LifecycleNotifier {
       initial ?? DefaultDataRegistry.provider?.warehouseLocations ?? const [],
     );
     if (repository != null) {
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
     }
   }
 
@@ -38,7 +38,7 @@ class WarehouseProvider extends LifecycleNotifier {
       List<WarehouseLocationModel>.unmodifiable(_locations);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get usesFirestore => repository != null;
+  bool get usesCloudBackend => repository != null;
 
   Future<void> _subscriptionWork = Future<void>.value();
 
@@ -52,7 +52,7 @@ class WarehouseProvider extends LifecycleNotifier {
     notifyListeners();
   }
 
-  void _subscribeToFirestore() {
+  void _subscribeToCloudRepository() {
     final revision = ++_streamRevision;
     final previous = _subscription;
     _subscription = null;
@@ -88,7 +88,7 @@ class WarehouseProvider extends LifecycleNotifier {
     if (isDisposed) return;
     _errorMessage = null;
     if (repository != null) {
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
       notifyListeners();
     } else {
       notifyListeners();
@@ -196,7 +196,7 @@ class WarehouseProvider extends LifecycleNotifier {
     required String batchId,
     required String locationId,
   }) {
-    if (isDisposed || repository != null || batchProvider.usesFirestore) {
+    if (isDisposed || repository != null || batchProvider.usesCloudBackend) {
       return false;
     }
     final batch = batchProvider.findById(batchId);
@@ -226,7 +226,7 @@ class WarehouseProvider extends LifecycleNotifier {
       required String batchId,
       required String locationId}) async {
     if (isDisposed) return false;
-    if (repository == null && !batchProvider.usesFirestore) {
+    if (repository == null && !batchProvider.usesCloudBackend) {
       return assignBatch(
           batchProvider: batchProvider,
           batchId: batchId,

@@ -1000,7 +1000,7 @@ class _RegisterDialogState extends State<_RegisterDialog> {
 
     setState(() => _submitting = true);
 
-    final result = await auth.registerWithFirebase(
+    final result = await auth.registerWithCloud(
       email: _emailController.text.trim(),
       password: _passwordController.text,
       name: _nameController.text.trim(),
@@ -1130,15 +1130,14 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
     if (!auth.isCloudAuthEnabled) {
       AppToast.error(
         context,
-        'Khôi phục mật khẩu qua email chỉ hỗ trợ khi kết nối Firebase.',
+        'Không thể kết nối đến dịch vụ xác thực Supabase.',
       );
       return;
     }
 
     setState(() => _submitting = true);
 
-    final result =
-        await auth.resetPasswordWithFirebase(_controller.text.trim());
+    final result = await auth.resetPassword(_controller.text.trim());
 
     if (!mounted) return;
 

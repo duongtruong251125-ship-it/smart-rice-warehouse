@@ -24,6 +24,7 @@ import 'package:smart_rice_warehouse/presentation/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/presentation/theme/theme_provider.dart';
 import 'package:smart_rice_warehouse/presentation/widgets/async_status_banner.dart';
 import 'package:smart_rice_warehouse/presentation/widgets/pressable_scale.dart';
+import 'package:smart_rice_warehouse/presentation/widgets/search_field.dart';
 import 'package:smart_rice_warehouse/presentation/widgets/sticky_action_bar.dart';
 
 double _relativeLuminance(Color color) {
@@ -114,10 +115,10 @@ void main() {
   });
 
   group('2. Real Sync Status Model & State Resolution', () {
-    test('Resolves local state when not using cloud/Firestore', () {
+    test('Resolves local state when not using cloud/Supabase', () {
       final status = WarehouseSyncStatus.resolve(
         sources: [
-          const SyncSourceSnapshot(usesFirestore: false, isLoading: false),
+          const SyncSourceSnapshot(usesCloudBackend: false, isLoading: false),
         ],
       );
       expect(status.state, WarehouseSyncState.local);
@@ -128,8 +129,8 @@ void main() {
     test('Resolves syncing state when any source is loading', () {
       final status = WarehouseSyncStatus.resolve(
         sources: [
-          const SyncSourceSnapshot(usesFirestore: true, isLoading: true),
-          const SyncSourceSnapshot(usesFirestore: true, isLoading: false),
+          const SyncSourceSnapshot(usesCloudBackend: true, isLoading: true),
+          const SyncSourceSnapshot(usesCloudBackend: true, isLoading: false),
         ],
       );
       expect(status.state, WarehouseSyncState.syncing);
@@ -140,7 +141,9 @@ void main() {
       final status = WarehouseSyncStatus.resolve(
         sources: [
           const SyncSourceSnapshot(
-              usesFirestore: true, isLoading: false, errorMessage: 'Lỗi mạng'),
+              usesCloudBackend: true,
+              isLoading: false,
+              errorMessage: 'Lỗi mạng'),
         ],
       );
       expect(status.state, WarehouseSyncState.error);
@@ -152,8 +155,8 @@ void main() {
     test('Resolves synced state when cloud sources are idle without error', () {
       final status = WarehouseSyncStatus.resolve(
         sources: [
-          const SyncSourceSnapshot(usesFirestore: true, isLoading: false),
-          const SyncSourceSnapshot(usesFirestore: true, isLoading: false),
+          const SyncSourceSnapshot(usesCloudBackend: true, isLoading: false),
+          const SyncSourceSnapshot(usesCloudBackend: true, isLoading: false),
         ],
       );
       expect(status.state, WarehouseSyncState.synced);
@@ -184,6 +187,13 @@ void main() {
 
       expect(find.text('Lỗi đồng bộ'), findsOneWidget);
       expect(find.byIcon(Icons.refresh_rounded), findsOneWidget);
+      final badgeLabel = tester.widget<Text>(find.text('Lỗi đồng bộ'));
+      expect(
+        badgeLabel.style?.color,
+        AppTheme.dangerTextColor(
+          tester.element(find.byType(SyncStatusBadge)),
+        ),
+      );
 
       await tester.tap(find.byType(SyncStatusBadge));
       expect(retried, isTrue);
@@ -237,6 +247,41 @@ void main() {
   });
 
   group('4. Touch Targets, Accessibility & Reduced Motion', () {
+    testWidgets(
+        'SearchField clear action tracks controller without parent rebuild',
+        (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      final receivedQueries = <String>[];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: SearchField(
+              controller: controller,
+              hintText: 'Tìm gạo',
+              onChanged: receivedQueries.add,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byTooltip('Xóa tìm kiếm'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'Jasmine');
+      await tester.pump();
+
+      expect(find.byTooltip('Xóa tìm kiếm'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Xóa tìm kiếm'));
+      await tester.pump();
+
+      expect(controller.text, isEmpty);
+      expect(find.byTooltip('Xóa tìm kiếm'), findsNothing);
+      expect(receivedQueries.last, isEmpty);
+    });
+
     testWidgets('PressableScale enforces min 44x44 touch target and Semantics',
         (tester) async {
       await tester.pumpWidget(

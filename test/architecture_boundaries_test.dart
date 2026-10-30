@@ -52,9 +52,7 @@ void main() {
       'contracts never depend on external database, cloud, or device platform drivers',
       () {
     final forbiddenDrivers = [
-      'package:cloud_firestore/',
-      'package:firebase_auth/',
-      'package:firebase_core/',
+      'package:supabase_flutter/',
       'package:sqflite/',
       'package:path_provider/',
       'package:shared_preferences/',
@@ -70,7 +68,7 @@ void main() {
 
   test('no source or test imports a retired source directory', () {
     final retired = RegExp(
-      r'^package:smart_rice_warehouse/(screens|widgets|models|providers|services|repositories|core/(services|theme|routes|firebase))/',
+      r'^package:smart_rice_warehouse/(screens|widgets|models|providers|services|repositories|core/(services|theme|routes))/',
     );
     for (final file in [...sources('lib'), ...sources('test')]) {
       for (final match in directives.allMatches(file.readAsStringSync())) {

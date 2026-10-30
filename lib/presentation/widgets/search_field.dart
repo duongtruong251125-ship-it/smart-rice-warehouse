@@ -60,28 +60,32 @@ class SearchField extends StatelessWidget {
               color: AppTheme.primaryColor,
               size: 20,
             ),
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (controller.text.isNotEmpty)
-                  IconButton(
-                    tooltip: 'Xóa tìm kiếm',
-                    constraints: const BoxConstraints(
-                      minWidth: 44,
-                      minHeight: 44,
+            suffixIcon: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              child: trailing,
+              builder: (context, value, trailingWidget) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (value.text.isNotEmpty)
+                    IconButton(
+                      tooltip: 'Xóa tìm kiếm',
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      onPressed: () {
+                        controller.clear();
+                        onChanged('');
+                      },
+                      icon: Icon(
+                        Icons.cancel_rounded,
+                        size: 18,
+                        color: AppTheme.textMutedColor(context),
+                      ),
                     ),
-                    onPressed: () {
-                      controller.clear();
-                      onChanged('');
-                    },
-                    icon: Icon(
-                      Icons.cancel_rounded,
-                      size: 18,
-                      color: AppTheme.textMutedColor(context),
-                    ),
-                  ),
-                if (trailing != null) trailing!,
-              ],
+                  if (trailingWidget != null) trailingWidget,
+                ],
+              ),
             ),
           ),
         ),

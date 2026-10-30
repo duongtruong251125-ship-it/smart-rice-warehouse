@@ -18,7 +18,7 @@ class BatchProvider extends LifecycleNotifier {
           initial ?? DefaultDataRegistry.provider?.batches ?? const [],
         ) {
     if (repository != null) {
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
     }
   }
 
@@ -36,7 +36,7 @@ class BatchProvider extends LifecycleNotifier {
   List<BatchModel> get batches => List<BatchModel>.unmodifiable(_batches);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get usesFirestore => repository != null;
+  bool get usesCloudBackend => repository != null;
 
   Future<void> _subscriptionWork = Future<void>.value();
 
@@ -51,7 +51,7 @@ class BatchProvider extends LifecycleNotifier {
     notifyListeners();
   }
 
-  void _subscribeToFirestore() {
+  void _subscribeToCloudRepository() {
     final revision = ++_streamRevision;
     final previous = _subscription;
     _subscription = null;
@@ -87,7 +87,7 @@ class BatchProvider extends LifecycleNotifier {
     if (isDisposed) return;
     _errorMessage = null;
     if (repository != null) {
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
       notifyListeners();
     } else {
       notifyListeners();

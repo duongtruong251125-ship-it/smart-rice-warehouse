@@ -44,7 +44,9 @@ class UserManagementSheet extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Đồng bộ quyền hạn Quản trị viên và Nhân viên kho (Mật khẩu mặc định: 123456)',
+              auth.isDemoMode
+                  ? 'Đồng bộ quyền hạn Quản trị viên và Nhân viên kho (Mật khẩu mẫu: 123456)'
+                  : 'Quyền hạn được đồng bộ với Supabase. Nhân viên dùng mật khẩu đăng nhập cá nhân.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
@@ -221,6 +223,44 @@ class UserManagementSheet extends StatelessWidget {
                                       nextActive
                                           ? 'Đã kích hoạt tài khoản ${u.name}'
                                           : 'Đã khóa tài khoản ${u.name}',
+                                    );
+                                  }
+                                },
+                              ),
+                            if (auth.isAdmin &&
+                                !isSelf &&
+                                u.role == 'staff' &&
+                                !auth.isDemoMode)
+                              TextButton.icon(
+                                icon: const Icon(
+                                  Icons.mark_email_read_outlined,
+                                  size: 14,
+                                ),
+                                label: const Text(
+                                  'Xác minh email',
+                                  style: TextStyle(fontSize: 11.5),
+                                ),
+                                onPressed: () async {
+                                  final confirm = await showConfirmationDialog(
+                                    context: context,
+                                    title: 'Xác minh email thủ công',
+                                    message:
+                                        'Đánh dấu email ${u.email} đã được xác minh mà không cần bấm liên kết trong hộp thư. Chỉ tiếp tục nếu bạn đã tự kiểm tra danh tính người dùng.',
+                                    confirmLabel: 'Xác minh email',
+                                  );
+                                  if (confirm != true || !context.mounted) {
+                                    return;
+                                  }
+                                  final result =
+                                      await auth.confirmUserEmail(u.id);
+                                  if (!context.mounted) return;
+                                  if (result.success) {
+                                    AppToast.success(context, result.message!);
+                                  } else {
+                                    AppToast.error(
+                                      context,
+                                      result.message ??
+                                          'Không thể xác minh email.',
                                     );
                                   }
                                 },
@@ -478,7 +518,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
     setState(() => _isSubmitting = true);
     try {
       final auth = context.read<AuthProvider>();
-      final result = await auth.changePasswordWithFirebase(
+      final result = await auth.changeCloudPassword(
         current: current,
         replacement: newPass,
       );

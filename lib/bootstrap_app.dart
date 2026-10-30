@@ -1,11 +1,20 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_rice_warehouse/app.dart';
-import 'package:smart_rice_warehouse/data/firebase/config/firestore_paths.dart';
-import 'package:smart_rice_warehouse/data/firebase/firebase_auth_service.dart';
-import 'package:smart_rice_warehouse/data/local/settings_service.dart';
-import 'package:smart_rice_warehouse/presentation/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/data/local/app_database.dart';
+import 'package:smart_rice_warehouse/data/local/image_storage_service.dart';
+import 'package:smart_rice_warehouse/data/local/settings_service.dart';
+import 'package:smart_rice_warehouse/data/sync/business_sync_policy.dart';
+import 'package:smart_rice_warehouse/data/repositories/supabase/supabase_auth_service.dart';
+import 'package:smart_rice_warehouse/data/repositories/supabase/supabase_backend.dart';
+import 'package:smart_rice_warehouse/data/repositories/supabase/supabase_domain_repositories.dart';
+import 'package:smart_rice_warehouse/data/repositories/supabase/supabase_inventory_transactions.dart';
+import 'package:smart_rice_warehouse/data/repositories/supabase/supabase_user_profile_repository.dart';
+import 'package:smart_rice_warehouse/data/mock/mock_data.dart';
+import 'package:smart_rice_warehouse/logic/contracts/authentication_service.dart';
+import 'package:smart_rice_warehouse/logic/contracts/repositories/crud_repository.dart';
+import 'package:smart_rice_warehouse/logic/contracts/initial_data_provider.dart';
+import 'package:smart_rice_warehouse/logic/contracts/inventory_transactions.dart';
+import 'package:smart_rice_warehouse/logic/contracts/repositories/user_profile_repository.dart';
 import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
 import 'package:smart_rice_warehouse/logic/models/customer_model.dart';
 import 'package:smart_rice_warehouse/logic/models/damage_report_model.dart';
@@ -15,42 +24,22 @@ import 'package:smart_rice_warehouse/logic/models/inventory_check_model.dart';
 import 'package:smart_rice_warehouse/logic/models/rice_characteristic_model.dart';
 import 'package:smart_rice_warehouse/logic/models/rice_model.dart';
 import 'package:smart_rice_warehouse/logic/models/supplier_model.dart';
-import 'package:smart_rice_warehouse/logic/models/warehouse_location_model.dart';
-import 'package:smart_rice_warehouse/logic/contracts/repositories/crud_repository.dart';
-import 'package:smart_rice_warehouse/logic/contracts/repositories/user_profile_repository.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/firestore_batch_repository.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/customer_mapper.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/damage_report_mapper.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/export_receipt_mapper.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/firestore_collection_repository.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/firestore_user_profile_repository.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/import_receipt_mapper.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/inventory_check_mapper.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/callable_inventory_transactions.dart';
-import 'package:smart_rice_warehouse/logic/contracts/inventory_transactions.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/rice_characteristic_mapper.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/rice_product_mapper.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/supplier_mapper.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/warehouse_location_mapper.dart';
-
-import 'package:smart_rice_warehouse/data/firebase/business_sync_policy.dart';
-import 'package:smart_rice_warehouse/data/firebase/firebase_data_migration_service.dart';
 import 'package:smart_rice_warehouse/logic/models/warehouse_data_mode.dart';
+import 'package:smart_rice_warehouse/logic/models/warehouse_location_model.dart';
 import 'package:smart_rice_warehouse/logic/services/cloud_refresh_service.dart';
-import 'package:smart_rice_warehouse/data/local/image_storage_service.dart';
-import 'package:smart_rice_warehouse/data/mock/mock_data.dart';
-import 'package:smart_rice_warehouse/logic/contracts/initial_data_provider.dart';
 import 'package:smart_rice_warehouse/logic/services/media_service.dart';
+import 'package:smart_rice_warehouse/presentation/theme/app_theme.dart';
 
-/// Controls only the warehouse/business collections. Firebase Authentication
-/// and its user-profile collection are initialized independently below so an
-/// app can use real accounts without unexpectedly replacing local warehouse
-/// data with an empty Firestore project.
-const bool useFirebaseBackend = bool.fromEnvironment(
-  'USE_FIREBASE',
-  defaultValue: true,
-);
 const bool demoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
+const bool useSupabaseBackend =
+    bool.fromEnvironment('USE_SUPABASE', defaultValue: true);
+const String supabaseUrl = String.fromEnvironment(
+  'SUPABASE_URL',
+  defaultValue: 'https://tzvftlwcdupzrtzbugxt.supabase.co',
+);
+const String supabasePublishableKey =
+    String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+const bool releaseBuild = bool.fromEnvironment('dart.vm.product');
 
 typedef BootstrapData = ({
   WarehouseDataMode mode,
@@ -111,150 +100,129 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp>
   }
 
   Future<BootstrapData> _load() async {
+    if (!demoMode && !useSupabaseBackend) {
+      throw StateError('Ứng dụng chỉ hỗ trợ Supabase ngoài chế độ demo.');
+    }
+    if (releaseBuild && !demoMode && !useSupabaseBackend) {
+      throw StateError('Bản phát hành phải chọn Supabase.');
+    }
+
     final settings = SettingsService();
     await settings.init();
-    final firebaseReady =
-        !demoMode && await FirebaseAuthService.instance.initialize();
+    final supabaseClient = demoMode
+        ? null
+        : await SupabaseBackend.initialize(
+            url: supabaseUrl,
+            publishableKey: supabasePublishableKey,
+          );
     final mode = WarehouseDataMode.resolve(
-        demoMode: demoMode,
-        useFirebaseBackend: useFirebaseBackend,
-        firebaseReady: firebaseReady);
+      demoMode: demoMode,
+      supabaseReady: supabaseClient != null,
+    );
     final database = await AppDatabase.open(mode: mode);
-    await database.seedLocalDataIfNeeded(
-        demoMode: mode == WarehouseDataMode.demo);
+    await database.seedLocalDataIfNeeded(demoMode: demoMode);
     if (!mounted) {
       await database.close();
       settings.dispose();
       throw StateError('Khởi tạo đã bị hủy.');
     }
+
     _settings?.removeListener(_updateSyncSetting);
     _settings = settings;
     _syncPolicy =
         BusinessSyncPolicy(backgroundSyncEnabled: settings.backgroundSync);
     settings.addListener(_updateSyncSetting);
     _syncPolicy!.configure(
-        foreground: WidgetsBinding.instance.lifecycleState == null ||
-            WidgetsBinding.instance.lifecycleState ==
-                AppLifecycleState.resumed);
+      foreground: WidgetsBinding.instance.lifecycleState == null ||
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed,
+    );
 
-    final authUid =
-        firebaseReady ? FirebaseAuthService.instance.currentUser?.uid : null;
+    final AuthenticationService? authenticationService = supabaseClient == null
+        ? null
+        : SupabaseAuthService(client: supabaseClient);
+    final authUid = authenticationService?.currentUser?.uid;
     final snapshot = await database.loadSnapshot(authUid: authUid);
-    final userProfiles = firebaseReady
-        ? FirestoreUserProfileRepository(firestore: FirebaseFirestore.instance)
-        : null;
-    final firestore =
-        mode == WarehouseDataMode.cloud ? FirebaseFirestore.instance : null;
-
-    final riceProducts = firestore == null
+    final UserProfileRepository? userProfiles = supabaseClient == null
         ? null
-        : FirestoreCollectionRepository<RiceModel>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.riceProducts,
+        : SupabaseUserProfileRepository(client: supabaseClient);
+    final authChanges = authenticationService?.authStateChanges;
+
+    final riceProducts = supabaseClient == null
+        ? null
+        : supabaseRiceProducts(
+            client: supabaseClient,
             syncPolicy: _syncPolicy,
-            mapper: const RiceProductMapper(),
-            orderByField: 'code',
-            manageTimestamps: true,
+            authChanges: authChanges,
           );
-
-    final riceCharacteristics = firestore == null
+    final riceCharacteristics = supabaseClient == null
         ? null
-        : FirestoreCollectionRepository<RiceCharacteristicModel>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.riceCharacteristics,
+        : supabaseRiceCharacteristics(
+            client: supabaseClient,
             syncPolicy: _syncPolicy,
-            mapper: const RiceCharacteristicMapper(),
-            orderByField: 'name',
-            manageTimestamps: true,
+            authChanges: authChanges,
           );
-
-    final suppliers = firestore == null
+    final suppliers = supabaseClient == null
         ? null
-        : FirestoreCollectionRepository<SupplierModel>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.suppliers,
+        : supabaseSuppliers(
+            client: supabaseClient,
             syncPolicy: _syncPolicy,
-            mapper: const SupplierMapper(),
-            orderByField: 'name',
-            manageTimestamps: true,
+            authChanges: authChanges,
           );
-
-    final customers = firestore == null
+    final customers = supabaseClient == null
         ? null
-        : FirestoreCollectionRepository<CustomerModel>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.customers,
+        : supabaseCustomers(
+            client: supabaseClient,
             syncPolicy: _syncPolicy,
-            mapper: const CustomerMapper(),
-            orderByField: 'name',
-            manageTimestamps: true,
+            authChanges: authChanges,
           );
-
-    final warehouseLocations = firestore == null
+    final warehouseLocations = supabaseClient == null
         ? null
-        : FirestoreCollectionRepository<WarehouseLocationModel>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.warehouseLocations,
+        : supabaseWarehouseLocations(
+            client: supabaseClient,
             syncPolicy: _syncPolicy,
-            mapper: const WarehouseLocationMapper(),
-            orderByField: 'code',
-            manageTimestamps: true,
+            authChanges: authChanges,
           );
-
-    final batches = firestore == null
+    final batches = supabaseClient == null
         ? null
-        : FirestoreBatchRepository(
-            firestore: firestore, syncPolicy: _syncPolicy);
-
-    final importReceipts = firestore == null
-        ? null
-        : FirestoreCollectionRepository<ImportReceiptModel>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.importReceipts,
+        : SupabaseBatchRepository(
+            client: supabaseClient,
             syncPolicy: _syncPolicy,
-            mapper: const ImportReceiptMapper(),
-            orderByField: 'date',
-            manageTimestamps: true,
+            authChanges: authChanges,
           );
-
-    final exportReceipts = firestore == null
+    final importReceipts = supabaseClient == null
         ? null
-        : FirestoreCollectionRepository<ExportReceiptModel>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.exportReceipts,
+        : supabaseImportReceipts(
+            client: supabaseClient,
             syncPolicy: _syncPolicy,
-            mapper: const ExportReceiptMapper(),
-            orderByField: 'date',
-            manageTimestamps: true,
+            authChanges: authChanges,
           );
-
-    final damageReports = firestore == null
+    final exportReceipts = supabaseClient == null
         ? null
-        : FirestoreCollectionRepository<DamageReportModel>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.damageReports,
+        : supabaseExportReceipts(
+            client: supabaseClient,
             syncPolicy: _syncPolicy,
-            mapper: const DamageReportMapper(),
-            orderByField: 'reportedAt',
-            manageTimestamps: true,
+            authChanges: authChanges,
           );
-
-    final inventoryChecks = firestore == null
+    final damageReports = supabaseClient == null
         ? null
-        : FirestoreCollectionRepository<InventoryCheckSession>(
-            firestore: firestore,
-            collectionPath: FirestorePaths.inventoryChecks,
+        : supabaseDamageReports(
+            client: supabaseClient,
             syncPolicy: _syncPolicy,
-            mapper: const InventoryCheckMapper(),
-            orderByField: 'createdAt',
-            manageTimestamps: true,
+            authChanges: authChanges,
           );
-
-    final transactionRepository =
-        firestore == null ? null : CallableInventoryTransactions();
+    final inventoryChecks = supabaseClient == null
+        ? null
+        : supabaseInventoryChecks(
+            client: supabaseClient,
+            syncPolicy: _syncPolicy,
+            authChanges: authChanges,
+          );
+    final transactionRepository = supabaseClient == null
+        ? null
+        : SupabaseInventoryTransactions(client: supabaseClient);
 
     DefaultDataRegistry.provider =
-        mode == WarehouseDataMode.demo ? const MockInitialDataProvider() : null;
+        demoMode ? const MockInitialDataProvider() : null;
     MediaService.initialize(const LocalMediaStorage());
 
     return (
@@ -262,7 +230,8 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp>
       database: database,
       snapshot: snapshot,
       settings: settings,
-      authenticationService: FirebaseAuthService.instance,
+      authenticationService:
+          authenticationService ?? _NoOpAuthenticationService(),
       userProfiles: userProfiles,
       riceProducts: riceProducts,
       riceCharacteristics: riceCharacteristics,
@@ -294,38 +263,23 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp>
       }
     }
     return CloudRefreshService(
-        authentication: data.authenticationService,
-        profiles: data.userProfiles!,
-        refreshData: () async {
-          await Future.wait([
-            data.riceProducts!.getAll(),
-            data.riceCharacteristics!.getAll(),
-            data.suppliers!.getAll(),
-            data.customers!.getAll(),
-            data.warehouseLocations!.getAll(),
-            data.batches!.getAll(),
-            data.importReceipts!.getAll(),
-            data.exportReceipts!.getAll(),
-            data.damageReports!.getAll(),
-            data.inventoryChecks!.getAll(),
-          ]);
-        }).refresh();
-  }
-
-  Future<({bool success, String? message})> _migrateLegacy(
-      BootstrapData data) async {
-    final result = await FirebaseDataMigrationService(
-        authentication: data.authenticationService,
-        profiles: data.userProfiles!,
-        loadLegacySnapshot: () async {
-          final legacy = await AppDatabase.open(mode: WarehouseDataMode.local);
-          try {
-            return await legacy.loadSnapshot();
-          } finally {
-            await legacy.close();
-          }
-        }).runMigration();
-    return (success: result.isSuccess, message: result.message);
+      authentication: data.authenticationService,
+      profiles: data.userProfiles!,
+      refreshData: () async {
+        await Future.wait([
+          data.riceProducts!.getAll(),
+          data.riceCharacteristics!.getAll(),
+          data.suppliers!.getAll(),
+          data.customers!.getAll(),
+          data.warehouseLocations!.getAll(),
+          data.batches!.getAll(),
+          data.importReceipts!.getAll(),
+          data.exportReceipts!.getAll(),
+          data.damageReports!.getAll(),
+          data.inventoryChecks!.getAll(),
+        ]);
+      },
+    ).refresh();
   }
 
   @override
@@ -354,9 +308,6 @@ class _WarehouseBootstrapAppState extends State<WarehouseBootstrapApp>
             inventoryChecks: data.inventoryChecks,
             transactionRepository: data.transactionRepository,
             onForceCloudSync: () => _refresh(data),
-            onLegacyMigration: data.mode == WarehouseDataMode.cloud
-                ? () => _migrateLegacy(data)
-                : null,
           );
         }
         return MaterialApp(
@@ -421,4 +372,47 @@ class _BootstrapScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class _NoOpAuthenticationService implements AuthenticationService {
+  @override
+  bool get isInitialized => false;
+
+  @override
+  AuthenticatedUser? get currentUser => null;
+
+  @override
+  Stream<AuthenticatedUser?> get authStateChanges =>
+      const Stream<AuthenticatedUser?>.empty();
+
+  @override
+  Future<AuthResult> signIn(
+          {required String email, required String password}) async =>
+      AuthResult.failure('Xác thực Supabase không khả dụng trong demo.');
+
+  @override
+  Future<AuthResult> register({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async =>
+      AuthResult.failure('Xác thực Supabase không khả dụng trong demo.');
+
+  @override
+  Future<AuthResult> sendPasswordResetEmail({required String email}) async =>
+      AuthResult.failure('Xác thực Supabase không khả dụng trong demo.');
+
+  @override
+  Future<AuthResult> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async =>
+      AuthResult.failure('Xác thực Supabase không khả dụng trong demo.');
+
+  @override
+  Future<AuthResult> updateDisplayName(String displayName) async =>
+      AuthResult.failure('Xác thực Supabase không khả dụng trong demo.');
+
+  @override
+  Future<void> signOut() async {}
 }

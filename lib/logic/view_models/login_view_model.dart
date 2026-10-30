@@ -11,7 +11,7 @@ class LoginViewModel {
   }) async {
     final cleanEmail = email.trim();
     if (auth.isCloudAuthEnabled) {
-      final result = await auth.loginWithFirebase(
+      final result = await auth.signInWithCloud(
         email: cleanEmail,
         password: password,
         remember: remember,

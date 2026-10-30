@@ -1,7 +1,4 @@
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/batch_mapper.dart';
-import 'package:smart_rice_warehouse/data/repositories/firestore/inventory_transaction_repository.dart';
 import 'package:smart_rice_warehouse/logic/contracts/repositories/repository_exception.dart';
 import 'package:smart_rice_warehouse/logic/models/batch_allocation_model.dart';
 import 'package:smart_rice_warehouse/logic/models/batch_model.dart';
@@ -99,63 +96,5 @@ void main() {
               now: now,
             ),
         throwsA(unavailable));
-  });
-
-  test('transaction checks latest hold and writes no partial stock or receipt',
-      () async {
-    final db = FakeFirebaseFirestore();
-    const mapper = BatchMapper();
-    // The client preview was available; another operator held the batch later.
-    final staleReceipt =
-        receipt([available, held.copyWith(status: BatchStatus.available)]);
-    for (final batch in [available, held]) {
-      await db
-          .collection('batches')
-          .doc(batch.id)
-          .set(mapper.toFirestore(batch, null));
-    }
-    final repository =
-        InventoryTransactionRepository(firestore: db, clock: () => now);
-    await expectLater(
-        repository.confirmExportReceipt(
-          receipt: staleReceipt,
-          performedBy: 'staff',
-        ),
-        throwsA(unavailable));
-    expect(
-        (await db.collection('batches').doc(available.id).get())
-            .data()!['quantity'],
-        100);
-    expect(
-        (await db.collection('batches').doc(held.id).get()).data()!['quantity'],
-        100);
-    expect((await db.collection('export_receipts').get()).docs, isEmpty);
-    expect((await db.collection('stock_movements').get()).docs, isEmpty);
-  });
-
-  test('valid multi-batch export still commits stock and movements together',
-      () async {
-    final second = held.copyWith(status: BatchStatus.lowStock);
-    final db = FakeFirebaseFirestore();
-    const mapper = BatchMapper();
-    for (final batch in [available, second]) {
-      await db
-          .collection('batches')
-          .doc(batch.id)
-          .set(mapper.toFirestore(batch, null));
-    }
-    await InventoryTransactionRepository(firestore: db, clock: () => now)
-        .confirmExportReceipt(
-            receipt: receipt([available, second]), performedBy: 'staff');
-    expect(
-        (await db.collection('batches').doc(available.id).get())
-            .data()!['quantity'],
-        90);
-    expect(
-        (await db.collection('batches').doc(second.id).get())
-            .data()!['quantity'],
-        90);
-    expect((await db.collection('export_receipts').get()).docs, hasLength(1));
-    expect((await db.collection('stock_movements').get()).docs, hasLength(2));
   });
 }

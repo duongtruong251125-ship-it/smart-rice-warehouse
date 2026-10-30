@@ -131,6 +131,9 @@ class FakeUserProfileRepository implements UserProfileRepository {
   }
 
   @override
+  Future<bool> confirmEmail(String uid) async => false;
+
+  @override
   Stream<List<UserModel>> watchAll() => Stream.value(profiles.values.toList());
 
   @override
@@ -234,7 +237,7 @@ void main() {
       await authProvider.waitUntilReady();
       expect(authProvider.isLoggedIn, isFalse);
 
-      final loginResult = await authProvider.loginWithFirebase(
+      final loginResult = await authProvider.signInWithCloud(
         email: 'test@smartrice.vn',
         password: 'password123',
       );
@@ -243,21 +246,21 @@ void main() {
       expect(authProvider.currentUser?.id, equals('fake-uid-123'));
       expect(authProvider.currentUser?.email, equals('test@smartrice.vn'));
 
-      final changePassSuccess = await authProvider.changePasswordWithFirebase(
+      final changePassSuccess = await authProvider.changeCloudPassword(
         current: 'old-pass',
         replacement: 'new-pass',
       );
       expect(changePassSuccess.success, isTrue);
 
       fakeAuth.shouldFailChangePassword = true;
-      final changePassFail = await authProvider.changePasswordWithFirebase(
+      final changePassFail = await authProvider.changeCloudPassword(
         current: 'wrong',
         replacement: 'new',
       );
       expect(changePassFail.success, isFalse);
       expect(changePassFail.message, contains('Mật khẩu'));
 
-      await authProvider.logoutWithFirebase();
+      await authProvider.logout();
       expect(authProvider.isLoggedIn, isFalse);
       expect(authProvider.currentUser, isNull);
     });

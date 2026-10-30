@@ -56,7 +56,6 @@ class AuthProvider extends ChangeNotifier {
     this.loadAvatarPath,
     this.onAvatarPersist,
     this.onForceCloudSync,
-    this.onLegacyMigration,
   })  : _email = (email ?? 'admin@gmail.com').trim().toLowerCase(),
         _passwordHash = passwordHash ?? _hash('123456'),
         _userName = userName ?? 'Admin',
@@ -69,7 +68,7 @@ class AuthProvider extends ChangeNotifier {
             ? List<UserModel>.from(defaultAccounts)
             : [] {
     if (isCloudAuthEnabled) {
-      _bindFirebaseSession();
+      _bindAuthSession();
       if (userProfileRepository == null ||
           !_authenticationService.isInitialized) {
         _authError = 'Dịch vụ xác thực cloud chưa sẵn sàng.';
@@ -102,31 +101,6 @@ class AuthProvider extends ChangeNotifier {
   final Future<String?> Function(String uid)? loadAvatarPath;
   final void Function(String uid, String? avatarPath)? onAvatarPersist;
   final Future<({bool success, String? message})> Function()? onForceCloudSync;
-  final Future<({bool success, String? message})> Function()? onLegacyMigration;
-  bool _isMigratingLegacy = false;
-  bool get isMigratingLegacy => _isMigratingLegacy;
-  bool get canMigrateLegacy =>
-      isAdmin && !isDemoMode && onLegacyMigration != null;
-
-  Future<({bool success, String? message})> migrateLegacyData() async {
-    if (!canMigrateLegacy || _isMigratingLegacy) {
-      return (
-        success: false,
-        message: 'Không có quyền hoặc migration đang chạy.'
-      );
-    }
-    _isMigratingLegacy = true;
-    notifyListeners();
-    try {
-      return await onLegacyMigration!();
-    } catch (error) {
-      return (success: false, message: 'Không thể chuyển dữ liệu cũ: $error');
-    } finally {
-      _isMigratingLegacy = false;
-      notifyListeners();
-    }
-  }
-
   final Completer<void> _authReadyCompleter = Completer<void>();
   StreamSubscription<AuthenticatedUser?>? _authSubscription;
   StreamSubscription<List<UserModel>>? _usersSubscription;
@@ -164,7 +138,6 @@ class AuthProvider extends ChangeNotifier {
       },
       onError: (Object error) {
         if (_disposed || revision != _sessionRevision) return;
-        _managedUsers.clear();
         _authError =
             'Không thể tải danh sách nhân sự. ${AuthProfileDiagnostics.readError(error)}';
         notifyListeners();
@@ -220,7 +193,7 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = _currentUser!.copyWith(role: role, isActive: isActive);
       _userRole = role;
       if (!isActive) {
-        await logoutWithFirebase();
+        await logout();
       }
     }
     notifyListeners();
@@ -228,6 +201,47 @@ class AuthProvider extends ChangeNotifier {
       success: true,
       message: 'Đã cập nhật quyền và trạng thái tài khoản.',
     );
+  }
+
+  Future<({bool success, String? message})> confirmUserEmail(
+    String uid,
+  ) async {
+    if (!isAdmin) {
+      return (
+        success: false,
+        message: 'Chỉ Quản trị viên mới có quyền xác minh email.',
+      );
+    }
+    final normalizedUid = uid.trim();
+    if (normalizedUid.isEmpty || normalizedUid == _currentUser?.id) {
+      return (
+        success: false,
+        message: 'Không thể xác minh email của tài khoản đang đăng nhập.',
+      );
+    }
+    if (isDemoMode || userProfileRepository == null) {
+      return (
+        success: false,
+        message: 'Tính năng xác minh email cần dịch vụ Supabase.',
+      );
+    }
+    try {
+      final alreadyConfirmed =
+          await userProfileRepository!.confirmEmail(normalizedUid);
+      return (
+        success: true,
+        message: alreadyConfirmed
+            ? 'Email tài khoản này đã được xác minh trước đó.'
+            : 'Đã xác minh email cho tài khoản.',
+      );
+    } catch (error) {
+      return (
+        success: false,
+        message: error is RepositoryException
+            ? error.message
+            : 'Không thể xác minh email trên máy chủ: $error',
+      );
+    }
   }
 
   bool _isRefreshingCloud = false;
@@ -276,11 +290,11 @@ class AuthProvider extends ChangeNotifier {
     await _authReadyCompleter.future.timeout(timeout, onTimeout: () {});
   }
 
-  void _bindFirebaseSession() {
+  void _bindAuthSession() {
     _authSubscription = _authenticationService.authStateChanges.listen(
       (user) {
         if (_authOperationInProgress) return;
-        unawaited(_applyFirebaseSession(user));
+        unawaited(_applyAuthSession(user));
       },
       onError: (Object error) {
         unawaited(_revokeSession(AuthProfileDiagnostics.readError(error)));
@@ -288,7 +302,7 @@ class AuthProvider extends ChangeNotifier {
     );
   }
 
-  Future<void> _applyFirebaseSession(AuthenticatedUser? user) async {
+  Future<void> _applyAuthSession(AuthenticatedUser? user) async {
     if (_disposed) return;
     final revision = ++_sessionRevision;
     await _cancelProfileListeners();
@@ -372,7 +386,7 @@ class AuthProvider extends ChangeNotifier {
     return false;
   }
 
-  Future<({bool success, String? message})> loginWithFirebase({
+  Future<({bool success, String? message})> signInWithCloud({
     required String email,
     required String password,
     bool remember = false,
@@ -431,7 +445,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<({bool success, String? message})> registerWithFirebase({
+  Future<({bool success, String? message})> registerWithCloud({
     required String email,
     required String password,
     required String name,
@@ -596,7 +610,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<({bool success, String? message})> resetPasswordWithFirebase(
+  Future<({bool success, String? message})> resetPassword(
     String email,
   ) async {
     final result = await _authenticationService.sendPasswordResetEmail(
@@ -605,7 +619,7 @@ class AuthProvider extends ChangeNotifier {
     return (success: result.isSuccess, message: result.message);
   }
 
-  Future<({bool success, String? message})> changePasswordWithFirebase({
+  Future<({bool success, String? message})> changeCloudPassword({
     required String current,
     required String replacement,
   }) async {
@@ -626,7 +640,7 @@ class AuthProvider extends ChangeNotifier {
     return (success: result.isSuccess, message: result.message);
   }
 
-  Future<({bool success, String? message})> updateProfileWithFirebase({
+  Future<({bool success, String? message})> updateCloudProfile({
     required String name,
     String? avatarPath,
   }) async {
@@ -677,17 +691,9 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> logoutWithFirebase() async {
-    if (!isCloudAuthEnabled) {
-      logout();
-      return;
-    }
-    await _revokeSession('');
-  }
-
-  void logout() {
+  Future<void> logout() async {
     if (isCloudAuthEnabled) {
-      unawaited(logoutWithFirebase());
+      await _revokeSession('');
       return;
     }
     if (_currentUser == null) return;
@@ -697,8 +703,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Legacy-only password update kept until the local authentication data is
-  /// removed by the migration task.
+  /// Demo-only password update for local sample accounts.
   bool changePassword({
     required String current,
     required String replacement,
@@ -713,7 +718,7 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
-  /// Legacy-only profile update. Cloud users use updateProfileWithFirebase so
+  /// Demo-only profile update. Cloud users use updateCloudProfile so
   /// their role cannot be changed by the client.
   bool updateProfile({
     required String name,

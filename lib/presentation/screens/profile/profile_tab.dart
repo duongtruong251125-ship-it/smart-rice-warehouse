@@ -24,24 +24,6 @@ import 'package:smart_rice_warehouse/logic/view_models/profile_view_model.dart';
 class ProfileTab extends StatelessWidget {
   const ProfileTab({super.key});
 
-  Future<void> _migrateLegacy(BuildContext context, AuthProvider auth) async {
-    final confirmed = await showConfirmationDialog(
-        context: context,
-        title: 'Dùng dữ liệu cũ làm dữ liệu thật?',
-        message:
-            'Chuyển dữ liệu SQLite cũ lên cloud. Giữ nguyên bản gốc và mọi bản ghi cloud đã có. Số dư lô chỉ ghi nhận một lần, không cộng lại lịch sử phiếu.',
-        confirmLabel: 'Xác nhận chuyển');
-    if (!confirmed || !context.mounted) return;
-    final result = await auth.migrateLegacyData();
-    if (!context.mounted) return;
-    if (result.success) {
-      AppToast.success(context, result.message ?? 'Đã chuyển dữ liệu.');
-    } else {
-      AppToast.error(
-          context, result.message ?? 'Chưa hoàn tất. Có thể thử lại.');
-    }
-  }
-
   void _showPasswordModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -200,7 +182,7 @@ class ProfileTab extends StatelessWidget {
       return;
     }
 
-    await context.read<AuthProvider>().logoutWithFirebase();
+    await context.read<AuthProvider>().logout();
     if (!context.mounted) return;
     Navigator.of(context).pushNamedAndRemoveUntil(
       AppRoutes.login,
@@ -307,22 +289,6 @@ class ProfileTab extends StatelessWidget {
         ),
 
         if (isAdmin) ...[
-          if (auth.canMigrateLegacy) ...[
-            const SizedBox(height: 8),
-            _ProfileHubCard(
-              title: auth.isMigratingLegacy
-                  ? 'Đang chuyển dữ liệu cũ...'
-                  : 'Dùng dữ liệu cũ làm dữ liệu thật',
-              badgeText: 'Admin',
-              badgeColor: AppTheme.primaryColor,
-              icon: Icons.cloud_upload_rounded,
-              iconBgColor: AppTheme.primaryLight,
-              iconColor: AppTheme.primaryColor,
-              onTap: () {
-                if (!auth.isMigratingLegacy) _migrateLegacy(context, auth);
-              },
-            ),
-          ],
           const SizedBox(height: 8),
           _ProfileHubCard(
             title: 'Quản lý nhân sự & Phân quyền',
@@ -729,7 +695,7 @@ class _ProfileHubCard extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13.5,

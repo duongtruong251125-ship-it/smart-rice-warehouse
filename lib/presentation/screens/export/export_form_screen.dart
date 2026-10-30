@@ -682,7 +682,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
 
                   // THANH CÔNG CỤ GHIM CỐ ĐỊNH Ở ĐÁY (STICKY ACTION BAR)
                   StickyActionBar(
-                    primaryLabel: 'Kiểm tra & Phân bổ FEFO',
+                    primaryLabel: 'Kiểm tra FEFO',
                     primaryIcon: Icons.alt_route_rounded,
                     primaryColor: AppTheme.warningText,
                     isLoading: _viewModel.isSubmitting,

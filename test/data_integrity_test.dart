@@ -95,6 +95,19 @@ void main() {
     expect(checks.activeSession, isNotNull);
   });
 
+  test('inventory check session codes do not depend on loaded history length',
+      () {
+    final checks = InventoryCheckProvider(initial: const []);
+
+    final first = checks.startNewSession();
+    final second = checks.startNewSession();
+
+    expect(first.id, isNot(second.id));
+    expect(first.code, startsWith('KK-'));
+    expect(second.code, startsWith('KK-'));
+    expect(first.code, isNot(second.code));
+  });
+
   test('duplicate batch import rejects incompatible lot metadata', () async {
     final existing = batch(id: 'a', code: 'LOT-01');
     final batches = BatchProvider(initial: [existing]);

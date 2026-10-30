@@ -1,0 +1,4 @@
+id,code,name,category,unit,purchase_price,selling_price,minimum_stock,description,is_active,source_migration_run
+tmp-rice-st25-20261029,TMP-RICE-ST25-20261029,Gạo ST25,Gạo thơm đặc sản,kg,25000,32000,100,Dữ liệu khởi tạo tạm thời do chủ dự án yêu cầu.,true,tmp-opening-stock-2026-10-29
+tmp-rice-jasmine-20261029,TMP-RICE-JAS-20261029,Gạo Jasmine,Gạo thơm,kg,18000,24000,100,Dữ liệu khởi tạo tạm thời do chủ dự án yêu cầu.,true,tmp-opening-stock-2026-10-29
+tmp-rice-nanghuong-20261029,TMP-RICE-NH-20261029,Gạo Nàng Hương,Gạo thơm,kg,20000,27000,100,Dữ liệu khởi tạo tạm thời do chủ dự án yêu cầu.,true,tmp-opening-stock-2026-10-29

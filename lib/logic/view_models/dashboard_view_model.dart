@@ -23,22 +23,22 @@ class DashboardViewModel {
     syncStatus = WarehouseSyncStatus.resolve(
       sources: [
         SyncSourceSnapshot(
-          usesFirestore: rices.usesFirestore,
+          usesCloudBackend: rices.usesCloudBackend,
           isLoading: rices.isLoading,
           errorMessage: rices.errorMessage,
         ),
         SyncSourceSnapshot(
-          usesFirestore: batches.usesFirestore,
+          usesCloudBackend: batches.usesCloudBackend,
           isLoading: batches.isLoading,
           errorMessage: batches.errorMessage,
         ),
         SyncSourceSnapshot(
-          usesFirestore: imports.usesFirestore,
+          usesCloudBackend: imports.usesCloudBackend,
           isLoading: imports.isLoading,
           errorMessage: imports.errorMessage,
         ),
         SyncSourceSnapshot(
-          usesFirestore: exports.usesFirestore,
+          usesCloudBackend: exports.usesCloudBackend,
           isLoading: exports.isLoading,
           errorMessage: exports.errorMessage,
         ),

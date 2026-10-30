@@ -22,8 +22,7 @@ class ProfileViewModel {
       avatarPath = await MediaService.save(imagePath,
           subDirectory: 'avatars', oldPathToDelete: original?.avatarPath);
     }
-    return auth.updateProfileWithFirebase(
-        name: name.trim(), avatarPath: avatarPath);
+    return auth.updateCloudProfile(name: name.trim(), avatarPath: avatarPath);
   }
 
   static WarehouseSyncStatus resolveSyncStatus({
@@ -36,25 +35,25 @@ class ProfileViewModel {
     final sources = <SyncSourceSnapshot>[
       if (rices != null)
         SyncSourceSnapshot(
-          usesFirestore: rices.usesFirestore,
+          usesCloudBackend: rices.usesCloudBackend,
           isLoading: rices.isLoading,
           errorMessage: rices.errorMessage,
         ),
       if (batches != null)
         SyncSourceSnapshot(
-          usesFirestore: batches.usesFirestore,
+          usesCloudBackend: batches.usesCloudBackend,
           isLoading: batches.isLoading,
           errorMessage: batches.errorMessage,
         ),
       if (imports != null)
         SyncSourceSnapshot(
-          usesFirestore: imports.usesFirestore,
+          usesCloudBackend: imports.usesCloudBackend,
           isLoading: imports.isLoading,
           errorMessage: imports.errorMessage,
         ),
       if (exports != null)
         SyncSourceSnapshot(
-          usesFirestore: exports.usesFirestore,
+          usesCloudBackend: exports.usesCloudBackend,
           isLoading: exports.isLoading,
           errorMessage: exports.errorMessage,
         ),

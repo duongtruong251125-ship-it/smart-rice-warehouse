@@ -23,6 +23,7 @@ migrate_working_dir/
 
 # Flutter/Dart/Pub related
 **/doc/api/
+**/node_modules/
 **/ios/Flutter/.last_build_id
 .dart_tool/
 .flutter-plugins
@@ -45,7 +46,7 @@ app.*.map.json
 
 # Coverage
 coverage/
-/test/firestore_rules/node_modules/
-/test/firestore_rules/*-debug.log
-/functions/node_modules/
-/functions/*-debug.log
+/migration_artifacts/
+/.agents/
+/supabase/.branches/
+/supabase/.temp/

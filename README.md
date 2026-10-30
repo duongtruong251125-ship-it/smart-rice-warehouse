@@ -1,64 +1,38 @@
 # Smart Rice Warehouse
 
-Ứng dụng mặc định xác thực bằng Firebase. Hồ sơ Firestore quyết định chức vụ và
-trạng thái kích hoạt. Nếu xác thực cloud hoặc kiểm tra hồ sơ thất bại, ứng dụng
-không cho đăng nhập bằng mật khẩu local hay tài khoản mẫu.
+Ứng dụng Flutter quản lý kho gạo. Ngoài chế độ demo, Supabase là dịch vụ cloud
+cho đăng nhập, hồ sơ, danh mục, kho và các giao dịch tồn.
 
-Tài khoản mẫu (chỉ trong demo được bật chủ động):
+## Chạy ứng dụng
 
-- Email: `admin@gmail.com`
-- Mật khẩu: `123456`
-
-Chạy demo cục bộ, không kết nối Firebase:
+Demo cục bộ, không kết nối cloud:
 
 ```sh
 flutter run --dart-define=DEMO_MODE=true
 ```
 
-Chạy cloud (mặc định):
+Chạy với project cloud mặc định:
 
-```sh
+```powershell
+$env:SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_...'
 flutter run
 ```
 
-`USE_FIREBASE` điều khiển backend nghiệp vụ; `USE_FIREBASE=false` không bật demo
-và không tắt xác thực Firebase. Tắt đồng bộ nền cũng không bỏ qua xác thực cloud.
-Ở chế độ demo, dữ liệu được lưu bằng SQLite và không đồng bộ sang thiết bị khác.
-Không sử dụng bản demo để bảo vệ dữ liệu nghiệp vụ thực tế.
+URL project đã có mặc định trong ứng dụng. Chỉ dùng publishable key trong app;
+không truyền secret/service-role key vào Flutter hoặc lưu vào Git.
 
-Hồ sơ được kiểm tra từ máy chủ khi khôi phục phiên/đăng nhập. Khi đang online,
-thay đổi role/isActive từ Firestore được áp dụng qua listener; tài khoản bị khóa
-hoặc mất quyền sẽ bị đưa về đăng nhập. Rules là lớp chặn yêu cầu cloud cuối cùng.
-
-Kiểm tra rules cục bộ (Node >=20, Java >=21, Firebase CLI):
-
-```sh
-cd test/firestore_rules
-npm ci
-cd ../..
-firebase emulators:exec --config firebase.auth-test.json --project demo-smart-rice-auth --only firestore "node --test test/firestore_rules/auth.rules.test.mjs"
-```
-
-Bộ test chỉ chấp nhận endpoint `127.0.0.1:8089` và project demo, không chạy trên
-Firebase thật. Các thay đổi rules chưa được deploy bằng lệnh kiểm tra này.
+Tài khoản local mẫu chỉ dùng trong demo chủ động. Dữ liệu demo được lưu bằng
+SQLite và không đồng bộ sang thiết bị khác. Không dùng demo để quản lý tồn kho
+thật.
 
 ## Cấu trúc mã nguồn
 
 - `lib/presentation/`: giao diện, widget, theme và routes.
-- `lib/logic/`: ViewModel, Provider, service, model và validation.
-- `lib/data/`: SQLite, Firebase, repository và dữ liệu mẫu.
+- `lib/logic/`: Provider, ViewModel, service, model và validation.
+- `lib/data/`: Supabase, SQLite, đồng bộ và dữ liệu mẫu.
+- `supabase/`: migrations, kiểm thử SQL và Edge Functions.
 
-Xem [ARCHITECTURE.md](ARCHITECTURE.md) để biết sửa chức năng ở đâu và cách nối các tầng.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Xem [ARCHITECTURE.md](ARCHITECTURE.md) để biết ranh giới giữa các tầng.
+Xem [supabase/README.md](supabase/README.md) để chạy database local và test.
+Tình trạng dữ liệu tồn lịch sử nằm trong
+[supabase/MIGRATION_DATA_STATUS.md](supabase/MIGRATION_DATA_STATUS.md).

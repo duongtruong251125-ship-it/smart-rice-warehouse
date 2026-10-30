@@ -27,7 +27,7 @@ class FailingInventoryTransactions implements InventoryTransactions {
     required BatchModel batchToCreateOrUpdate,
     required String performedBy,
   }) async {
-    throw Exception('Firestore network timeout: Phiếu nhập không thể ghi.');
+    throw Exception('Supabase network timeout: Phiếu nhập không thể ghi.');
   }
 
   @override
@@ -36,7 +36,7 @@ class FailingInventoryTransactions implements InventoryTransactions {
     required String performedBy,
   }) async {
     throw Exception(
-        'Firestore transaction conflict: Lô hàng đã bị xuất bởi thiết bị khác.');
+        'Supabase transaction conflict: Lô hàng đã bị xuất bởi thiết bị khác.');
   }
 
   @override

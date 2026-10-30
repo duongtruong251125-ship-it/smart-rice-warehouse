@@ -20,7 +20,7 @@ class RiceProvider extends ChangeNotifier {
         _localImagePaths[rice.id] = rice.imagePath!;
       }
     }
-    if (repository != null) _subscribeToFirestore();
+    if (repository != null) _subscribeToCloudRepository();
   }
 
   final List<RiceModel> _rices;
@@ -34,7 +34,7 @@ class RiceProvider extends ChangeNotifier {
   List<RiceModel> get rices => List<RiceModel>.unmodifiable(_rices);
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get usesFirestore => repository != null;
+  bool get usesCloudBackend => repository != null;
 
   static String? resolveDefaultAssetImage(RiceModel rice) {
     if (rice.imagePath?.trim().isNotEmpty == true) {
@@ -69,7 +69,7 @@ class RiceProvider extends ChangeNotifier {
     return null;
   }
 
-  void _subscribeToFirestore() {
+  void _subscribeToCloudRepository() {
     _isLoading = true;
     _subscription = repository!.watchAll().listen(
       (remoteRices) {
@@ -106,7 +106,7 @@ class RiceProvider extends ChangeNotifier {
     _errorMessage = null;
     if (repository != null) {
       _subscription?.cancel();
-      _subscribeToFirestore();
+      _subscribeToCloudRepository();
       notifyListeners();
     } else {
       notifyListeners();

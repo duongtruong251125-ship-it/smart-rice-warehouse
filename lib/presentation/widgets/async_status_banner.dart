@@ -7,7 +7,7 @@ class SyncStatusBadge extends StatelessWidget {
     super.key,
     required this.status,
     this.onRetry,
-    this.onHeroSurface = true,
+    this.onHeroSurface = false,
   });
 
   final WarehouseSyncStatus status;

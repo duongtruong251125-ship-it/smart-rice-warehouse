@@ -4,7 +4,7 @@ import 'package:smart_rice_warehouse/logic/models/export_receipt_model.dart';
 import 'package:smart_rice_warehouse/logic/models/import_receipt_model.dart';
 import 'package:smart_rice_warehouse/logic/models/inventory_check_model.dart';
 
-/// Warehouse transaction API, independent of a Firestore implementation.
+/// Warehouse transaction API, independent of its Supabase RPC implementation.
 abstract interface class InventoryTransactions {
   Future<void> confirmImportReceipt({
     required ImportReceiptModel receipt,

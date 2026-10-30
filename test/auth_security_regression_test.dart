@@ -201,7 +201,7 @@ void main() {
     service.signInError = Exception('network-request-failed');
     expect((await signIn()).success, isFalse);
     service.signInError = null;
-    profiles.readError = Exception('Firestore unavailable');
+    profiles.readError = Exception('Supabase unavailable');
     expect((await signIn()).success, isFalse);
     expect(auth.isLoggedIn, isFalse);
     expect(auth.managedUsers, isEmpty);
@@ -226,7 +226,7 @@ void main() {
     expect(auth.authError, contains('Không tìm thấy hồ sơ'));
   });
 
-  test('Firestore staff role wins over matching demo admin email', () async {
+  test('Supabase staff role wins over matching demo admin email', () async {
     await flush();
     profiles.profiles[identity.uid] = activeAdmin.copyWith(role: 'staff');
     expect((await signIn()).success, isTrue);
@@ -238,7 +238,7 @@ void main() {
   });
 
   test(
-      'restored Firebase session revalidates profile and ignores remembered local admin',
+      'restored Supabase session revalidates profile and ignores remembered local admin',
       () async {
     await flush();
     service.emit(identity);
@@ -321,7 +321,7 @@ void main() {
     profiles.delayedRead = Completer<UserModel?>();
     service.emit(identity);
     await flush();
-    await auth.logoutWithFirebase();
+    await auth.logout();
     profiles.delayedRead!.complete(activeAdmin);
     await flush();
     expect(auth.isLoggedIn, isFalse);
@@ -352,7 +352,7 @@ void main() {
     await signIn();
     await flush();
     service.displayNameResult = Completer<AuthResult>();
-    final update = auth.updateProfileWithFirebase(name: 'Updated');
+    final update = auth.updateCloudProfile(name: 'Updated');
     await flush();
     profiles.emit(activeAdmin.copyWith(isActive: false));
     await flush();
@@ -379,7 +379,7 @@ void main() {
     await signIn();
     await flush();
     service.displayNameResult = Completer<AuthResult>();
-    final update = auth.updateProfileWithFirebase(name: 'Updated');
+    final update = auth.updateCloudProfile(name: 'Updated');
     await flush();
     profiles.emit(activeAdmin.copyWith(role: 'staff'));
     await flush();
@@ -401,7 +401,7 @@ void main() {
     expect(find.text('Tài khoản mẫu (chế độ demo):'), findsNothing);
     final context = tester.element(find.byType(TextFormField).first);
     final appAuth = context.read<AuthProvider>();
-    await appAuth.loginWithFirebase(
+    await appAuth.signInWithCloud(
         email: 'admin@gmail.com', password: 'cloud-password');
     AppRoutes.navigatorKey.currentState!
         .pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
