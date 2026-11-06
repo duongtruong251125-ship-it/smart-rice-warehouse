@@ -5,12 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
-import 'package:smart_rice_warehouse/logic/models/rice_model.dart';
-import 'package:smart_rice_warehouse/logic/models/supplier_model.dart';
 import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/logic/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/logic/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/logic/providers/supplier_provider.dart';
+import 'package:smart_rice_warehouse/logic/utils/unique_by_id.dart';
 import 'package:smart_rice_warehouse/logic/view_models/ocr_invoice_view_model.dart';
 import 'package:smart_rice_warehouse/presentation/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/presentation/utils/app_toast.dart';
@@ -127,8 +126,18 @@ class _OcrInvoiceScreenState extends State<OcrInvoiceScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final suppliers = context.watch<SupplierProvider>().suppliers;
-    final rices = context.watch<RiceProvider>().rices;
+    final suppliers = uniqueById(
+      context.watch<SupplierProvider>().suppliers,
+      (supplier) => supplier.id,
+    );
+    final rices = uniqueById(
+      context.watch<RiceProvider>().rices,
+      (rice) => rice.id,
+    );
+    final suppliersById = {
+      for (final supplier in suppliers) supplier.id: supplier
+    };
+    final ricesById = {for (final rice in rices) rice.id: rice};
 
     return ListenableBuilder(
       listenable: _viewModel,
@@ -268,37 +277,49 @@ class _OcrInvoiceScreenState extends State<OcrInvoiceScreen> {
                 const SizedBox(height: 14),
 
                 // Review dropdowns and inputs
-                DropdownButtonFormField<SupplierModel>(
-                  initialValue: _viewModel.selectedSupplier,
+                DropdownButtonFormField<String>(
+                  initialValue: suppliersById.containsKey(
+                    _viewModel.selectedSupplier?.id,
+                  )
+                      ? _viewModel.selectedSupplier?.id
+                      : null,
                   isExpanded: true,
                   decoration:
                       const InputDecoration(labelText: 'Nhà cung cấp (NCC)'),
                   items: suppliers
                       .map(
-                        (s) => DropdownMenuItem(
-                          value: s,
+                        (s) => DropdownMenuItem<String>(
+                          value: s.id,
                           child: Text(s.name, overflow: TextOverflow.ellipsis),
                         ),
                       )
                       .toList(),
-                  onChanged: (val) => _viewModel.setSupplier(val),
+                  onChanged: (id) => _viewModel.setSupplier(
+                    id == null ? null : suppliersById[id],
+                  ),
                 ),
                 const SizedBox(height: 12),
 
-                DropdownButtonFormField<RiceModel>(
-                  initialValue: _viewModel.selectedRice,
+                DropdownButtonFormField<String>(
+                  initialValue: ricesById.containsKey(
+                    _viewModel.selectedRice?.id,
+                  )
+                      ? _viewModel.selectedRice?.id
+                      : null,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Loại gạo nhập'),
                   items: rices
                       .map(
-                        (r) => DropdownMenuItem(
-                          value: r,
+                        (r) => DropdownMenuItem<String>(
+                          value: r.id,
                           child: Text('${r.name} (${r.code})',
                               overflow: TextOverflow.ellipsis),
                         ),
                       )
                       .toList(),
-                  onChanged: (val) => _viewModel.setRice(val),
+                  onChanged: (id) => _viewModel.setRice(
+                    id == null ? null : ricesById[id],
+                  ),
                 ),
                 const SizedBox(height: 12),
 

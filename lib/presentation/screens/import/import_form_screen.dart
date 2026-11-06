@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
-import 'package:smart_rice_warehouse/logic/models/rice_model.dart';
-import 'package:smart_rice_warehouse/logic/models/supplier_model.dart';
 import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/logic/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/logic/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/logic/providers/supplier_provider.dart';
+import 'package:smart_rice_warehouse/logic/utils/unique_by_id.dart';
 import 'package:smart_rice_warehouse/logic/view_models/import_form_view_model.dart';
 import 'package:smart_rice_warehouse/presentation/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/presentation/utils/app_toast.dart';
@@ -130,16 +129,16 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final suppliers = context
-        .watch<SupplierProvider>()
-        .suppliers
-        .where((supplier) => supplier.isActive)
-        .toList(growable: false);
-    final rices = context
-        .watch<RiceProvider>()
-        .rices
-        .where((rice) => rice.isActive)
-        .toList(growable: false);
+    final suppliers = uniqueById(
+      context.watch<SupplierProvider>().suppliers.where((row) => row.isActive),
+      (row) => row.id,
+    );
+    final supplierById = {for (final row in suppliers) row.id: row};
+    final rices = uniqueById(
+      context.watch<RiceProvider>().rices.where((row) => row.isActive),
+      (row) => row.id,
+    );
+    final riceById = {for (final row in rices) row.id: row};
 
     return ListenableBuilder(
       listenable: _viewModel,
@@ -210,15 +209,18 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  DropdownButtonFormField<SupplierModel>(
-                    initialValue: _viewModel.selectedSupplier,
+                  DropdownButtonFormField<String>(
+                    initialValue: supplierById
+                            .containsKey(_viewModel.selectedSupplier?.id)
+                        ? _viewModel.selectedSupplier!.id
+                        : null,
                     isExpanded: true,
                     decoration:
                         const InputDecoration(labelText: 'Nhà cung cấp'),
                     items: suppliers
                         .map(
                           (supplier) => DropdownMenuItem(
-                            value: supplier,
+                            value: supplier.id,
                             child: Text(
                               supplier.name,
                               overflow: TextOverflow.ellipsis,
@@ -226,18 +228,22 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                           ),
                         )
                         .toList(growable: false),
-                    onChanged: (value) => _viewModel.setSupplier(value),
-                    validator: _viewModel.validateSupplier,
+                    onChanged: (id) => _viewModel.setSupplier(supplierById[id]),
+                    validator: (id) =>
+                        _viewModel.validateSupplier(supplierById[id]),
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<RiceModel>(
-                    initialValue: _viewModel.selectedRice,
+                  DropdownButtonFormField<String>(
+                    initialValue:
+                        riceById.containsKey(_viewModel.selectedRice?.id)
+                            ? _viewModel.selectedRice!.id
+                            : null,
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Gạo'),
                     items: rices
                         .map(
                           (rice) => DropdownMenuItem(
-                            value: rice,
+                            value: rice.id,
                             child: Text(
                               '${rice.name} (${rice.code})',
                               overflow: TextOverflow.ellipsis,
@@ -245,7 +251,8 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                           ),
                         )
                         .toList(growable: false),
-                    onChanged: (value) {
+                    onChanged: (id) {
+                      final value = riceById[id];
                       if (value != null) {
                         _purchasePriceController.text =
                             _numberText(value.purchasePrice);
@@ -254,7 +261,7 @@ class _ImportFormScreenState extends State<ImportFormScreen> {
                       _viewModel.setRice(value, allBatches);
                       _syncControllersFromViewModel();
                     },
-                    validator: _viewModel.validateRice,
+                    validator: (id) => _viewModel.validateRice(riceById[id]),
                   ),
                   const SizedBox(height: 16),
                   CustomTextField(

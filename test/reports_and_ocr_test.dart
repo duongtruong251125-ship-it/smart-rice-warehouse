@@ -9,6 +9,7 @@ import 'package:smart_rice_warehouse/logic/providers/import_provider.dart';
 import 'package:smart_rice_warehouse/logic/services/fefo_service.dart';
 import 'package:smart_rice_warehouse/logic/services/forecast_service.dart';
 import 'package:smart_rice_warehouse/logic/services/ocr_service.dart';
+import 'package:smart_rice_warehouse/logic/utils/unique_by_id.dart';
 import 'fixtures/ocr_invoice_samples.dart';
 
 void main() {
@@ -108,6 +109,43 @@ void main() {
     const ocrService = OcrService();
     const suppliers = MockData.suppliers;
     const rices = MockData.rices;
+
+    test('Catalog dropdown options contain one row per stable ID', () {
+      final rice = rices.first;
+      final duplicatedRices = [
+        ...rices,
+        rice,
+        rice.copyWith(name: 'Duplicate')
+      ];
+
+      final options = uniqueById(duplicatedRices, (item) => item.id);
+
+      expect(options, hasLength(rices.length));
+      expect(options.map((item) => item.id).toSet(), hasLength(options.length));
+      expect(options.first, same(rice));
+    });
+
+    test(
+        'Parses unit price from accent-stripped OCR without taking invoice total',
+        () {
+      final extracted = ocrService.parseInvoice(
+        rawText: '''
+HOA DON NHAP KHO NONG SAN
+So HD: HD-TEST-002
+Ma lo: LO-ST25-003
+Ten hang hoa: Gao ST25
+So luong: 800 kg
+Don gia: 28.000 VND/kg
+Thanh tien: 22.400.000 VND
+''',
+        suppliers: suppliers,
+        rices: rices,
+      );
+
+      expect(extracted.matchedRiceId, 'rice-st25');
+      expect(extracted.quantity, 800);
+      expect(extracted.purchasePrice, 28000);
+    });
 
     test('Parses Sample 1: Cty Lúa Việt, ST25, 800kg, 28000 VNĐ, LO-ST25-003',
         () {

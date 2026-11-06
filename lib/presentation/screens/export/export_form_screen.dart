@@ -3,13 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:smart_rice_warehouse/core/utils/currency_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/date_formatter.dart';
 import 'package:smart_rice_warehouse/core/utils/number_formatter.dart';
-import 'package:smart_rice_warehouse/logic/models/customer_model.dart';
-import 'package:smart_rice_warehouse/logic/models/rice_model.dart';
 import 'package:smart_rice_warehouse/logic/providers/batch_provider.dart';
 import 'package:smart_rice_warehouse/logic/providers/customer_provider.dart';
 import 'package:smart_rice_warehouse/logic/providers/export_provider.dart';
 import 'package:smart_rice_warehouse/logic/providers/rice_provider.dart';
 import 'package:smart_rice_warehouse/logic/services/fefo_service.dart';
+import 'package:smart_rice_warehouse/logic/utils/unique_by_id.dart';
 import 'package:smart_rice_warehouse/logic/view_models/export_form_view_model.dart';
 import 'package:smart_rice_warehouse/presentation/theme/app_theme.dart';
 import 'package:smart_rice_warehouse/presentation/utils/app_toast.dart';
@@ -93,9 +92,10 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
           maxChildSize: 0.94,
           builder: (_, scrollController) {
             return Container(
-              decoration: const BoxDecoration(
-                color: AppTheme.cardColor,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBg(context),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: ListView(
@@ -419,16 +419,21 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final customers = context
-        .watch<CustomerProvider>()
-        .customers
-        .where((customer) => customer.isActive)
-        .toList(growable: false);
-    final rices = context
-        .watch<RiceProvider>()
-        .rices
-        .where((rice) => rice.isActive)
-        .toList(growable: false);
+    final customers = uniqueById(
+      context
+          .watch<CustomerProvider>()
+          .customers
+          .where((customer) => customer.isActive),
+      (customer) => customer.id,
+    );
+    final customerById = {
+      for (final customer in customers) customer.id: customer
+    };
+    final rices = uniqueById(
+      context.watch<RiceProvider>().rices.where((rice) => rice.isActive),
+      (rice) => rice.id,
+    );
+    final riceById = {for (final rice in rices) rice.id: rice};
 
     return ListenableBuilder(
       listenable: _viewModel,
@@ -461,8 +466,11 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                           title: '1. Khách hàng & Mặt hàng xuất',
                           icon: Icons.storefront_rounded,
                           children: [
-                            DropdownButtonFormField<CustomerModel>(
-                              initialValue: _viewModel.selectedCustomer,
+                            DropdownButtonFormField<String>(
+                              initialValue: customerById.containsKey(
+                                      _viewModel.selectedCustomer?.id)
+                                  ? _viewModel.selectedCustomer!.id
+                                  : null,
                               isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'Đại lý / Khách hàng',
@@ -472,7 +480,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                               items: customers
                                   .map(
                                     (customer) => DropdownMenuItem(
-                                      value: customer,
+                                      value: customer.id,
                                       child: Text(
                                         customer.name,
                                         overflow: TextOverflow.ellipsis,
@@ -480,13 +488,19 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                                     ),
                                   )
                                   .toList(growable: false),
-                              onChanged: (value) =>
-                                  _viewModel.setCustomer(value),
-                              validator: _viewModel.validateCustomer,
+                              onChanged: (id) => _viewModel.setCustomer(
+                                id == null ? null : customerById[id],
+                              ),
+                              validator: (_) => _viewModel.validateCustomer(
+                                _viewModel.selectedCustomer,
+                              ),
                             ),
                             const SizedBox(height: 12),
-                            DropdownButtonFormField<RiceModel>(
-                              initialValue: _viewModel.selectedRice,
+                            DropdownButtonFormField<String>(
+                              initialValue: riceById
+                                      .containsKey(_viewModel.selectedRice?.id)
+                                  ? _viewModel.selectedRice!.id
+                                  : null,
                               isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'Mặt hàng gạo xuất',
@@ -496,7 +510,7 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                               items: rices
                                   .map(
                                     (rice) => DropdownMenuItem(
-                                      value: rice,
+                                      value: rice.id,
                                       child: Text(
                                         '${rice.name} (${rice.code}) - ${rice.category}',
                                         overflow: TextOverflow.ellipsis,
@@ -504,14 +518,17 @@ class _ExportFormScreenState extends State<ExportFormScreen> {
                                     ),
                                   )
                                   .toList(growable: false),
-                              onChanged: (value) {
+                              onChanged: (id) {
+                                final value = id == null ? null : riceById[id];
                                 _viewModel.setRice(value);
                                 if (value != null) {
                                   _sellingPriceController.text =
                                       _numberText(value.sellingPrice);
                                 }
                               },
-                              validator: _viewModel.validateRice,
+                              validator: (id) => _viewModel.validateRice(
+                                id == null ? null : riceById[id],
+                              ),
                             ),
                             if (selectedRice != null) ...[
                               const SizedBox(height: 10),

@@ -80,7 +80,7 @@ class OcrService {
     // 4. Nhận diện Đơn giá (Purchase price)
     double? unitPrice;
     final priceRegex = RegExp(
-      r'(?:đơn\s*giá|giá\s*nhập|giá\s*mua|giá)\s*[:.]?\s*(\d{1,3}(?:\.\d{3})+|\d+)',
+      r'(?:đơn\s*giá|don\s*gia|giá\s*nhập|gia\s*nhap|giá\s*mua|gia\s*mua|giá|gia)\s*[:.]?\s*(\d{1,3}(?:\.\d{3})+|\d+)',
       caseSensitive: false,
     );
     final priceMatch = priceRegex.firstMatch(rawText);

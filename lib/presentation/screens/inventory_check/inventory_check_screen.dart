@@ -62,9 +62,10 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
           builder: (ctx, setSheetState) {
             final bottomInsets = MediaQuery.of(ctx).viewInsets.bottom;
             return Container(
-              decoration: const BoxDecoration(
-                color: AppTheme.cardColor,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              decoration: BoxDecoration(
+                color: AppTheme.cardBg(sheetContext),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               padding: EdgeInsets.fromLTRB(20, 16, 20, 24 + bottomInsets),
               child: SingleChildScrollView(
@@ -207,17 +208,18 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
                             horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
                           color: currentDiff.abs() < 0.001
-                              ? AppTheme.safeBg
+                              ? AppTheme.safeBgColor(sheetContext)
                               : (currentDiff < 0
-                                  ? AppTheme.dangerBg
-                                  : AppTheme.warningBg),
+                                  ? AppTheme.dangerBgColor(sheetContext)
+                                  : AppTheme.warningBgColor(sheetContext)),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: currentDiff.abs() < 0.001
-                                ? AppTheme.safeBorder
+                                ? AppTheme.safeBorderColor(sheetContext)
                                 : (currentDiff < 0
-                                    ? AppTheme.dangerBorder
-                                    : AppTheme.warningBorder),
+                                    ? AppTheme.dangerBorderColor(sheetContext)
+                                    : AppTheme.warningBorderColor(
+                                        sheetContext)),
                           ),
                         ),
                         child: Row(
@@ -239,10 +241,12 @@ class _InventoryCheckScreenState extends State<InventoryCheckScreen> {
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w900,
                                   color: currentDiff.abs() < 0.001
-                                      ? AppTheme.safeText
+                                      ? AppTheme.safeTextColor(sheetContext)
                                       : (currentDiff < 0
-                                          ? AppTheme.dangerText
-                                          : AppTheme.warningText),
+                                          ? AppTheme.dangerTextColor(
+                                              sheetContext)
+                                          : AppTheme.warningTextColor(
+                                              sheetContext)),
                                   fontFeatures: const [
                                     FontFeature.tabularFigures()
                                   ],
